@@ -40,7 +40,7 @@ jobs:
       - name: Configure npm for GitHub Packages
         working-directory: frontend
         run: |
-          echo "@arribatec-sds:registry=https://npm.pkg.github.com" >> .npmrc
+          echo "@arribatec-sds:registry=https://npm.pkg.github.com" > .npmrc
           echo "//npm.pkg.github.com/:_authToken=${{ secrets.GH_PACKAGES_TOKEN }}" >> .npmrc
 
       - name: Install frontend dependencies
