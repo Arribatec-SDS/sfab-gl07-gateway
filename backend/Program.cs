@@ -1,5 +1,8 @@
 using Arribatec.Nexus.Client.Extensions;
 using Arribatec.Nexus.Client.TaskExecution;
+using SfabGl07Gateway.Api.Repositories;
+using SfabGl07Gateway.Api.Services;
+using SfabGl07Gateway.Api.Services.Transformers;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -16,6 +19,40 @@ builder.AddArribatecNexus(
             WriteToConsole = true
         };
     });
+
+// Data Protection for encrypting sensitive settings
+builder.Services.AddDataProtection();
+
+// Repositories
+builder.Services.AddScoped<IAppSettingsRepository, AppSettingsRepository>();
+builder.Services.AddScoped<ISourceSystemRepository, SourceSystemRepository>();
+builder.Services.AddScoped<IProcessingLogRepository, ProcessingLogRepository>();
+
+// Services
+builder.Services.AddScoped<IAppSettingsService, AppSettingsService>();
+builder.Services.AddScoped<IXmlParserService, XmlParserService>();
+builder.Services.AddScoped<IDatabaseInitializer, DatabaseInitializer>();
+
+// Transformation services (Strategy Pattern)
+builder.Services.AddScoped<ITransformationService, ABWTransactionTransformer>();
+// Add more transformers as needed:
+// builder.Services.AddScoped<ITransformationService, CustomCsvTransformer>();
+builder.Services.AddScoped<ITransformationServiceFactory, TransformationServiceFactory>();
+
+// File source provider (based on configuration)
+var fileSourceProvider = builder.Configuration["FileSource:Provider"] ?? "Local";
+if (fileSourceProvider.Equals("AzureBlob", StringComparison.OrdinalIgnoreCase))
+{
+    builder.Services.AddScoped<IFileSourceService, AzureBlobFileSourceService>();
+}
+else
+{
+    builder.Services.AddScoped<IFileSourceService, LocalFileSourceService>();
+}
+
+// HTTP Client for Unit4 API
+builder.Services.AddHttpClient<IUnit4ApiClient, Unit4ApiClient>();
+
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
@@ -43,15 +80,15 @@ app.Lifetime.ApplicationStarted.Register(() =>
     var logger = app.Services.GetRequiredService<ILogger<Program>>();
     var urls = app.Urls.FirstOrDefault() ?? "http://localhost:7439";
     var port = new Uri(urls).Port;
-    
+
     var swaggerUrl = $"http://localhost:{port}/swagger";
     var apiUrl = $"http://localhost:{port}/api";
-    
+
     // Box inner width is 56 chars (between ║ and ║)
     // Emojis display as 2 chars wide but count as 1, so pad to 56 to compensate
     var swaggerLine = $"  🌐 Swagger:  {swaggerUrl}".PadRight(56);
     var apiLine = $"  🚀 API:      {apiUrl}".PadRight(56);
-    
+
     logger.LogInformation("");
     logger.LogInformation("╔════════════════════════════════════════════════════════╗");
     logger.LogInformation("║                                                        ║");

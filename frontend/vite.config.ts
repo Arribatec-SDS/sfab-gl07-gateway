@@ -1,8 +1,8 @@
-import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import path from 'path'
 import { fileURLToPath } from 'url'
 import type { Plugin } from 'vite'
+import { defineConfig } from 'vite'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 
@@ -31,7 +31,7 @@ const customServerLogger = (): Plugin => {
         const backendPort = new URL(backendTarget).port
         
         info('')
-        info(`  ${'\x1b[32m➜\x1b[0m'}  ${'\x1b[1mFrontend\x1b[0m'}:  https://demo.localtest.me:${port}${base}`)
+        info(`  ${'\x1b[32m➜\x1b[0m'}  ${'\x1b[1mFrontend\x1b[0m'}:  https://sfab.localtest.me:${port}${base}`)
         info(`  ${'\x1b[32m➜\x1b[0m'}  ${'\x1b[1mSwagger\x1b[0m'}:   http://localhost:${backendPort}/swagger`)
         info('')
       }
@@ -51,7 +51,7 @@ export default defineConfig({
     strictPort: true,  // Fail if port is already in use
     https: httpsConfig,
     cors: true,
-    open: 'https://demo.localtest.me:7358/sfab-gl07-gateway/',
+    open: 'https://sfab.localtest.me:7358/sfab-gl07-gateway/',
     proxy: {
       '/sfab-gl07-gateway/api': {
         target: 'http://localhost:7458',

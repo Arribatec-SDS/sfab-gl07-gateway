@@ -902,6 +902,116 @@ Add these settings via Admin UI or directly in database:
 
 ---
 
+## Debugging
+
+### VS Code Debugging Setup
+
+The project includes VS Code configurations for debugging both backend and frontend.
+
+#### Configuration Files
+
+| File | Purpose |
+|------|---------|
+| `.vscode/launch.json` | Debug configurations |
+| `.vscode/tasks.json` | Build and run tasks |
+| `.vscode/settings.json` | Editor settings |
+| `.vscode/extensions.json` | Recommended extensions |
+
+#### Available Debug Configurations
+
+| Configuration | Description |
+|---------------|-------------|
+| **Backend: .NET API** | Debug the .NET 8 backend with breakpoints |
+| **Frontend: Vite Dev Server** | Debug React app in Chrome with breakpoints |
+| **Frontend: Debug in Edge** | Debug React app in Microsoft Edge |
+| **Backend: Attach to Process** | Attach debugger to running backend process |
+| **Full Stack: Backend + Frontend** | Launch both backend and frontend simultaneously |
+
+#### How to Debug
+
+**Backend (.NET API):**
+1. Open VS Code in the project root
+2. Press `F5` or go to **Run > Start Debugging**
+3. Select **"Backend: .NET API"**
+4. Set breakpoints in any `.cs` file
+5. The debugger will break at your breakpoints
+
+**Frontend (React):**
+1. Ensure backend is running (or use Full Stack config)
+2. Press `F5` and select **"Frontend: Vite Dev Server"**
+3. Set breakpoints in any `.tsx` or `.ts` file
+4. Chrome will open and stop at breakpoints
+
+**Full Stack (Both):**
+1. Press `F5` and select **"Full Stack: Backend + Frontend"**
+2. Both backend and frontend will start with debugging enabled
+3. Set breakpoints in both `.cs` and `.tsx` files
+
+#### VS Code Tasks
+
+Run tasks via **Terminal > Run Task**:
+
+| Task | Command | Description |
+|------|---------|-------------|
+| `build-backend` | `dotnet build` | Build the .NET backend |
+| `watch-backend` | `dotnet watch run` | Run backend with hot reload |
+| `start-frontend` | `npm run dev` | Start Vite dev server |
+| `build-frontend` | `npm run build` | Build frontend for production |
+| `install-frontend` | `npm install` | Install frontend dependencies |
+| `restore-backend` | `dotnet restore` | Restore NuGet packages |
+| `Full Stack: Start All` | Both | Run backend and frontend in parallel |
+
+#### Recommended Extensions
+
+Install these VS Code extensions for the best development experience:
+
+| Extension | ID | Purpose |
+|-----------|-----|---------|
+| C# | `ms-dotnettools.csharp` | C# language support |
+| C# Dev Kit | `ms-dotnettools.csdevkit` | Enhanced C# tooling |
+| ESLint | `dbaeumer.vscode-eslint` | TypeScript/JS linting |
+| Prettier | `esbenp.prettier-vscode` | Code formatting |
+| Code Spell Checker | `streetsidesoftware.code-spell-checker` | Spell checking |
+
+#### Debugging Tips
+
+**Backend:**
+- Use `ILogger<T>` for logging - logs appear in Debug Console
+- Set `ASPNETCORE_ENVIRONMENT=Development` for detailed errors
+- Use Swagger at `http://localhost:7458/swagger` for API testing
+- Check **Debug Console** for request/response details
+
+**Frontend:**
+- Source maps are enabled by default (`sourcemap: true` in vite.config.ts)
+- Use browser DevTools (F12) alongside VS Code debugging
+- React DevTools extension helps inspect component state
+- Network tab shows API calls to `/sfab-gl07-gateway/api/*`
+
+**Common Issues:**
+
+| Issue | Solution |
+|-------|----------|
+| Breakpoints not hitting (Backend) | Ensure "Build" task ran successfully |
+| Breakpoints not hitting (Frontend) | Check sourcemaps enabled, clear browser cache |
+| Port already in use | Kill existing process or use different port |
+| Chrome doesn't open | Install Chrome or use Edge configuration |
+| API calls fail | Ensure backend is running on port 7458 |
+
+#### Environment Variables for Debugging
+
+Backend debug environment (configured in launch.json):
+
+```json
+{
+  "ASPNETCORE_ENVIRONMENT": "Development",
+  "ASPNETCORE_URLS": "http://localhost:7458",
+  "NEXUS_API_URL": "http://localhost:7833",
+  "SECURITY__INTERNALAPITOKEN": "dev-internal-token-change-in-production"
+}
+```
+
+---
+
 ## References
 
 - **Unit4 API:** https://no01-npe.erpx-api.unit4cloud.com/swagger/

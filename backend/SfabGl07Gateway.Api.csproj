@@ -8,9 +8,18 @@
 
   <ItemGroup>
     <PackageReference Include="Arribatec.Nexus.Client" Version="10.4.0" />
+    <PackageReference Include="Azure.Storage.Blobs" Version="12.19.1" />
     <PackageReference Include="Dapper" Version="2.1.35" />
+    <PackageReference Include="Microsoft.AspNetCore.DataProtection" Version="8.0.0" />
     <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="8.0.0" />
     <PackageReference Include="Swashbuckle.AspNetCore" Version="6.4.0" />
+  </ItemGroup>
+
+  <!-- Copy SQL scripts to output directory -->
+  <ItemGroup>
+    <None Update="sql\**\*.sql">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
   </ItemGroup>
 
 </Project>

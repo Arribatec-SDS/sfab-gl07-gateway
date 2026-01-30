@@ -1,0 +1,328 @@
+using System.Diagnostics;
+using System.Text.Json;
+using Arribatec.Nexus.Client.TaskExecution;
+using SfabGl07Gateway.Api.Models.Settings;
+using SfabGl07Gateway.Api.Repositories;
+using SfabGl07Gateway.Api.Services;
+
+namespace SfabGl07Gateway.Api.Workers;
+
+/// <summary>
+/// Parameters for the GL07 processing task.
+/// </summary>
+public record GL07ProcessingParameters
+{
+    /// <summary>
+    /// Optional: Process only specific source system by code.
+    /// If null, all active source systems are processed.
+    /// </summary>
+    public string? SourceSystemCode { get; init; }
+
+    /// <summary>
+    /// If true, only validates files without posting to Unit4.
+    /// </summary>
+    public bool DryRun { get; init; } = false;
+}
+
+/// <summary>
+/// Background worker that processes files from all active source systems,
+/// transforms them to Unit4 format, and posts to Unit4 REST API.
+/// </summary>
+[TaskHandler("gl07-process",
+    Name = "GL07 Transaction Processing",
+    Description = "Processes XML files from source systems and posts to Unit4 API")]
+public class GL07ProcessingWorker : ITaskHandler<GL07ProcessingParameters>
+{
+    private readonly ILogger<GL07ProcessingWorker> _logger;
+    private readonly ITaskContext _context;
+    private readonly ISourceSystemRepository _sourceSystemRepository;
+    private readonly IProcessingLogRepository _processingLogRepository;
+    private readonly IFileSourceService _fileSourceService;
+    private readonly ITransformationServiceFactory _transformerFactory;
+    private readonly IUnit4ApiClient _unit4Client;
+
+    public GL07ProcessingWorker(
+        ILogger<GL07ProcessingWorker> logger,
+        ITaskContext context,
+        ISourceSystemRepository sourceSystemRepository,
+        IProcessingLogRepository processingLogRepository,
+        IFileSourceService fileSourceService,
+        ITransformationServiceFactory transformerFactory,
+        IUnit4ApiClient unit4Client)
+    {
+        _logger = logger;
+        _context = context;
+        _sourceSystemRepository = sourceSystemRepository;
+        _processingLogRepository = processingLogRepository;
+        _fileSourceService = fileSourceService;
+        _transformerFactory = transformerFactory;
+        _unit4Client = unit4Client;
+    }
+
+    public async Task ExecuteAsync(GL07ProcessingParameters parameters, CancellationToken cancellationToken = default)
+    {
+        _logger.LogInformation("╔════════════════════════════════════════════════════════════════╗");
+        _logger.LogInformation("║              GL07 Transaction Processing Started               ║");
+        _logger.LogInformation("╠════════════════════════════════════════════════════════════════╣");
+        _logger.LogInformation("║  Task ID: {TaskId}", _context.TaskExecutionId);
+        _logger.LogInformation("║  Dry Run: {DryRun}", parameters.DryRun);
+        _logger.LogInformation("║  Source Filter: {Filter}", parameters.SourceSystemCode ?? "All active systems");
+        _logger.LogInformation("╚════════════════════════════════════════════════════════════════╝");
+
+        var overallStopwatch = Stopwatch.StartNew();
+        var totalFilesProcessed = 0;
+        var totalFilesSuccess = 0;
+        var totalFilesError = 0;
+
+        try
+        {
+            // Get source systems to process
+            var sourceSystems = await GetSourceSystemsAsync(parameters.SourceSystemCode);
+
+            if (!sourceSystems.Any())
+            {
+                _logger.LogWarning("No active source systems found to process");
+                return;
+            }
+
+            _logger.LogInformation("Processing {Count} source system(s)", sourceSystems.Count());
+
+            foreach (var sourceSystem in sourceSystems)
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+
+                var (processed, success, errors) = await ProcessSourceSystemAsync(
+                    sourceSystem, parameters.DryRun, cancellationToken);
+
+                totalFilesProcessed += processed;
+                totalFilesSuccess += success;
+                totalFilesError += errors;
+            }
+        }
+        catch (OperationCanceledException)
+        {
+            _logger.LogWarning("GL07 processing was cancelled");
+            throw;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "GL07 processing failed with unexpected error");
+            throw;
+        }
+        finally
+        {
+            overallStopwatch.Stop();
+
+            _logger.LogInformation("╔════════════════════════════════════════════════════════════════╗");
+            _logger.LogInformation("║              GL07 Processing Summary                           ║");
+            _logger.LogInformation("╠════════════════════════════════════════════════════════════════╣");
+            _logger.LogInformation("║  Total Files Processed: {Total}", totalFilesProcessed);
+            _logger.LogInformation("║  Successful: {Success}", totalFilesSuccess);
+            _logger.LogInformation("║  Failed: {Errors}", totalFilesError);
+            _logger.LogInformation("║  Duration: {Duration}ms", overallStopwatch.ElapsedMilliseconds);
+            _logger.LogInformation("╚════════════════════════════════════════════════════════════════╝");
+        }
+    }
+
+    private async Task<IEnumerable<SourceSystem>> GetSourceSystemsAsync(string? sourceSystemCode)
+    {
+        if (!string.IsNullOrEmpty(sourceSystemCode))
+        {
+            var specific = await _sourceSystemRepository.GetByCodeAsync(sourceSystemCode);
+            if (specific == null)
+            {
+                _logger.LogWarning("Source system not found: {Code}", sourceSystemCode);
+                return Enumerable.Empty<SourceSystem>();
+            }
+            if (!specific.IsActive)
+            {
+                _logger.LogWarning("Source system is not active: {Code}", sourceSystemCode);
+                return Enumerable.Empty<SourceSystem>();
+            }
+            return new[] { specific };
+        }
+
+        return await _sourceSystemRepository.GetActiveAsync();
+    }
+
+    private async Task<(int processed, int success, int errors)> ProcessSourceSystemAsync(
+        SourceSystem sourceSystem,
+        bool dryRun,
+        CancellationToken cancellationToken)
+    {
+        _logger.LogInformation("────────────────────────────────────────────────────────────────");
+        _logger.LogInformation("Processing source system: {Name} ({Code})",
+            sourceSystem.SystemName, sourceSystem.SystemCode);
+        _logger.LogInformation("  Folder: {Folder}", sourceSystem.FolderPath);
+        _logger.LogInformation("  Transformer: {Transformer}", sourceSystem.TransformerType);
+        _logger.LogInformation("  Pattern: {Pattern}", sourceSystem.FilePattern);
+
+        var processed = 0;
+        var success = 0;
+        var errors = 0;
+
+        try
+        {
+            // Get the transformer for this source system
+            var transformer = _transformerFactory.GetTransformer(sourceSystem.TransformerType);
+
+            // List files in inbox
+            var files = (await _fileSourceService.ListFilesAsync(sourceSystem)).ToList();
+
+            if (!files.Any())
+            {
+                _logger.LogInformation("  No files to process in {Folder}/inbox", sourceSystem.FolderPath);
+                return (0, 0, 0);
+            }
+
+            _logger.LogInformation("  Found {Count} file(s) to process", files.Count);
+
+            foreach (var fileName in files)
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+
+                var fileResult = await ProcessFileAsync(
+                    sourceSystem, fileName, transformer, dryRun, cancellationToken);
+
+                processed++;
+                if (fileResult)
+                {
+                    success++;
+                }
+                else
+                {
+                    errors++;
+                    // Stop processing this source system on error
+                    _logger.LogWarning("  Stopping {SystemCode} processing due to error", sourceSystem.SystemCode);
+                    break;
+                }
+            }
+        }
+        catch (NotSupportedException ex)
+        {
+            _logger.LogError(ex, "Transformer not found for source system: {Code}", sourceSystem.SystemCode);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error processing source system: {Code}", sourceSystem.SystemCode);
+        }
+
+        _logger.LogInformation("  Source system {Code} complete: {Success} success, {Errors} errors",
+            sourceSystem.SystemCode, success, errors);
+
+        return (processed, success, errors);
+    }
+
+    private async Task<bool> ProcessFileAsync(
+        SourceSystem sourceSystem,
+        string fileName,
+        ITransformationService transformer,
+        bool dryRun,
+        CancellationToken cancellationToken)
+    {
+        var stopwatch = Stopwatch.StartNew();
+        var logEntry = new ProcessingLog
+        {
+            SourceSystemId = sourceSystem.Id,
+            FileName = fileName,
+            Status = "Processing"
+        };
+
+        try
+        {
+            _logger.LogInformation("    Processing file: {FileName}", fileName);
+
+            // Download file content
+            var content = await _fileSourceService.DownloadAsStringAsync(sourceSystem, fileName);
+            _logger.LogDebug("    Downloaded {Length} bytes", content.Length);
+
+            // Transform to Unit4 format
+            var request = transformer.Transform(content);
+
+            var voucherCount = request.TransactionInformation.Count;
+            var transactionCount = request.TransactionInformation
+                .Sum(t => t.TransactionDetailInformation.Count);
+
+            logEntry.VoucherCount = voucherCount;
+            logEntry.TransactionCount = transactionCount;
+
+            _logger.LogInformation("    Transformed: {VoucherCount} vouchers, {TransactionCount} transactions",
+                voucherCount, transactionCount);
+
+            if (dryRun)
+            {
+                _logger.LogInformation("    [DRY RUN] Would post to Unit4 API");
+                logEntry.Status = "Success";
+                logEntry.ErrorMessage = "Dry run - not posted";
+            }
+            else
+            {
+                // Post to Unit4 API
+                var response = await _unit4Client.PostTransactionBatchAsync(request);
+
+                if (response.Status == "Success" || response.Status == "Accepted")
+                {
+                    logEntry.Status = "Success";
+                    _logger.LogInformation("    ✓ Posted to Unit4 successfully");
+                }
+                else
+                {
+                    logEntry.Status = "Error";
+                    logEntry.ErrorMessage = response.Message ??
+                        string.Join("; ", response.Errors?.Select(e => e.Message) ?? Array.Empty<string>());
+                    _logger.LogError("    ✗ Unit4 API error: {Message}", logEntry.ErrorMessage);
+                }
+            }
+
+            // Move file based on result
+            if (logEntry.Status == "Success")
+            {
+                await _fileSourceService.MoveToProcessedAsync(sourceSystem, fileName);
+                _logger.LogDebug("    Moved to archive folder");
+
+                // Save the transformed JSON alongside the XML
+                var jsonOptions = new JsonSerializerOptions { WriteIndented = true };
+                var jsonContent = JsonSerializer.Serialize(request, jsonOptions);
+                await _fileSourceService.SaveJsonToArchiveAsync(sourceSystem, fileName, jsonContent);
+                _logger.LogDebug("    Saved JSON to archive folder");
+            }
+            else
+            {
+                await _fileSourceService.MoveToErrorAsync(sourceSystem, fileName);
+                _logger.LogDebug("    Moved to error folder");
+            }
+
+            stopwatch.Stop();
+            logEntry.DurationMs = (int)stopwatch.ElapsedMilliseconds;
+
+            // Save log entry
+            await _processingLogRepository.CreateAsync(logEntry);
+
+            return logEntry.Status == "Success";
+        }
+        catch (Exception ex)
+        {
+            stopwatch.Stop();
+            logEntry.Status = "Error";
+            logEntry.ErrorMessage = ex.Message;
+            logEntry.DurationMs = (int)stopwatch.ElapsedMilliseconds;
+
+            _logger.LogError(ex, "    ✗ Error processing file: {FileName}", fileName);
+
+            // Move to error folder
+            try
+            {
+                await _fileSourceService.MoveToErrorAsync(sourceSystem, fileName);
+            }
+            catch (Exception moveEx)
+            {
+                _logger.LogError(moveEx, "    Failed to move file to error folder");
+            }
+
+            // Save log entry
+            await _processingLogRepository.CreateAsync(logEntry);
+
+            return false;
+        }
+    }
+}

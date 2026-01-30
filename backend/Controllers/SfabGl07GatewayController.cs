@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Arribatec.Nexus.Client.Services;
 using Microsoft.AspNetCore.Authorization;
+using SfabGl07Gateway.Api.Services;
 using System.Security.Claims;
 
 namespace SfabGl07Gateway.Api.Controllers;
@@ -11,10 +12,16 @@ public class SfabGl07GatewayController : ControllerBase
 {
     private readonly ILogger<SfabGl07GatewayController> _logger;
     private readonly IContextProvider _contextProvider;
-    public SfabGl07GatewayController(ILogger<SfabGl07GatewayController> logger, IContextProvider contextProvider)
+    private readonly IDatabaseInitializer _dbInitializer;
+
+    public SfabGl07GatewayController(
+        ILogger<SfabGl07GatewayController> logger,
+        IContextProvider contextProvider,
+        IDatabaseInitializer dbInitializer)
     {
         _logger = logger;
         _contextProvider = contextProvider;
+        _dbInitializer = dbInitializer;
     }
 
     [Authorize]
@@ -23,6 +30,9 @@ public class SfabGl07GatewayController : ControllerBase
     {
         try
         {
+            // Initialize database on first authenticated request
+            await _dbInitializer.InitializeAsync();
+
             // Get user validation information from context provider
             var validation = _contextProvider.GetUserValidation();
 
@@ -54,18 +64,18 @@ public class SfabGl07GatewayController : ControllerBase
                         tenantName = validation.TenantInfo.TenantName,
                         isGlobalAdmin = validation.TenantInfo.IsGlobalAdmin
                     } : null,
-                    
+
                     // Product information from validation
                     productId = validation.ProductId,
                     productShortName = validation.ProductShortName,
                     productInfo = validation.ProductInfo,
-                    
+
                     // Global admin status
                     isGlobalAdmin = validation.IsGlobalAdmin,
-                    
+
                     // Available tenants
                     availableTenants = validation.AvailableTenants,
-                    
+
                     // Host information
                     host = Request.Host.Host,
                     subdomain = Request.Host.Host.Split('.').FirstOrDefault()
