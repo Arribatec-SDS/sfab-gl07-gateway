@@ -1,53 +1,48 @@
-import React, { useState, useEffect, useCallback } from 'react';
-import {
-  Box,
-  Paper,
-  Typography,
-  Button,
-  Alert,
-  Snackbar,
-  CircularProgress,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-  TablePagination,
-  Chip,
-  TextField,
-  MenuItem,
-  IconButton,
-  Collapse,
-} from '@mui/material';
-import {
-  Refresh as RefreshIcon,
-  ExpandMore as ExpandMoreIcon,
-  ExpandLess as ExpandLessIcon,
-  CheckCircle as CheckCircleIcon,
-  Error as ErrorIcon,
-  Warning as WarningIcon,
-  Info as InfoIcon,
-} from '@mui/icons-material';
-import { createApiClient } from '../../utils/api';
 import { useAuth } from '@arribatec-sds/arribatec-nexus-react';
-
-interface SourceSystem {
-  id: number;
-  name: string;
-}
+import {
+    CheckCircle as CheckCircleIcon,
+    Error as ErrorIcon,
+    ExpandLess as ExpandLessIcon,
+    ExpandMore as ExpandMoreIcon,
+    Info as InfoIcon,
+    Refresh as RefreshIcon,
+    Warning as WarningIcon,
+} from '@mui/icons-material';
+import {
+    Alert,
+    Box,
+    Button,
+    Chip,
+    CircularProgress,
+    Collapse,
+    IconButton,
+    MenuItem,
+    Paper,
+    Snackbar,
+    Table,
+    TableBody,
+    TableCell,
+    TableContainer,
+    TableHead,
+    TablePagination,
+    TableRow,
+    TextField,
+    Typography,
+} from '@mui/material';
+import React, { useCallback, useEffect, useState } from 'react';
+import { createApiClient } from '../../utils/api';
 
 interface ProcessingLog {
   id: number;
   sourceSystemId: number;
-  sourceSystem: SourceSystem | null;
+  sourceSystemName: string | null;
   fileName: string;
   status: string;
-  message: string | null;
-  recordsProcessed: number;
-  unit4Response: string | null;
+  voucherCount: number | null;
+  transactionCount: number | null;
+  errorMessage: string | null;
   processedAt: string;
-  createdAt: string;
+  durationMs: number | null;
 }
 
 type LogStatus = 'Success' | 'Failed' | 'Warning' | 'Processing' | '';
@@ -150,7 +145,9 @@ export default function ProcessingLogsPage() {
   };
 
   const formatDate = (dateString: string): string => {
-    return new Date(dateString).toLocaleString();
+    // Database stores UTC, append 'Z' to tell JavaScript it's UTC
+    const utcDate = dateString.endsWith('Z') ? dateString : dateString + 'Z';
+    return new Date(utcDate).toLocaleString();
   };
 
   if (loading && logs.length === 0) {
@@ -215,7 +212,7 @@ export default function ProcessingLogsPage() {
                   <TableCell>File Name</TableCell>
                   <TableCell>Source System</TableCell>
                   <TableCell>Status</TableCell>
-                  <TableCell>Records</TableCell>
+                  <TableCell>Vouchers / Trans</TableCell>
                   <TableCell>Processed At</TableCell>
                 </TableRow>
               </TableHead>
@@ -237,7 +234,7 @@ export default function ProcessingLogsPage() {
                         </Typography>
                       </TableCell>
                       <TableCell>
-                        {log.sourceSystem?.name || `System #${log.sourceSystemId}`}
+                        {log.sourceSystemName || `System #${log.sourceSystemId}`}
                       </TableCell>
                       <TableCell>
                         <Chip
@@ -247,7 +244,9 @@ export default function ProcessingLogsPage() {
                           color={getStatusColor(log.status)}
                         />
                       </TableCell>
-                      <TableCell>{log.recordsProcessed}</TableCell>
+                      <TableCell>
+                        {log.voucherCount ?? 0} / {log.transactionCount ?? 0}
+                      </TableCell>
                       <TableCell>
                         <Typography variant="body2" color="text.secondary">
                           {formatDate(log.processedAt)}
@@ -258,40 +257,42 @@ export default function ProcessingLogsPage() {
                       <TableCell style={{ paddingBottom: 0, paddingTop: 0 }} colSpan={6}>
                         <Collapse in={expandedRows.has(log.id)} timeout="auto" unmountOnExit>
                           <Box sx={{ py: 2, px: 2, backgroundColor: 'grey.50' }}>
-                            {log.message && (
-                              <Box sx={{ mb: 2 }}>
-                                <Typography variant="subtitle2" gutterBottom>
-                                  Message
-                                </Typography>
-                                <Typography variant="body2" color="text.secondary">
-                                  {log.message}
-                                </Typography>
-                              </Box>
-                            )}
-                            {log.unit4Response && (
+                            <Box sx={{ display: 'flex', gap: 4, flexWrap: 'wrap', mb: 2 }}>
                               <Box>
-                                <Typography variant="subtitle2" gutterBottom>
-                                  Unit4 Response
+                                <Typography variant="caption" color="text.secondary">Vouchers</Typography>
+                                <Typography variant="body2" fontWeight={500}>{log.voucherCount ?? 0}</Typography>
+                              </Box>
+                              <Box>
+                                <Typography variant="caption" color="text.secondary">Transactions</Typography>
+                                <Typography variant="body2" fontWeight={500}>{log.transactionCount ?? 0}</Typography>
+                              </Box>
+                              <Box>
+                                <Typography variant="caption" color="text.secondary">Duration</Typography>
+                                <Typography variant="body2" fontWeight={500}>{log.durationMs ?? 0} ms</Typography>
+                              </Box>
+                            </Box>
+                            {log.errorMessage && (
+                              <Box>
+                                <Typography 
+                                  variant="subtitle2" 
+                                  color={log.status === 'Error' ? 'error' : 'text.secondary'} 
+                                  gutterBottom
+                                >
+                                  {log.status === 'Error' ? 'Error Message' : 'Notes'}
                                 </Typography>
                                 <Paper
                                   variant="outlined"
                                   sx={{
                                     p: 1,
-                                    backgroundColor: 'background.paper',
-                                    maxHeight: 200,
-                                    overflow: 'auto',
+                                    backgroundColor: log.status === 'Error' ? 'error.50' : 'grey.100',
+                                    borderColor: log.status === 'Error' ? 'error.200' : 'grey.300',
                                   }}
                                 >
-                                  <pre style={{ margin: 0, fontSize: '0.75rem', whiteSpace: 'pre-wrap' }}>
-                                    {log.unit4Response}
-                                  </pre>
+                                  <Typography variant="body2" color={log.status === 'Error' ? 'error.main' : 'text.secondary'}>
+                                    {log.errorMessage}
+                                  </Typography>
                                 </Paper>
                               </Box>
-                            )}
-                            {!log.message && !log.unit4Response && (
-                              <Typography variant="body2" color="text.secondary">
-                                No additional details available.
-                              </Typography>
                             )}
                           </Box>
                         </Collapse>

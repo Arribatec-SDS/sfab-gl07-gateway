@@ -160,6 +160,7 @@ public class GL07ProcessingWorker : ITaskHandler<GL07ProcessingParameters>
         var processed = 0;
         var success = 0;
         var errors = 0;
+        var logEntries = new List<ProcessingLog>();
 
         try
         {
@@ -181,20 +182,28 @@ public class GL07ProcessingWorker : ITaskHandler<GL07ProcessingParameters>
             {
                 cancellationToken.ThrowIfCancellationRequested();
 
-                var fileResult = await ProcessFileAsync(
+                var (fileSuccess, logEntry, fileException) = await ProcessFileAsync(
                     sourceSystem, fileName, transformer, dryRun, cancellationToken);
 
+                logEntries.Add(logEntry);
                 processed++;
-                if (fileResult)
+
+                if (fileSuccess)
                 {
                     success++;
                 }
                 else
                 {
                     errors++;
-                    // Stop processing this source system on error
-                    _logger.LogWarning("  Stopping {SystemCode} processing due to error", sourceSystem.SystemCode);
-                    break;
+                    // Continue processing remaining files even on error
+                    if (fileException != null)
+                    {
+                        _logger.LogError(fileException, "  File {FileName} failed, continuing with next file", fileName);
+                    }
+                    else
+                    {
+                        _logger.LogWarning("  File {FileName} failed (Unit4 API error), continuing with next file", fileName);
+                    }
                 }
             }
         }
@@ -206,6 +215,22 @@ public class GL07ProcessingWorker : ITaskHandler<GL07ProcessingParameters>
         {
             _logger.LogError(ex, "Error processing source system: {Code}", sourceSystem.SystemCode);
         }
+        finally
+        {
+            // Batch save all log entries at the end (even if processing failed)
+            if (logEntries.Any())
+            {
+                try
+                {
+                    _logger.LogDebug("  Saving {Count} processing log entries", logEntries.Count);
+                    await _processingLogRepository.CreateBatchAsync(logEntries);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "  Failed to save processing log entries");
+                }
+            }
+        }
 
         _logger.LogInformation("  Source system {Code} complete: {Success} success, {Errors} errors",
             sourceSystem.SystemCode, success, errors);
@@ -213,7 +238,7 @@ public class GL07ProcessingWorker : ITaskHandler<GL07ProcessingParameters>
         return (processed, success, errors);
     }
 
-    private async Task<bool> ProcessFileAsync(
+    private async Task<(bool success, ProcessingLog logEntry, Exception? exception)> ProcessFileAsync(
         SourceSystem sourceSystem,
         string fileName,
         ITransformationService transformer,
@@ -295,10 +320,7 @@ public class GL07ProcessingWorker : ITaskHandler<GL07ProcessingParameters>
             stopwatch.Stop();
             logEntry.DurationMs = (int)stopwatch.ElapsedMilliseconds;
 
-            // Save log entry
-            await _processingLogRepository.CreateAsync(logEntry);
-
-            return logEntry.Status == "Success";
+            return (logEntry.Status == "Success", logEntry, null);
         }
         catch (Exception ex)
         {
@@ -319,10 +341,7 @@ public class GL07ProcessingWorker : ITaskHandler<GL07ProcessingParameters>
                 _logger.LogError(moveEx, "    Failed to move file to error folder");
             }
 
-            // Save log entry
-            await _processingLogRepository.CreateAsync(logEntry);
-
-            return false;
+            return (false, logEntry, ex);
         }
     }
 }

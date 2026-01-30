@@ -12,5 +12,6 @@ public interface IProcessingLogRepository
     Task<IEnumerable<ProcessingLog>> GetByStatusAsync(string status, int? limit = 100);
     Task<ProcessingLog?> GetByIdAsync(int id);
     Task<int> CreateAsync(ProcessingLog log);
+    Task CreateBatchAsync(IEnumerable<ProcessingLog> logs);
     Task UpdateAsync(ProcessingLog log);
 }

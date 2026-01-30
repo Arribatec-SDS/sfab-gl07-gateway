@@ -130,6 +130,18 @@ public class ProcessingLogRepository : IProcessingLogRepository
             log);
     }
 
+    public async Task CreateBatchAsync(IEnumerable<ProcessingLog> logs)
+    {
+        var logList = logs.ToList();
+        if (!logList.Any()) return;
+
+        using var connection = await _dbService.CreateProductConnectionAsync();
+        await connection.ExecuteAsync(@"
+            INSERT INTO ProcessingLog (SourceSystemId, FileName, Status, VoucherCount, TransactionCount, ErrorMessage, ProcessedAt, DurationMs)
+            VALUES (@SourceSystemId, @FileName, @Status, @VoucherCount, @TransactionCount, @ErrorMessage, GETUTCDATE(), @DurationMs)",
+            logList);
+    }
+
     public async Task UpdateAsync(ProcessingLog log)
     {
         using var connection = await _dbService.CreateProductConnectionAsync();

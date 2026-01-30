@@ -1,359 +1,309 @@
 import { useAuth } from '@arribatec-sds/arribatec-nexus-react';
-import { useState, useEffect } from 'react';
-import axios from 'axios';
-import { buildApiPath } from '@/utils/api';
-import MasterApiTest from './MasterApiTest';
 import {
-  Container,
-  Typography,
-  Card,
-  CardContent,
-  Button,
-  CircularProgress,
-  Alert,
-  Box,
-  Grid,
-  Chip,
-  AppBar,
-  Toolbar,
-  Avatar,
-  Divider
-} from '@mui/material';
-import {
-  Logout as LogoutIcon,
-  Person as PersonIcon,
-  Api as ApiIcon,
-  Security as SecurityIcon
+    CheckCircle as CheckCircleIcon,
+    CloudUpload as CloudUploadIcon,
+    History as HistoryIcon,
+    Logout as LogoutIcon,
+    PlayArrow as PlayArrowIcon,
+    Settings as SettingsIcon,
+    Storage as StorageIcon,
+    Transform as TransformIcon,
 } from '@mui/icons-material';
-
-interface ApiData {
-  message: string;
-  user: any;
-  context?: {
-    tenantId?: string;
-    currentTenant?: string;
-    tenantShortName?: string;
-    productId?: string;
-    headers?: {
-      tenantId?: string;
-      productId?: string;
-      tenantShortName?: string;
-    };
-    host?: string;
-    subdomain?: string;
-  };
-  allClaims?: Array<{ Type: string; Value: string }>;
-  tenantAccess?: any[];
-  timestamp: string;
-}
+import {
+    AppBar,
+    Avatar,
+    Box,
+    Button,
+    Card,
+    CardContent,
+    Container,
+    Grid,
+    Paper,
+    Toolbar,
+    Typography,
+} from '@mui/material';
+import { useNavigate } from 'react-router-dom';
 
 function HomePage() {
-  const { user, logout, getToken } = useAuth();
-  const [apiData, setApiData] = useState<ApiData | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const token = await getToken();
-        // Use buildApiPath to dynamically construct the API path
-        const response = await axios.get(buildApiPath('/user'), {
-          headers: {
-            Authorization: `Bearer ${token}`
-          }
-        });
-
-        setApiData(response.data);
-        setError(null);
-      } catch (err: any) {
-        console.error('Failed to fetch data:', err);
-        setError(err.response?.data?.message || err.message || 'Failed to fetch data');
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchData();
-  }, []);
+  const { user, logout } = useAuth();
+  const navigate = useNavigate();
 
   const handleLogout = () => {
     logout();
   };
 
+  const features = [
+    {
+      icon: <StorageIcon sx={{ fontSize: 40 }} />,
+      title: 'Source Systems',
+      description: 'Configure connections to Agresso/ABW and other ERP systems',
+      path: '/admin/source-systems',
+      color: '#003d4d',
+    },
+    {
+      icon: <PlayArrowIcon sx={{ fontSize: 40 }} />,
+      title: 'Run Worker',
+      description: 'Manually trigger GL07 transaction processing',
+      path: '/admin/run-worker',
+      color: '#00717f',
+    },
+    {
+      icon: <HistoryIcon sx={{ fontSize: 40 }} />,
+      title: 'Processing Logs',
+      description: 'View history of processed files and transactions',
+      path: '/admin/processing-logs',
+      color: '#00a0b0',
+    },
+    {
+      icon: <SettingsIcon sx={{ fontSize: 40 }} />,
+      title: 'Settings',
+      description: 'Configure application settings and preferences',
+      path: '/admin/settings',
+      color: '#5c6970',
+    },
+  ];
+
+  const workflowSteps = [
+    { icon: <CloudUploadIcon />, label: 'XML files placed in inbox folder' },
+    { icon: <TransformIcon />, label: 'Transform Agresso XML to Unit4 JSON' },
+    { icon: <CheckCircleIcon />, label: 'Post to Unit4 REST API' },
+  ];
+
   return (
-    <Box sx={{ flexGrow: 1 }}>
-      <AppBar position="static">
-        <Toolbar>
-          <Avatar sx={{ mr: 2, bgcolor: 'secondary.main' }}>
-            <PersonIcon />
-          </Avatar>
-          <Typography variant="h6" component="div" sx={{ flexGrow: 1, color: 'white' }}>
-            Stena Fastigheter – GL07 Gateway
-          </Typography>
-          <Button
-            color="inherit"
-            onClick={handleLogout}
-            startIcon={<LogoutIcon />}
-          >
-            Logout
-          </Button>
+    <Box sx={{ flexGrow: 1, minHeight: '100vh', bgcolor: '#f5f7fa' }}>
+      <AppBar position="static" elevation={0} sx={{ bgcolor: '#003d4d' }}>
+        <Toolbar sx={{ minHeight: 64 }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', mr: 3 }}>
+            <Box
+              sx={{
+                width: 40,
+                height: 40,
+                borderRadius: 1,
+                bgcolor: 'white',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                mr: 2,
+              }}
+            >
+              <TransformIcon sx={{ color: '#003d4d', fontSize: 24 }} />
+            </Box>
+            <Typography variant="h6" component="div" fontWeight={600} sx={{ color: 'white' }}>
+              GL07 Gateway
+            </Typography>
+          </Box>
+          <Box sx={{ flexGrow: 1 }} />
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', bgcolor: 'rgba(255,255,255,0.1)', px: 2, py: 0.75, borderRadius: 2 }}>
+              <Avatar sx={{ width: 28, height: 28, mr: 1, bgcolor: '#00a0b0', fontSize: 14 }}>
+                {(user?.firstName?.[0] || user?.username?.[0] || 'U').toUpperCase()}
+              </Avatar>
+              <Typography variant="body2" fontWeight={500} sx={{ color: 'white' }}>
+                {user?.firstName || user?.username || 'User'}
+              </Typography>
+            </Box>
+            <Button
+              color="inherit"
+              onClick={handleLogout}
+              startIcon={<LogoutIcon />}
+              size="small"
+              sx={{ 
+                bgcolor: 'rgba(255,255,255,0.1)', 
+                '&:hover': { bgcolor: 'rgba(255,255,255,0.2)' },
+                textTransform: 'none',
+              }}
+            >
+              Logout
+            </Button>
+          </Box>
         </Toolbar>
       </AppBar>
 
-      <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
-        <Typography variant="h4" component="h1" gutterBottom>
-          Welcome to the Stena Fastigheter – GL07 Gateway
+      <Container maxWidth="lg" sx={{ py: 4 }}>
+        {/* Hero Section */}
+        <Paper 
+          elevation={0} 
+          sx={{ 
+            p: 5, 
+            mb: 4, 
+            background: 'linear-gradient(135deg, #004d5c 0%, #003d4d 50%, #002a36 100%)',
+            color: 'white',
+            borderRadius: 4,
+            position: 'relative',
+            overflow: 'hidden',
+          }}
+        >
+          {/* Background decoration */}
+          <Box 
+            sx={{ 
+              position: 'absolute', 
+              top: -50, 
+              right: -50, 
+              width: 300, 
+              height: 300, 
+              borderRadius: '50%', 
+              bgcolor: 'rgba(255,255,255,0.03)',
+            }} 
+          />
+          <Box 
+            sx={{ 
+              position: 'absolute', 
+              bottom: -100, 
+              left: -100, 
+              width: 400, 
+              height: 400, 
+              borderRadius: '50%', 
+              bgcolor: 'rgba(255,255,255,0.02)',
+            }} 
+          />
+          <Grid container spacing={3} alignItems="center" sx={{ position: 'relative', zIndex: 1 }}>
+            <Grid size={{ xs: 12, md: 8 }}>
+              <Typography variant="h3" fontWeight={700} gutterBottom sx={{ color: '#ffffff' }}>
+                GL07 Transaction Gateway
+              </Typography>
+              <Typography variant="h6" sx={{ color: 'rgba(255,255,255,0.85)', mb: 3, fontWeight: 400 }}>
+                Automated transformation and posting of Agresso GL07 transactions to Unit4 ERP
+              </Typography>
+              <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
+                {workflowSteps.map((step, index) => (
+                  <Box 
+                    key={index} 
+                    sx={{ 
+                      display: 'flex', 
+                      alignItems: 'center', 
+                      bgcolor: 'rgba(0,77,92,0.9)', 
+                      px: 2, 
+                      py: 1, 
+                      borderRadius: 2,
+                      border: '1px solid rgba(255,255,255,0.3)',
+                      color: '#ffffff',
+                    }}
+                  >
+                    <Box sx={{ color: '#ffffff', display: 'flex' }}>{step.icon}</Box>
+                    <Typography variant="body2" sx={{ ml: 1, color: '#ffffff', fontWeight: 500 }}>
+                      {step.label}
+                    </Typography>
+                  </Box>
+                ))}
+              </Box>
+            </Grid>
+            <Grid size={{ xs: 12, md: 4 }} sx={{ textAlign: 'center' }}>
+              <Box 
+                sx={{ 
+                  width: 160, 
+                  height: 160, 
+                  mx: 'auto',
+                  bgcolor: 'rgba(255,255,255,0.08)',
+                  borderRadius: '50%',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  border: '2px solid rgba(255,255,255,0.15)',
+                }}
+              >
+                <TransformIcon sx={{ fontSize: 80, opacity: 0.9 }} />
+              </Box>
+            </Grid>
+          </Grid>
+        </Paper>
+
+        {/* Quick Actions */}
+        <Typography variant="h5" fontWeight={600} gutterBottom sx={{ mb: 3 }}>
+          Quick Actions
         </Typography>
-
-        {/* Master API Test Section (for development) */}
-        {process.env.NODE_ENV === 'development' && (
-          <>
-            <Card sx={{ mb: 3, bgcolor: 'warning.light', color: 'warning.contrastText' }}>
-              <CardContent>
-                <MasterApiTest />
-              </CardContent>
-            </Card>
-            <Divider sx={{ mb: 3 }} />
-          </>
-        )}
-
         <Grid container spacing={3}>
-          {/* User Information Card */}
-          <Grid size={{ xs: 12, md: 6 }}>
-            <Card>
-              <CardContent>
-                <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-                  <PersonIcon sx={{ mr: 1, color: 'primary.main' }} />
-                  <Typography variant="h5" component="h2">
-                    User Information
-                  </Typography>
-                </Box>
-                {user ? (
-                  <Box>
-                    <Typography variant="body1" gutterBottom>
-                      <strong>Username:</strong> {user.username}
-                    </Typography>
-                    <Typography variant="body1" gutterBottom>
-                      <strong>Email:</strong> {user.email}
-                    </Typography>
-                    <Typography variant="body1" gutterBottom>
-                      <strong>First Name:</strong> {user.firstName}
-                    </Typography>
-                    <Typography variant="body1" gutterBottom>
-                      <strong>Last Name:</strong> {user.lastName}
-                    </Typography>
+          {features.map((feature) => (
+            <Grid key={feature.title} size={{ xs: 12, sm: 6, md: 3 }}>
+              <Card 
+                sx={{ 
+                  height: '100%', 
+                  cursor: 'pointer',
+                  transition: 'all 0.2s ease-in-out',
+                  '&:hover': {
+                    transform: 'translateY(-4px)',
+                    boxShadow: 4,
+                  },
+                }}
+                onClick={() => navigate(feature.path)}
+              >
+                <CardContent sx={{ textAlign: 'center', py: 3 }}>
+                  <Box 
+                    sx={{ 
+                      color: feature.color,
+                      mb: 2,
+                    }}
+                  >
+                    {feature.icon}
                   </Box>
-                ) : (
+                  <Typography variant="h6" fontWeight={600} gutterBottom>
+                    {feature.title}
+                  </Typography>
                   <Typography variant="body2" color="text.secondary">
-                    No user information available
+                    {feature.description}
                   </Typography>
-                )}
-              </CardContent>
-            </Card>
-          </Grid>
+                </CardContent>
+              </Card>
+            </Grid>
+          ))}
+        </Grid>
 
-          {/* API Response Card */}
-          <Grid size={{ xs: 12, md: 6 }}>
-            <Card>
-              <CardContent>
-                <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-                  <ApiIcon sx={{ mr: 1, color: 'primary.main' }} />
-                  <Typography variant="h5" component="h2">
-                    API Response
+        {/* How It Works Section */}
+        <Paper elevation={0} sx={{ p: 4, mt: 4, bgcolor: 'white', borderRadius: 4 }}>
+          <Typography variant="h5" fontWeight={600} gutterBottom>
+            How It Works
+          </Typography>
+          <Grid container spacing={4} sx={{ mt: 1 }}>
+            <Grid size={{ xs: 12, md: 4 }}>
+              <Box sx={{ display: 'flex', alignItems: 'flex-start' }}>
+                <Avatar sx={{ bgcolor: '#003d4d', mr: 2, fontWeight: 700 }}>1</Avatar>
+                <Box>
+                  <Typography variant="subtitle1" fontWeight={600}>
+                    Configure Source Systems
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary">
+                    Set up folder paths for each Agresso/ABW source system. The gateway monitors 
+                    inbox folders for new XML files.
                   </Typography>
                 </Box>
-                
-                {loading && (
-                  <Box sx={{ display: 'flex', justifyContent: 'center', p: 2 }}>
-                    <CircularProgress />
-                  </Box>
-                )}
-                
-                {error && (
-                  <Alert severity="error" sx={{ mb: 2 }}>
-                    {error}
-                  </Alert>
-                )}
-                
-                {apiData && (
-                  <Box>
-                    <Typography variant="body1" gutterBottom>
-                      <strong>Message:</strong> {apiData.message}
-                    </Typography>
-                    <Typography variant="body1" gutterBottom>
-                      <strong>Timestamp:</strong> {new Date(apiData.timestamp).toLocaleString()}
-                    </Typography>
-                  </Box>
-                )}
-              </CardContent>
-            </Card>
+              </Box>
+            </Grid>
+            <Grid size={{ xs: 12, md: 4 }}>
+              <Box sx={{ display: 'flex', alignItems: 'flex-start' }}>
+                <Avatar sx={{ bgcolor: '#00717f', mr: 2, fontWeight: 700 }}>2</Avatar>
+                <Box>
+                  <Typography variant="subtitle1" fontWeight={600}>
+                    Automatic Transformation
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary">
+                    GL07 XML transactions are automatically transformed to Unit4 JSON format, 
+                    mapping vouchers, accounts, and dimensions.
+                  </Typography>
+                </Box>
+              </Box>
+            </Grid>
+            <Grid size={{ xs: 12, md: 4 }}>
+              <Box sx={{ display: 'flex', alignItems: 'flex-start' }}>
+                <Avatar sx={{ bgcolor: '#00a0b0', mr: 2, fontWeight: 700 }}>3</Avatar>
+                <Box>
+                  <Typography variant="subtitle1" fontWeight={600}>
+                    Post to Unit4
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary">
+                    Transformed transactions are posted to the Unit4 REST API. Processed files 
+                    are archived with JSON output for auditing.
+                  </Typography>
+                </Box>
+              </Box>
+            </Grid>
           </Grid>
+        </Paper>
 
-          {/* Context Information Card */}
-          {apiData?.context && (
-            <Grid size={12}>
-              <Card>
-                <CardContent>
-                  <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-                    <SecurityIcon sx={{ mr: 1, color: 'primary.main' }} />
-                    <Typography variant="h5" component="h2">
-                      Context Information
-                    </Typography>
-                  </Box>
-                  
-                  <Grid container spacing={2}>
-                    {/* Tenant Information */}
-                    <Grid size={{ xs: 12, md: 6 }}>
-                      <Typography variant="h6" gutterBottom color="primary">
-                        Tenant Context
-                      </Typography>
-                      <Typography variant="body2" gutterBottom>
-                        <strong>Tenant ID:</strong> {apiData.context.tenantId || 'N/A'}
-                      </Typography>
-                      <Typography variant="body2" gutterBottom>
-                        <strong>Current Tenant:</strong> {apiData.context.currentTenant || 'N/A'}
-                      </Typography>
-                      <Typography variant="body2" gutterBottom>
-                        <strong>Tenant Short Name:</strong> {apiData.context.tenantShortName || 'N/A'}
-                      </Typography>
-                    </Grid>
-
-                    {/* Product Information */}
-                    <Grid size={{ xs: 12, md: 6 }}>
-                      <Typography variant="h6" gutterBottom color="primary">
-                        Product Context
-                      </Typography>
-                      <Typography variant="body2" gutterBottom>
-                        <strong>Product ID:</strong> {apiData.context.productId || 'N/A'}
-                      </Typography>
-                    </Grid>
-
-                    {/* Host Information */}
-                    <Grid size={{ xs: 12, md: 6 }}>
-                      <Typography variant="h6" gutterBottom color="primary">
-                        Host Information
-                      </Typography>
-                      <Typography variant="body2" gutterBottom>
-                        <strong>Host:</strong> {apiData.context.host || 'N/A'}
-                      </Typography>
-                      <Typography variant="body2" gutterBottom>
-                        <strong>Subdomain:</strong> {apiData.context.subdomain || 'N/A'}
-                      </Typography>
-                    </Grid>
-
-                    {/* Headers */}
-                    {apiData.context.headers && (
-                      <Grid size={{ xs: 12, md: 6 }}>
-                        <Typography variant="h6" gutterBottom color="primary">
-                          Request Headers
-                        </Typography>
-                        <Typography variant="body2" gutterBottom>
-                          <strong>X-Tenant-Id:</strong> {apiData.context.headers.tenantId || 'N/A'}
-                        </Typography>
-                        <Typography variant="body2" gutterBottom>
-                          <strong>X-Product-Id:</strong> {apiData.context.headers.productId || 'N/A'}
-                        </Typography>
-                        <Typography variant="body2" gutterBottom>
-                          <strong>X-Tenant-ShortName:</strong> {apiData.context.headers.tenantShortName || 'N/A'}
-                        </Typography>
-                      </Grid>
-                    )}
-                  </Grid>
-                </CardContent>
-              </Card>
-            </Grid>
-          )}
-
-          {/* User Details from API */}
-          {apiData?.user && (
-            <Grid size={{ xs: 12, md: 6 }}>
-              <Card>
-                <CardContent>
-                  <Typography variant="h6" gutterBottom>
-                    User Details from API
-                  </Typography>
-                  <Box
-                    component="pre"
-                    sx={{
-                      backgroundColor: 'grey.100',
-                      p: 2,
-                      borderRadius: 1,
-                      overflow: 'auto',
-                      fontSize: '0.875rem',
-                      fontFamily: 'monospace'
-                    }}
-                  >
-                    {JSON.stringify(apiData.user, null, 2)}
-                  </Box>
-                </CardContent>
-              </Card>
-            </Grid>
-          )}
-
-          {/* All JWT Claims */}
-          {apiData?.allClaims && apiData.allClaims.length > 0 && (
-            <Grid size={{ xs: 12, md: 6 }}>
-              <Card>
-                <CardContent>
-                  <Typography variant="h6" gutterBottom>
-                    All JWT Claims
-                  </Typography>
-                  <Box
-                    component="pre"
-                    sx={{
-                      backgroundColor: 'grey.100',
-                      p: 2,
-                      borderRadius: 1,
-                      overflow: 'auto',
-                      maxHeight: 400,
-                      fontSize: '0.875rem',
-                      fontFamily: 'monospace'
-                    }}
-                  >
-                    {JSON.stringify(apiData.allClaims, null, 2)}
-                  </Box>
-                </CardContent>
-              </Card>
-            </Grid>
-          )}
-
-          {/* Tenant Access */}
-          {apiData?.tenantAccess && apiData.tenantAccess.length > 0 && (
-            <Grid size={12}>
-              <Card>
-                <CardContent>
-                  <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-                    <SecurityIcon sx={{ mr: 1, color: 'primary.main' }} />
-                    <Typography variant="h6">
-                      Tenant Access
-                    </Typography>
-                    <Chip 
-                      label={apiData.tenantAccess.length} 
-                      color="primary" 
-                      size="small" 
-                      sx={{ ml: 1 }}
-                    />
-                  </Box>
-                  <Box
-                    component="pre"
-                    sx={{
-                      backgroundColor: 'grey.100',
-                      p: 2,
-                      borderRadius: 1,
-                      overflow: 'auto',
-                      maxHeight: 300,
-                      fontSize: '0.875rem',
-                      fontFamily: 'monospace'
-                    }}
-                  >
-                    {JSON.stringify(apiData.tenantAccess, null, 2)}
-                  </Box>
-                </CardContent>
-              </Card>
-            </Grid>
-          )}
-        </Grid>
+        {/* Footer */}
+        <Box sx={{ mt: 4, textAlign: 'center' }}>
+          <Typography variant="body2" color="text.secondary">
+            Stena Fastigheter GL07 Gateway • Powered by Nexus Platform
+          </Typography>
+        </Box>
       </Container>
     </Box>
   );
