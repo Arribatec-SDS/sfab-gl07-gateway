@@ -1,0 +1,17 @@
+{
+  "$schema": "http://json.schemastore.org/launchsettings.json",
+  "profiles": {
+    "http": {
+      "commandName": "Project",
+      "dotnetRunMessages": true,
+      "launchBrowser": false,
+      "applicationUrl": "http://localhost:7458",
+      "environmentVariables": {
+        "ASPNETCORE_ENVIRONMENT": "Development",
+        "NEXUS_API_URL": "http://localhost:7833",
+        "SECURITY__INTERNALAPITOKEN": "dev-internal-token-change-in-production"
+
+      }
+    }
+  }
+}

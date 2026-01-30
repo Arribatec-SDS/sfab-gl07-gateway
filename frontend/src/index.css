@@ -1,0 +1,120 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+/* Arribatec Brand Colors */
+:root {
+  /* Primary Brand Colors */
+  --arribatec-rusty-red: #A95F55;
+  --arribatec-dark-blue: #18272F;
+  --arribatec-ocean-blue: #5E7898;
+  --arribatec-gold: #C2AC6F;
+  --arribatec-almost-white: #EEECE7;
+  --arribatec-almost-black: #323232;
+  
+  /* Typography */
+  font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  line-height: 1.6;
+  font-weight: 400;
+
+  color-scheme: light;
+  color: var(--arribatec-dark-blue);
+  background-color: var(--arribatec-almost-white);
+
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Google Fonts - Inter */
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  min-width: 320px;
+  min-height: 100vh;
+  background-color: var(--arribatec-almost-white);
+  color: var(--arribatec-dark-blue);
+}
+
+#root {
+  width: 100%;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Custom scrollbar for Arribatec style */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--arribatec-almost-white);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--arribatec-ocean-blue);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--arribatec-rusty-red);
+}
+
+/* Selection color */
+::selection {
+  background-color: rgba(169, 95, 85, 0.2);
+  color: var(--arribatec-dark-blue);
+}
+
+/* Focus styles for accessibility */
+:focus-visible {
+  outline: 2px solid var(--arribatec-rusty-red);
+  outline-offset: 2px;
+}
+
+/* Links */
+a {
+  color: var(--arribatec-rusty-red);
+  text-decoration: none;
+  transition: color 0.2s ease;
+}
+
+a:hover {
+  color: var(--arribatec-ocean-blue);
+}
+
+/* Animations */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.fade-in {
+  animation: fadeIn 0.3s ease-out;
+}
+
+/* Loading spinner override */
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}

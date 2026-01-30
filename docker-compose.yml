@@ -1,0 +1,36 @@
+services:
+  sfab-gl07-gateway-app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        - GITHUB_USERNAME=${GITHUB_USERNAME}
+        - GITHUB_TOKEN=${GITHUB_TOKEN}
+    container_name: sfab-gl07-gateway-app
+    environment:
+      - TZ=Europe/Oslo
+      - ASPNETCORE_ENVIRONMENT=Production
+      - ASPNETCORE_URLS=http://+:5000
+      - ASPNETCORE_PATHBASE=/sfab-gl07-gateway
+      - NEXUS_API_URL=http://nexus-console:7833
+      - SECURITY__INTERNALAPITOKEN=dev-internal-token
+      - ApplicationName=Sample
+    extra_hosts:
+      - "keycloak.localtest.me:host-gateway"
+    networks:
+      - nexus-net
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.sfab-gl07-gateway-frontend.rule=HostRegexp(`^.+\\.localtest\\.me$`) && PathPrefix(`/sfab-gl07-gateway`)"
+      - "traefik.http.routers.sfab-gl07-gateway-frontend.entrypoints=websecure"
+      - "traefik.http.routers.sfab-gl07-gateway-frontend.tls=true"
+      - "traefik.http.routers.sfab-gl07-gateway-frontend.service=sfab-gl07-gateway-frontend"
+      - "traefik.http.routers.sfab-gl07-gateway-frontend.middlewares=sfab-gl07-gateway-frontend-stripprefix"
+      - "traefik.http.middlewares.sfab-gl07-gateway-frontend-stripprefix.stripprefix.prefixes=/sfab-gl07-gateway"
+      - "traefik.http.services.sfab-gl07-gateway-frontend.loadbalancer.server.port=80"
+    restart: unless-stopped
+
+
+networks:
+  nexus-net:
+    external: true
