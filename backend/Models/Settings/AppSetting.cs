@@ -26,15 +26,19 @@ public class AppSettingDto
     public bool Sensitive { get; set; }
     public string Category { get; set; } = "General";
     public string? Description { get; set; }
-    
+
+    // Aliases for frontend compatibility
+    public string Key => ParamName;
+    public string Value => ParamValue ?? string.Empty;
+
     public static AppSettingDto FromEntity(AppSetting entity, bool maskSensitive = true)
     {
         return new AppSettingDto
         {
             Id = entity.Id,
             ParamName = entity.ParamName,
-            ParamValue = maskSensitive && entity.Sensitive && !string.IsNullOrEmpty(entity.ParamValue) 
-                ? "********" 
+            ParamValue = maskSensitive && entity.Sensitive && !string.IsNullOrEmpty(entity.ParamValue)
+                ? "********"
                 : entity.ParamValue,
             Sensitive = entity.Sensitive,
             Category = entity.Category,

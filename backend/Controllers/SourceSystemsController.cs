@@ -91,6 +91,7 @@ public class SourceSystemsController : ControllerBase
         {
             SystemCode = request.SystemCode,
             SystemName = request.SystemName,
+            Provider = request.Provider,
             FolderPath = request.FolderPath,
             TransformerType = request.TransformerType,
             FilePattern = request.FilePattern,
@@ -139,6 +140,7 @@ public class SourceSystemsController : ControllerBase
 
         existing.SystemCode = request.SystemCode;
         existing.SystemName = request.SystemName;
+        existing.Provider = request.Provider;
         existing.FolderPath = request.FolderPath;
         existing.TransformerType = request.TransformerType;
         existing.FilePattern = request.FilePattern;

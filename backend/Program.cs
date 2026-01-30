@@ -39,16 +39,11 @@ builder.Services.AddScoped<ITransformationService, ABWTransactionTransformer>();
 // builder.Services.AddScoped<ITransformationService, CustomCsvTransformer>();
 builder.Services.AddScoped<ITransformationServiceFactory, TransformationServiceFactory>();
 
-// File source provider (based on configuration)
-var fileSourceProvider = builder.Configuration["FileSource:Provider"] ?? "Local";
-if (fileSourceProvider.Equals("AzureBlob", StringComparison.OrdinalIgnoreCase))
-{
-    builder.Services.AddScoped<IFileSourceService, AzureBlobFileSourceService>();
-}
-else
-{
-    builder.Services.AddScoped<IFileSourceService, LocalFileSourceService>();
-}
+// File source services - register both providers and factory
+// Each SourceSystem specifies its own provider (Local or AzureBlob)
+builder.Services.AddScoped<LocalFileSourceService>();
+builder.Services.AddScoped<AzureBlobFileSourceService>();
+builder.Services.AddScoped<IFileSourceServiceFactory, FileSourceServiceFactory>();
 
 // HTTP Client for Unit4 API
 builder.Services.AddHttpClient<IUnit4ApiClient, Unit4ApiClient>();

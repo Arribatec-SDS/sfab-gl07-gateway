@@ -24,7 +24,7 @@ public class SourceSystemRepository : ISourceSystemRepository
     {
         using var connection = await _dbService.CreateProductConnectionAsync();
         return await connection.QueryAsync<SourceSystem>(@"
-            SELECT Id, SystemCode, SystemName, FolderPath, TransformerType, FilePattern, IsActive, Description, CreatedAt, UpdatedAt 
+            SELECT Id, SystemCode, SystemName, Provider, FolderPath, TransformerType, FilePattern, IsActive, Description, CreatedAt, UpdatedAt 
             FROM SourceSystems 
             ORDER BY SystemName");
     }
@@ -33,7 +33,7 @@ public class SourceSystemRepository : ISourceSystemRepository
     {
         using var connection = await _dbService.CreateProductConnectionAsync();
         return await connection.QueryAsync<SourceSystem>(@"
-            SELECT Id, SystemCode, SystemName, FolderPath, TransformerType, FilePattern, IsActive, Description, CreatedAt, UpdatedAt 
+            SELECT Id, SystemCode, SystemName, Provider, FolderPath, TransformerType, FilePattern, IsActive, Description, CreatedAt, UpdatedAt 
             FROM SourceSystems 
             WHERE IsActive = 1 
             ORDER BY SystemName");
@@ -43,7 +43,7 @@ public class SourceSystemRepository : ISourceSystemRepository
     {
         using var connection = await _dbService.CreateProductConnectionAsync();
         return await connection.QueryFirstOrDefaultAsync<SourceSystem>(@"
-            SELECT Id, SystemCode, SystemName, FolderPath, TransformerType, FilePattern, IsActive, Description, CreatedAt, UpdatedAt 
+            SELECT Id, SystemCode, SystemName, Provider, FolderPath, TransformerType, FilePattern, IsActive, Description, CreatedAt, UpdatedAt 
             FROM SourceSystems 
             WHERE Id = @Id",
             new { Id = id });
@@ -53,7 +53,7 @@ public class SourceSystemRepository : ISourceSystemRepository
     {
         using var connection = await _dbService.CreateProductConnectionAsync();
         return await connection.QueryFirstOrDefaultAsync<SourceSystem>(@"
-            SELECT Id, SystemCode, SystemName, FolderPath, TransformerType, FilePattern, IsActive, Description, CreatedAt, UpdatedAt 
+            SELECT Id, SystemCode, SystemName, Provider, FolderPath, TransformerType, FilePattern, IsActive, Description, CreatedAt, UpdatedAt 
             FROM SourceSystems 
             WHERE SystemCode = @SystemCode",
             new { SystemCode = systemCode });
@@ -63,9 +63,9 @@ public class SourceSystemRepository : ISourceSystemRepository
     {
         using var connection = await _dbService.CreateProductConnectionAsync();
         return await connection.QuerySingleAsync<int>(@"
-            INSERT INTO SourceSystems (SystemCode, SystemName, FolderPath, TransformerType, FilePattern, IsActive, Description, CreatedAt, UpdatedAt)
+            INSERT INTO SourceSystems (SystemCode, SystemName, Provider, FolderPath, TransformerType, FilePattern, IsActive, Description, CreatedAt, UpdatedAt)
             OUTPUT INSERTED.Id
-            VALUES (@SystemCode, @SystemName, @FolderPath, @TransformerType, @FilePattern, @IsActive, @Description, GETUTCDATE(), GETUTCDATE())",
+            VALUES (@SystemCode, @SystemName, @Provider, @FolderPath, @TransformerType, @FilePattern, @IsActive, @Description, GETUTCDATE(), GETUTCDATE())",
             sourceSystem);
     }
 
@@ -76,6 +76,7 @@ public class SourceSystemRepository : ISourceSystemRepository
             UPDATE SourceSystems 
             SET SystemCode = @SystemCode, 
                 SystemName = @SystemName, 
+                Provider = @Provider,
                 FolderPath = @FolderPath, 
                 TransformerType = @TransformerType, 
                 FilePattern = @FilePattern, 

@@ -42,10 +42,10 @@ interface NavItem {
 
 const navItems: NavItem[] = [
   { text: 'Home', icon: <HomeIcon />, path: '/' },
-  { text: 'Run Worker', icon: <PlayArrowIcon />, path: '/admin/run' },
-  { text: 'Settings', icon: <SettingsIcon />, path: '/admin/settings' },
   { text: 'Source Systems', icon: <StorageIcon />, path: '/admin/source-systems' },
+  { text: 'Run Worker', icon: <PlayArrowIcon />, path: '/admin/run' },
   { text: 'Processing Logs', icon: <HistoryIcon />, path: '/admin/logs' },
+  { text: 'Settings', icon: <SettingsIcon />, path: '/admin/settings' },
 ];
 
 export default function AdminLayout() {

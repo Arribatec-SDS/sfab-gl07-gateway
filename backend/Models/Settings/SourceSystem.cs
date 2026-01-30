@@ -9,6 +9,7 @@ public class SourceSystem
     public int Id { get; set; }
     public string SystemCode { get; set; } = string.Empty;
     public string SystemName { get; set; } = string.Empty;
+    public string Provider { get; set; } = "Local"; // Local or AzureBlob
     public string FolderPath { get; set; } = string.Empty;
     public string TransformerType { get; set; } = "ABWTransaction";
     public string FilePattern { get; set; } = "*.xml";
@@ -26,6 +27,7 @@ public class SourceSystemDto
     public int Id { get; set; }
     public string SystemCode { get; set; } = string.Empty;
     public string SystemName { get; set; } = string.Empty;
+    public string Provider { get; set; } = "Local"; // Local or AzureBlob
     public string FolderPath { get; set; } = string.Empty;
     public string TransformerType { get; set; } = "ABWTransaction";
     public string FilePattern { get; set; } = "*.xml";
@@ -39,6 +41,7 @@ public class SourceSystemDto
             Id = entity.Id,
             SystemCode = entity.SystemCode,
             SystemName = entity.SystemName,
+            Provider = entity.Provider,
             FolderPath = entity.FolderPath,
             TransformerType = entity.TransformerType,
             FilePattern = entity.FilePattern,
@@ -54,6 +57,7 @@ public class SourceSystemDto
             Id = Id,
             SystemCode = SystemCode,
             SystemName = SystemName,
+            Provider = Provider,
             FolderPath = FolderPath,
             TransformerType = TransformerType,
             FilePattern = FilePattern,
@@ -70,6 +74,7 @@ public class CreateSourceSystemRequest
 {
     public string SystemCode { get; set; } = string.Empty;
     public string SystemName { get; set; } = string.Empty;
+    public string Provider { get; set; } = "Local"; // Local or AzureBlob
     public string FolderPath { get; set; } = string.Empty;
     public string TransformerType { get; set; } = "ABWTransaction";
     public string FilePattern { get; set; } = "*.xml";

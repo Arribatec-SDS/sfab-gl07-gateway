@@ -183,7 +183,7 @@ INSERT INTO AppSettings (ParamName, ParamValue, Sensitive, Category, Description
 ('Unit4:ClientId', '', 0, 'Unit4', 'OAuth2 client ID'),
 ('Unit4:ClientSecret', '', 1, 'Unit4', 'OAuth2 client secret (encrypted)'),
 ('Unit4:Scope', 'api', 0, 'Unit4', 'OAuth2 scope'),
-('Unit4:TenantId', '', 0, 'Unit4', 'Unit4 tenant GUID'),
+('Unit4:GrantType', 'client_credentials', 0, 'Unit4', 'OAuth2 grant type'),
 ('AzureStorage:ConnectionString', '', 1, 'AzureStorage', 'Azure Blob connection string (encrypted)'),
 ('AzureStorage:ContainerName', 'gl07-files', 0, 'AzureStorage', 'Blob container name');
 -- Note: InboxFolder, DoneFolder, ErrorFolder removed - now per-system in SourceSystems table

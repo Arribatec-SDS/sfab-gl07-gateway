@@ -37,7 +37,7 @@ public class GL07ProcessingWorker : ITaskHandler<GL07ProcessingParameters>
     private readonly ITaskContext _context;
     private readonly ISourceSystemRepository _sourceSystemRepository;
     private readonly IProcessingLogRepository _processingLogRepository;
-    private readonly IFileSourceService _fileSourceService;
+    private readonly IFileSourceServiceFactory _fileSourceFactory;
     private readonly ITransformationServiceFactory _transformerFactory;
     private readonly IUnit4ApiClient _unit4Client;
 
@@ -46,7 +46,7 @@ public class GL07ProcessingWorker : ITaskHandler<GL07ProcessingParameters>
         ITaskContext context,
         ISourceSystemRepository sourceSystemRepository,
         IProcessingLogRepository processingLogRepository,
-        IFileSourceService fileSourceService,
+        IFileSourceServiceFactory fileSourceFactory,
         ITransformationServiceFactory transformerFactory,
         IUnit4ApiClient unit4Client)
     {
@@ -54,7 +54,7 @@ public class GL07ProcessingWorker : ITaskHandler<GL07ProcessingParameters>
         _context = context;
         _sourceSystemRepository = sourceSystemRepository;
         _processingLogRepository = processingLogRepository;
-        _fileSourceService = fileSourceService;
+        _fileSourceFactory = fileSourceFactory;
         _transformerFactory = transformerFactory;
         _unit4Client = unit4Client;
     }
@@ -153,6 +153,7 @@ public class GL07ProcessingWorker : ITaskHandler<GL07ProcessingParameters>
         _logger.LogInformation("────────────────────────────────────────────────────────────────");
         _logger.LogInformation("Processing source system: {Name} ({Code})",
             sourceSystem.SystemName, sourceSystem.SystemCode);
+        _logger.LogInformation("  Provider: {Provider}", sourceSystem.Provider);
         _logger.LogInformation("  Folder: {Folder}", sourceSystem.FolderPath);
         _logger.LogInformation("  Transformer: {Transformer}", sourceSystem.TransformerType);
         _logger.LogInformation("  Pattern: {Pattern}", sourceSystem.FilePattern);
@@ -164,11 +165,14 @@ public class GL07ProcessingWorker : ITaskHandler<GL07ProcessingParameters>
 
         try
         {
+            // Get the file source service for this source system's provider
+            var fileSourceService = _fileSourceFactory.GetFileSourceService(sourceSystem);
+            
             // Get the transformer for this source system
             var transformer = _transformerFactory.GetTransformer(sourceSystem.TransformerType);
 
             // List files in inbox
-            var files = (await _fileSourceService.ListFilesAsync(sourceSystem)).ToList();
+            var files = (await fileSourceService.ListFilesAsync(sourceSystem)).ToList();
 
             if (!files.Any())
             {
@@ -183,7 +187,7 @@ public class GL07ProcessingWorker : ITaskHandler<GL07ProcessingParameters>
                 cancellationToken.ThrowIfCancellationRequested();
 
                 var (fileSuccess, logEntry, fileException) = await ProcessFileAsync(
-                    sourceSystem, fileName, transformer, dryRun, cancellationToken);
+                    sourceSystem, fileName, transformer, fileSourceService, dryRun, cancellationToken);
 
                 logEntries.Add(logEntry);
                 processed++;
@@ -242,6 +246,7 @@ public class GL07ProcessingWorker : ITaskHandler<GL07ProcessingParameters>
         SourceSystem sourceSystem,
         string fileName,
         ITransformationService transformer,
+        IFileSourceService fileSourceService,
         bool dryRun,
         CancellationToken cancellationToken)
     {
@@ -258,7 +263,7 @@ public class GL07ProcessingWorker : ITaskHandler<GL07ProcessingParameters>
             _logger.LogInformation("    Processing file: {FileName}", fileName);
 
             // Download file content
-            var content = await _fileSourceService.DownloadAsStringAsync(sourceSystem, fileName);
+            var content = await fileSourceService.DownloadAsStringAsync(sourceSystem, fileName);
             _logger.LogDebug("    Downloaded {Length} bytes", content.Length);
 
             // Transform to Unit4 format
@@ -302,18 +307,18 @@ public class GL07ProcessingWorker : ITaskHandler<GL07ProcessingParameters>
             // Move file based on result
             if (logEntry.Status == "Success")
             {
-                await _fileSourceService.MoveToProcessedAsync(sourceSystem, fileName);
+                await fileSourceService.MoveToProcessedAsync(sourceSystem, fileName);
                 _logger.LogDebug("    Moved to archive folder");
 
                 // Save the transformed JSON alongside the XML
                 var jsonOptions = new JsonSerializerOptions { WriteIndented = true };
                 var jsonContent = JsonSerializer.Serialize(request, jsonOptions);
-                await _fileSourceService.SaveJsonToArchiveAsync(sourceSystem, fileName, jsonContent);
+                await fileSourceService.SaveJsonToArchiveAsync(sourceSystem, fileName, jsonContent);
                 _logger.LogDebug("    Saved JSON to archive folder");
             }
             else
             {
-                await _fileSourceService.MoveToErrorAsync(sourceSystem, fileName);
+                await fileSourceService.MoveToErrorAsync(sourceSystem, fileName);
                 _logger.LogDebug("    Moved to error folder");
             }
 
@@ -334,7 +339,7 @@ public class GL07ProcessingWorker : ITaskHandler<GL07ProcessingParameters>
             // Move to error folder
             try
             {
-                await _fileSourceService.MoveToErrorAsync(sourceSystem, fileName);
+                await fileSourceService.MoveToErrorAsync(sourceSystem, fileName);
             }
             catch (Exception moveEx)
             {

@@ -47,7 +47,7 @@ public class AppSettingsService : IAppSettingsService
         }
 
         var value = setting.ParamValue;
-        
+
         // Decrypt if needed and value is encrypted
         if (decrypt && setting.Sensitive && !string.IsNullOrEmpty(value) && value.StartsWith(EncryptedPrefix))
         {
@@ -69,16 +69,17 @@ public class AppSettingsService : IAppSettingsService
     public async Task SetValueAsync(string paramName, string? value)
     {
         var setting = await _repository.GetByNameAsync(paramName);
-        if (setting == null)
-        {
-            _logger.LogWarning("Attempted to update non-existent setting: {ParamName}", paramName);
-            return;
-        }
 
         var valueToStore = value;
 
+        // Determine if this should be encrypted (based on existing setting or key name pattern)
+        var isSensitive = setting?.Sensitive ??
+            paramName.Contains("Secret", StringComparison.OrdinalIgnoreCase) ||
+            paramName.Contains("Password", StringComparison.OrdinalIgnoreCase) ||
+            paramName.Contains("ConnectionString", StringComparison.OrdinalIgnoreCase);
+
         // Encrypt if sensitive and has a value
-        if (setting.Sensitive && !string.IsNullOrEmpty(value))
+        if (isSensitive && !string.IsNullOrEmpty(value))
         {
             // Don't re-encrypt if already encrypted
             if (!value.StartsWith(EncryptedPrefix))
@@ -88,8 +89,26 @@ public class AppSettingsService : IAppSettingsService
             }
         }
 
-        await _repository.UpdateAsync(paramName, valueToStore);
-        _logger.LogInformation("Updated setting: {ParamName}", paramName);
+        if (setting == null)
+        {
+            // Create new setting via upsert
+            var category = paramName.Contains(':') ? paramName.Split(':')[0] : "General";
+            await _repository.UpsertAsync(new AppSetting
+            {
+                Category = category,
+                ParamName = paramName,
+                ParamValue = valueToStore,
+                Description = null,
+                Sensitive = isSensitive
+            });
+            _logger.LogInformation("Created setting: {ParamName}", paramName);
+        }
+        else
+        {
+            // Update existing setting
+            await _repository.UpdateAsync(paramName, valueToStore);
+            _logger.LogInformation("Updated setting: {ParamName}", paramName);
+        }
     }
 
     public async Task<T> GetSettingsGroupAsync<T>(string category) where T : new()
@@ -111,7 +130,7 @@ public class AppSettingsService : IAppSettingsService
             if (property != null && property.CanWrite)
             {
                 var value = setting.ParamValue;
-                
+
                 // Decrypt if sensitive
                 if (setting.Sensitive && !string.IsNullOrEmpty(value) && value.StartsWith(EncryptedPrefix))
                 {
@@ -134,7 +153,7 @@ public class AppSettingsService : IAppSettingsService
                 }
                 catch (Exception ex)
                 {
-                    _logger.LogWarning(ex, "Failed to set property {PropertyName} from setting {ParamName}", 
+                    _logger.LogWarning(ex, "Failed to set property {PropertyName} from setting {ParamName}",
                         propertyName, setting.ParamName);
                 }
             }

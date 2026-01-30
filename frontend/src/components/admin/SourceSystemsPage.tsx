@@ -40,6 +40,7 @@ interface SourceSystem {
   systemCode: string;
   systemName: string;
   description: string | null;
+  provider: string;
   folderPath: string;
   filePattern: string;
   transformerType: string;
@@ -50,16 +51,27 @@ interface SourceSystemRequest {
   systemCode: string;
   systemName: string;
   description: string;
+  provider: string;
   folderPath: string;
   filePattern: string;
   transformerType: string;
   isActive: boolean;
 }
 
+// Helper to join paths without double slashes
+const joinPaths = (basePath: string, relativePath: string): string => {
+  const base = basePath.replace(/[\\/]+$/, ''); // Remove trailing slashes
+  const rel = relativePath.replace(/^[\\/]+/, ''); // Remove leading slashes
+  // Use backslash if base path contains backslash (Windows), otherwise forward slash
+  const separator = basePath.includes('\\') ? '\\' : '/';
+  return `${base}${separator}${rel}`;
+};
+
 const emptySourceSystem: SourceSystemRequest = {
   systemCode: '',
   systemName: '',
   description: '',
+  provider: 'Local',
   folderPath: '',
   filePattern: '*.xml',
   transformerType: 'ABWTransaction',
@@ -75,6 +87,8 @@ export default function SourceSystemsPage() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingSystem, setEditingSystem] = useState<SourceSystem | null>(null);
   const [formData, setFormData] = useState<SourceSystemRequest>(emptySourceSystem);
+  const [localBasePath, setLocalBasePath] = useState<string>('');
+  const [azureContainerName, setAzureContainerName] = useState<string>('');
   const [saving, setSaving] = useState(false);
 
   const fetchSourceSystems = useCallback(async () => {
@@ -86,8 +100,20 @@ export default function SourceSystemsPage() {
       const apiClient = createApiClient();
       apiClient.defaults.headers.common['Authorization'] = `Bearer ${token}`;
       
-      const response = await apiClient.get<SourceSystem[]>('/sourcesystems');
-      setSourceSystems(response.data);
+      // Fetch source systems and settings in parallel
+      const [systemsResponse, settingsResponse] = await Promise.all([
+        apiClient.get<SourceSystem[]>('/sourcesystems'),
+        apiClient.get<{ paramName: string; paramValue: string }[]>('/settings')
+      ]);
+      
+      setSourceSystems(systemsResponse.data);
+      
+      // Extract base paths from settings
+      const settings = settingsResponse.data;
+      const localPath = settings.find(s => s.paramName === 'FileSource:LocalBasePath')?.paramValue || '';
+      const containerName = settings.find(s => s.paramName === 'AzureStorage:ContainerName')?.paramValue || '';
+      setLocalBasePath(localPath);
+      setAzureContainerName(containerName);
     } catch (err: unknown) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to load source systems';
       setError(errorMessage);
@@ -107,6 +133,7 @@ export default function SourceSystemsPage() {
         systemCode: system.systemCode,
         systemName: system.systemName,
         description: system.description || '',
+        provider: system.provider || 'Local',
         folderPath: system.folderPath,
         filePattern: system.filePattern,
         transformerType: system.transformerType,
@@ -243,6 +270,7 @@ export default function SourceSystemsPage() {
               <TableRow>
                 <TableCell>Code</TableCell>
                 <TableCell>Name</TableCell>
+                <TableCell>Provider</TableCell>
                 <TableCell>Folder Path</TableCell>
                 <TableCell>Pattern</TableCell>
                 <TableCell>Transformer</TableCell>
@@ -269,7 +297,21 @@ export default function SourceSystemsPage() {
                     )}
                   </TableCell>
                   <TableCell>
-                    <Typography variant="body2" sx={{ maxWidth: 200, overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                    <Chip 
+                      label={system.provider || 'Local'} 
+                      size="small" 
+                      color={system.provider === 'AzureBlob' ? 'info' : 'default'}
+                    />
+                  </TableCell>
+                  <TableCell>
+                    <Tooltip title="Full path">
+                      <Typography variant="body2" sx={{ maxWidth: 300, overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                        {system.provider === 'AzureBlob' 
+                          ? joinPaths(azureContainerName, system.folderPath)
+                          : joinPaths(localBasePath, system.folderPath)}
+                      </Typography>
+                    </Tooltip>
+                    <Typography variant="caption" color="text.secondary" sx={{ display: 'block' }}>
                       {system.folderPath}
                     </Typography>
                   </TableCell>
@@ -355,14 +397,52 @@ export default function SourceSystemsPage() {
               placeholder="Optional description"
             />
             <TextField
-              label="Folder Path"
+              label="File Source Provider"
+              fullWidth
+              required
+              select
+              value={formData.provider}
+              onChange={(e) => setFormData(prev => ({ ...prev, provider: e.target.value }))}
+              slotProps={{
+                select: {
+                  native: true,
+                },
+              }}
+              helperText="Where files are stored: Local filesystem or Azure Blob Storage"
+            >
+              <option value="Local">Local Filesystem</option>
+              <option value="AzureBlob">Azure Blob Storage</option>
+            </TextField>
+            <TextField
+              label="Relative Folder Path"
               fullWidth
               required
               value={formData.folderPath}
               onChange={(e) => setFormData(prev => ({ ...prev, folderPath: e.target.value }))}
-              placeholder="C:\Data\GL07\Input"
-              helperText="Local file system path to watch for XML files"
+              placeholder={formData.provider === 'AzureBlob' ? 'erp/inbox' : 'erp'}
+              helperText={
+                formData.provider === 'AzureBlob' 
+                  ? 'Blob prefix path within the container (e.g., erp/inbox)' 
+                  : 'Relative folder path from base path (e.g., erp)'
+              }
             />
+            {/* Full path preview */}
+            <Box sx={{ 
+              p: 1.5, 
+              bgcolor: 'action.hover', 
+              borderRadius: 1,
+              border: '1px solid',
+              borderColor: 'divider'
+            }}>
+              <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 0.5 }}>
+                Full Path Preview
+              </Typography>
+              <Typography variant="body2" sx={{ fontFamily: 'monospace', wordBreak: 'break-all' }}>
+                {formData.provider === 'AzureBlob'
+                  ? joinPaths(azureContainerName || '(container)', formData.folderPath || '(folder)')
+                  : joinPaths(localBasePath || '(base path)', formData.folderPath || '(folder)')}
+              </Typography>
+            </Box>
             <TextField
               label="File Pattern"
               fullWidth

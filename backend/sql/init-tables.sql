@@ -32,6 +32,8 @@ BEGIN
         Id INT IDENTITY(1,1) PRIMARY KEY,
         SystemCode NVARCHAR(50) NOT NULL,           -- e.g., 'bookkeeping', 'payroll'
         SystemName NVARCHAR(100) NOT NULL,          -- e.g., 'Bookkeeping System'
+        Provider NVARCHAR(20) NOT NULL              -- 'Local' or 'AzureBlob'
+            DEFAULT 'Local',
         FolderPath NVARCHAR(255) NOT NULL,          -- e.g., 'bookkeeping' (relative path)
         TransformerType NVARCHAR(100) NOT NULL      -- e.g., 'ABWTransaction', 'CustomCSV'
             DEFAULT 'ABWTransaction',
@@ -46,6 +48,13 @@ BEGIN
 
     CREATE INDEX IX_SourceSystems_IsActive ON SourceSystems(IsActive);
     CREATE INDEX IX_SourceSystems_SystemCode ON SourceSystems(SystemCode);
+END
+GO
+
+-- Add Provider column if it doesn't exist (migration for existing tables)
+IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('SourceSystems') AND name = 'Provider')
+BEGIN
+    ALTER TABLE SourceSystems ADD Provider NVARCHAR(20) NOT NULL DEFAULT 'Local';
 END
 GO
 
@@ -88,15 +97,14 @@ IF NOT EXISTS (SELECT 1 FROM AppSettings WHERE ParamName = 'Unit4:BaseUrl')
 BEGIN
     INSERT INTO AppSettings (ParamName, ParamValue, Sensitive, Category, Description) VALUES
     ('Unit4:BaseUrl', 'https://no01-npe.erpx-api.unit4cloud.com', 0, 'Unit4', 'Unit4 API base URL'),
-    ('Unit4:TokenEndpoint', 'https://auth.unit4cloud.com/oauth/token', 0, 'Unit4', 'OAuth2 token endpoint'),
+    ('Unit4:TokenUrl', 'https://auth.unit4cloud.com/oauth/token', 0, 'Unit4', 'OAuth2 token endpoint'),
     ('Unit4:ClientId', '', 0, 'Unit4', 'OAuth2 client ID'),
     ('Unit4:ClientSecret', '', 1, 'Unit4', 'OAuth2 client secret (encrypted)'),
     ('Unit4:Scope', 'api', 0, 'Unit4', 'OAuth2 scope'),
-    ('Unit4:TenantId', '', 0, 'Unit4', 'Unit4 tenant GUID'),
+    ('Unit4:GrantType', 'client_credentials', 0, 'Unit4', 'OAuth2 grant type'),
+    ('FileSource:LocalBasePath', 'C:/dev/gl07-files', 0, 'FileSource', 'Base path for local file system'),
     ('AzureStorage:ConnectionString', '', 1, 'AzureStorage', 'Azure Blob connection string (encrypted)'),
-    ('AzureStorage:ContainerName', 'gl07-files', 0, 'AzureStorage', 'Blob container name'),
-    ('FileSource:Provider', 'Local', 0, 'FileSource', 'File source provider: Local or AzureBlob'),
-    ('FileSource:LocalBasePath', 'C:/dev/gl07-files', 0, 'FileSource', 'Base path for local file system (development)');
+    ('AzureStorage:ContainerName', 'gl07-files', 0, 'AzureStorage', 'Blob container name');
 END
 GO
 
@@ -105,8 +113,8 @@ GO
 -- =====================================================
 IF NOT EXISTS (SELECT 1 FROM SourceSystems WHERE SystemCode = 'bookkeeping')
 BEGIN
-    INSERT INTO SourceSystems (SystemCode, SystemName, FolderPath, TransformerType, FilePattern, Description) VALUES
-    ('bookkeeping', 'Bookkeeping System', 'bookkeeping', 'ABWTransaction', '*.xml', 'Main bookkeeping system - ABWTransaction XML format'),
-    ('payroll', 'Payroll System', 'payroll', 'ABWTransaction', '*.xml', 'Payroll transactions - ABWTransaction XML format');
+    INSERT INTO SourceSystems (SystemCode, SystemName, Provider, FolderPath, TransformerType, FilePattern, Description) VALUES
+    ('bookkeeping', 'Bookkeeping System', 'Local', 'bookkeeping', 'ABWTransaction', '*.xml', 'Main bookkeeping system - ABWTransaction XML format'),
+    ('payroll', 'Payroll System', 'Local', 'payroll', 'ABWTransaction', '*.xml', 'Payroll transactions - ABWTransaction XML format');
 END
 GO
