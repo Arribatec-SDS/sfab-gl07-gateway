@@ -22,7 +22,7 @@ public class ProcessingLogRepository : IProcessingLogRepository
 
     public async Task<IEnumerable<ProcessingLog>> GetAllAsync(int? limit = 100)
     {
-        using var connection = await _dbService.CreateProductConnectionAsync();
+        using var connection = (await _dbService.CreateProductConnectionAsync())!;
         var sql = @"
             SELECT TOP (@Limit) 
                 p.Id, p.SourceSystemId, p.FileName, p.Status, p.VoucherCount, p.TransactionCount, 
@@ -46,7 +46,7 @@ public class ProcessingLogRepository : IProcessingLogRepository
 
     public async Task<IEnumerable<ProcessingLog>> GetBySourceSystemAsync(int sourceSystemId, int? limit = 100)
     {
-        using var connection = await _dbService.CreateProductConnectionAsync();
+        using var connection = (await _dbService.CreateProductConnectionAsync())!;
         var sql = @"
             SELECT TOP (@Limit) 
                 p.Id, p.SourceSystemId, p.FileName, p.Status, p.VoucherCount, p.TransactionCount, 
@@ -71,7 +71,7 @@ public class ProcessingLogRepository : IProcessingLogRepository
 
     public async Task<IEnumerable<ProcessingLog>> GetByStatusAsync(string status, int? limit = 100)
     {
-        using var connection = await _dbService.CreateProductConnectionAsync();
+        using var connection = (await _dbService.CreateProductConnectionAsync())!;
         var sql = @"
             SELECT TOP (@Limit) 
                 p.Id, p.SourceSystemId, p.FileName, p.Status, p.VoucherCount, p.TransactionCount, 
@@ -96,7 +96,7 @@ public class ProcessingLogRepository : IProcessingLogRepository
 
     public async Task<ProcessingLog?> GetByIdAsync(int id)
     {
-        using var connection = await _dbService.CreateProductConnectionAsync();
+        using var connection = (await _dbService.CreateProductConnectionAsync())!;
         var sql = @"
             SELECT 
                 p.Id, p.SourceSystemId, p.FileName, p.Status, p.VoucherCount, p.TransactionCount, 
@@ -122,7 +122,7 @@ public class ProcessingLogRepository : IProcessingLogRepository
 
     public async Task<int> CreateAsync(ProcessingLog log)
     {
-        using var connection = await _dbService.CreateProductConnectionAsync();
+        using var connection = (await _dbService.CreateProductConnectionAsync())!;
         return await connection.QuerySingleAsync<int>(@"
             INSERT INTO ProcessingLog (SourceSystemId, FileName, Status, VoucherCount, TransactionCount, ErrorMessage, ProcessedAt, DurationMs)
             OUTPUT INSERTED.Id
@@ -135,7 +135,7 @@ public class ProcessingLogRepository : IProcessingLogRepository
         var logList = logs.ToList();
         if (!logList.Any()) return;
 
-        using var connection = await _dbService.CreateProductConnectionAsync();
+        using var connection = (await _dbService.CreateProductConnectionAsync())!;
         await connection.ExecuteAsync(@"
             INSERT INTO ProcessingLog (SourceSystemId, FileName, Status, VoucherCount, TransactionCount, ErrorMessage, ProcessedAt, DurationMs)
             VALUES (@SourceSystemId, @FileName, @Status, @VoucherCount, @TransactionCount, @ErrorMessage, GETUTCDATE(), @DurationMs)",
@@ -144,7 +144,7 @@ public class ProcessingLogRepository : IProcessingLogRepository
 
     public async Task UpdateAsync(ProcessingLog log)
     {
-        using var connection = await _dbService.CreateProductConnectionAsync();
+        using var connection = (await _dbService.CreateProductConnectionAsync())!;
         await connection.ExecuteAsync(@"
             UPDATE ProcessingLog 
             SET Status = @Status, 

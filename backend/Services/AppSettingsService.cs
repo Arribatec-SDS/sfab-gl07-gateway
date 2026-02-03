@@ -169,7 +169,7 @@ public class AppSettingsService : IAppSettingsService
 public class Unit4Settings
 {
     public string BaseUrl { get; set; } = string.Empty;
-    public string TokenEndpoint { get; set; } = string.Empty;
+    public string TokenUrl { get; set; } = string.Empty;
     public string ClientId { get; set; } = string.Empty;
     public string ClientSecret { get; set; } = string.Empty;
     public string Scope { get; set; } = "api";

@@ -47,7 +47,7 @@ public class DatabaseInitializer : IDatabaseInitializer
         {
             _logger.LogInformation("Running database schema initialization/migration...");
 
-            using var connection = await _dbService.CreateProductConnectionAsync();
+            using var connection = (await _dbService.CreateProductConnectionAsync())!;
 
             // Find the SQL script
             var sqlPath = FindInitScript();

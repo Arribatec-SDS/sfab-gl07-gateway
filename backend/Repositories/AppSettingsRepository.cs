@@ -22,14 +22,14 @@ public class AppSettingsRepository : IAppSettingsRepository
 
     public async Task<IEnumerable<AppSetting>> GetAllAsync()
     {
-        using var connection = await _dbService.CreateProductConnectionAsync();
+        using var connection = (await _dbService.CreateProductConnectionAsync())!;
         return await connection.QueryAsync<AppSetting>(
             "SELECT Id, ParamName, ParamValue, Sensitive, Category, Description, CreatedAt, UpdatedAt FROM AppSettings ORDER BY Category, ParamName");
     }
 
     public async Task<AppSetting?> GetByNameAsync(string paramName)
     {
-        using var connection = await _dbService.CreateProductConnectionAsync();
+        using var connection = (await _dbService.CreateProductConnectionAsync())!;
         return await connection.QueryFirstOrDefaultAsync<AppSetting>(
             "SELECT Id, ParamName, ParamValue, Sensitive, Category, Description, CreatedAt, UpdatedAt FROM AppSettings WHERE ParamName = @ParamName",
             new { ParamName = paramName });
@@ -37,7 +37,7 @@ public class AppSettingsRepository : IAppSettingsRepository
 
     public async Task<IEnumerable<AppSetting>> GetByCategoryAsync(string category)
     {
-        using var connection = await _dbService.CreateProductConnectionAsync();
+        using var connection = (await _dbService.CreateProductConnectionAsync())!;
         return await connection.QueryAsync<AppSetting>(
             "SELECT Id, ParamName, ParamValue, Sensitive, Category, Description, CreatedAt, UpdatedAt FROM AppSettings WHERE Category = @Category ORDER BY ParamName",
             new { Category = category });
@@ -45,7 +45,7 @@ public class AppSettingsRepository : IAppSettingsRepository
 
     public async Task UpdateAsync(string paramName, string? paramValue)
     {
-        using var connection = await _dbService.CreateProductConnectionAsync();
+        using var connection = (await _dbService.CreateProductConnectionAsync())!;
         await connection.ExecuteAsync(
             "UPDATE AppSettings SET ParamValue = @ParamValue, UpdatedAt = GETUTCDATE() WHERE ParamName = @ParamName",
             new { ParamName = paramName, ParamValue = paramValue });
@@ -53,8 +53,8 @@ public class AppSettingsRepository : IAppSettingsRepository
 
     public async Task UpsertAsync(AppSetting setting)
     {
-        using var connection = await _dbService.CreateProductConnectionAsync();
-        
+        using var connection = (await _dbService.CreateProductConnectionAsync())!;
+
         var existing = await GetByNameAsync(setting.ParamName);
         if (existing != null)
         {

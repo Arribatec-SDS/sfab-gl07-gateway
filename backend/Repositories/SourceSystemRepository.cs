@@ -27,7 +27,7 @@ public class SourceSystemRepository : ISourceSystemRepository
 
     public async Task<IEnumerable<SourceSystem>> GetAllAsync()
     {
-        using var connection = await _dbService.CreateProductConnectionAsync();
+        using var connection = (await _dbService.CreateProductConnectionAsync())!;
         return await connection.QueryAsync<SourceSystem, Gl07ReportSetup, SourceSystem>($@"
             SELECT {SelectColumns},
                    g.Id, g.SetupCode, g.SetupName
@@ -44,7 +44,7 @@ public class SourceSystemRepository : ISourceSystemRepository
 
     public async Task<IEnumerable<SourceSystem>> GetActiveAsync()
     {
-        using var connection = await _dbService.CreateProductConnectionAsync();
+        using var connection = (await _dbService.CreateProductConnectionAsync())!;
         return await connection.QueryAsync<SourceSystem, Gl07ReportSetup, SourceSystem>($@"
             SELECT {SelectColumns},
                    g.Id, g.SetupCode, g.SetupName
@@ -62,7 +62,7 @@ public class SourceSystemRepository : ISourceSystemRepository
 
     public async Task<SourceSystem?> GetByIdAsync(int id)
     {
-        using var connection = await _dbService.CreateProductConnectionAsync();
+        using var connection = (await _dbService.CreateProductConnectionAsync())!;
         var results = await connection.QueryAsync<SourceSystem, Gl07ReportSetup, SourceSystem>($@"
             SELECT {SelectColumns},
                    g.Id, g.SetupCode, g.SetupName
@@ -82,7 +82,7 @@ public class SourceSystemRepository : ISourceSystemRepository
 
     public async Task<SourceSystem?> GetByCodeAsync(string systemCode)
     {
-        using var connection = await _dbService.CreateProductConnectionAsync();
+        using var connection = (await _dbService.CreateProductConnectionAsync())!;
         var results = await connection.QueryAsync<SourceSystem, Gl07ReportSetup, SourceSystem>($@"
             SELECT {SelectColumns},
                    g.Id, g.SetupCode, g.SetupName
@@ -102,7 +102,7 @@ public class SourceSystemRepository : ISourceSystemRepository
 
     public async Task<int> CreateAsync(SourceSystem sourceSystem)
     {
-        using var connection = await _dbService.CreateProductConnectionAsync();
+        using var connection = (await _dbService.CreateProductConnectionAsync())!;
         return await connection.QuerySingleAsync<int>(@"
             INSERT INTO SourceSystems (SystemCode, SystemName, Provider, FolderPath, TransformerType, FilePattern, 
                                        IsActive, Description, Gl07ReportSetupId, Interface, TransactionType, 
@@ -116,7 +116,7 @@ public class SourceSystemRepository : ISourceSystemRepository
 
     public async Task UpdateAsync(SourceSystem sourceSystem)
     {
-        using var connection = await _dbService.CreateProductConnectionAsync();
+        using var connection = (await _dbService.CreateProductConnectionAsync())!;
         await connection.ExecuteAsync(@"
             UPDATE SourceSystems 
             SET SystemCode = @SystemCode, 
@@ -138,7 +138,7 @@ public class SourceSystemRepository : ISourceSystemRepository
 
     public async Task DeleteAsync(int id)
     {
-        using var connection = await _dbService.CreateProductConnectionAsync();
+        using var connection = (await _dbService.CreateProductConnectionAsync())!;
         await connection.ExecuteAsync("DELETE FROM SourceSystems WHERE Id = @Id", new { Id = id });
     }
 }

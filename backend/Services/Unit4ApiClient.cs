@@ -76,12 +76,39 @@ public class Unit4ApiClient : IUnit4ApiClient
             };
         }
 
-        var result = JsonSerializer.Deserialize<Unit4TransactionBatchResponse>(responseContent,
-            new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+        // Handle empty successful responses (some APIs return 200/201/204 with no body)
+        if (string.IsNullOrWhiteSpace(responseContent))
+        {
+            _logger.LogInformation("Unit4 API returned success with empty body: {StatusCode}", response.StatusCode);
+            return new Unit4TransactionBatchResponse
+            {
+                Status = "Success",
+                Message = $"HTTP {(int)response.StatusCode}: Request accepted"
+            };
+        }
 
-        _logger.LogInformation("Unit4 API response: {Status}", result?.Status ?? "Unknown");
+        try
+        {
+            var result = JsonSerializer.Deserialize<Unit4TransactionBatchResponse>(responseContent,
+                new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
 
-        return result ?? new Unit4TransactionBatchResponse { Status = "Unknown", Message = "Empty response" };
+            _logger.LogInformation("Unit4 API response: {Status}", result?.Status ?? "Unknown");
+
+            return result ?? new Unit4TransactionBatchResponse { Status = "Success", Message = "Request accepted" };
+        }
+        catch (JsonException ex)
+        {
+            // Log the actual response content for debugging
+            _logger.LogWarning("Could not parse Unit4 response as JSON: {Error}. StatusCode: {StatusCode}, ContentLength: {Length}, Content: {Content}",
+                ex.Message, response.StatusCode, responseContent?.Length ?? 0, responseContent);
+            
+            // If we got a success status code but can't parse the response, treat it as success
+            return new Unit4TransactionBatchResponse
+            {
+                Status = "Success",
+                Message = $"HTTP {(int)response.StatusCode}: Request accepted (response not JSON)"
+            };
+        }
     }
 
     public async Task<bool> TestConnectionAsync()
@@ -113,7 +140,7 @@ public class Unit4ApiClient : IUnit4ApiClient
 
             var settings = await _settingsService.GetSettingsGroupAsync<Unit4Settings>("Unit4");
 
-            if (string.IsNullOrEmpty(settings.TokenEndpoint) ||
+            if (string.IsNullOrEmpty(settings.TokenUrl) ||
                 string.IsNullOrEmpty(settings.ClientId) ||
                 string.IsNullOrEmpty(settings.ClientSecret))
             {
@@ -129,7 +156,7 @@ public class Unit4ApiClient : IUnit4ApiClient
             };
 
             var tokenResponse = await _httpClient.PostAsync(
-                settings.TokenEndpoint,
+                settings.TokenUrl,
                 new FormUrlEncodedContent(tokenRequest));
 
             if (!tokenResponse.IsSuccessStatusCode)

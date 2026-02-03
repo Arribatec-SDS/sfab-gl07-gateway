@@ -211,7 +211,7 @@ IF NOT EXISTS (SELECT 1 FROM AppSettings WHERE ParamName = 'Unit4:BaseUrl')
 BEGIN
     INSERT INTO AppSettings (ParamName, ParamValue, Sensitive, Category, Description) VALUES
     ('Unit4:BaseUrl', 'https://no01-npe.erpx-api.unit4cloud.com', 0, 'Unit4', 'Unit4 API base URL'),
-    ('Unit4:TokenUrl', 'https://auth.unit4cloud.com/oauth/token', 0, 'Unit4', 'OAuth2 token endpoint'),
+    ('Unit4:TokenUrl', 'https://s-no-ids1-preview.unit4cloud.com/identity/connect/token', 0, 'Unit4', 'OAuth2 token endpoint'),
     ('Unit4:ClientId', '', 0, 'Unit4', 'OAuth2 client ID'),
     ('Unit4:ClientSecret', '', 1, 'Unit4', 'OAuth2 client secret (encrypted)'),
     ('Unit4:Scope', 'api', 0, 'Unit4', 'OAuth2 scope'),

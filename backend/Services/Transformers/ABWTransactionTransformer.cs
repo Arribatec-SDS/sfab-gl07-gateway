@@ -216,7 +216,7 @@ public class ABWTransactionTransformer : ITransformationService
 
         return new Models.Unit4.Amounts
         {
-            DebitCreditFlag = amounts.DcFlag, // 1 = Debit, -1 = Credit per XSD
+            DebitCreditFlag = amounts.DcFlag ?? 1, // Use XML value (1 = Debit, -1 = Credit), default to 1 (Debit) if missing
             Amount = amounts.Amount,
             CurrencyAmount = amounts.CurrAmount,
             CurrencyCode = currency

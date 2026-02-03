@@ -218,8 +218,8 @@ export default function ProcessingLogsPage() {
               </TableHead>
               <TableBody>
                 {logs.map((log) => (
-                  <>
-                    <TableRow key={log.id} hover>
+                  <React.Fragment key={log.id}>
+                    <TableRow hover>
                       <TableCell>
                         <IconButton
                           size="small"
@@ -298,7 +298,7 @@ export default function ProcessingLogsPage() {
                         </Collapse>
                       </TableCell>
                     </TableRow>
-                  </>
+                  </React.Fragment>
                 ))}
               </TableBody>
             </Table>
