@@ -1,5 +1,6 @@
 using Arribatec.Nexus.Client.Extensions;
 using Arribatec.Nexus.Client.TaskExecution;
+using SfabGl07Gateway.Api.Middleware;
 using SfabGl07Gateway.Api.Repositories;
 using SfabGl07Gateway.Api.Services;
 using SfabGl07Gateway.Api.Services.Transformers;
@@ -27,6 +28,7 @@ builder.Services.AddDataProtection();
 builder.Services.AddScoped<IAppSettingsRepository, AppSettingsRepository>();
 builder.Services.AddScoped<ISourceSystemRepository, SourceSystemRepository>();
 builder.Services.AddScoped<IProcessingLogRepository, ProcessingLogRepository>();
+builder.Services.AddScoped<IGl07ReportSetupRepository, Gl07ReportSetupRepository>();
 
 // Services
 builder.Services.AddScoped<IAppSettingsService, AppSettingsService>();
@@ -55,7 +57,6 @@ builder.Services.AddSwaggerGen();
 
 var app = builder.Build();
 
-
 // Configure pipeline
 if (app.Environment.IsDevelopment())
 {
@@ -64,9 +65,10 @@ if (app.Environment.IsDevelopment())
 }
 
 // CRITICAL: Correct middleware order for v2.2.0
-app.UseCors();                  // 2. CORS
-app.UseAuthentication();        // 3. Validate JWT token
-app.UseArribatecNexus();  // ← Then context middleware
+app.UseCors();                  // 1. CORS
+app.UseAuthentication();        // 2. Validate JWT token
+app.UseArribatecNexus();        // 3. Context middleware
+app.UseDatabaseInitialization(); // 4. Initialize DB on first authenticated request
 app.UseAuthorization();         // 5. Check roles/policies
 app.MapControllers();
 

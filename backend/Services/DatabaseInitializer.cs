@@ -45,22 +45,9 @@ public class DatabaseInitializer : IDatabaseInitializer
 
         try
         {
-            _logger.LogInformation("Checking database schema...");
+            _logger.LogInformation("Running database schema initialization/migration...");
 
             using var connection = await _dbService.CreateProductConnectionAsync();
-
-            // Check if tables already exist
-            var tablesExist = await connection.QueryFirstOrDefaultAsync<int>(
-                @"SELECT COUNT(*) FROM sys.tables 
-                  WHERE name IN ('AppSettings', 'SourceSystems', 'ProcessingLog')");
-
-            if (tablesExist >= 3)
-            {
-                _logger.LogInformation("Database schema already exists ({TableCount} tables found)", tablesExist);
-                return;
-            }
-
-            _logger.LogInformation("Initializing database schema ({TableCount}/3 tables exist)...", tablesExist);
 
             // Find the SQL script
             var sqlPath = FindInitScript();
@@ -73,16 +60,27 @@ public class DatabaseInitializer : IDatabaseInitializer
             // Read and execute the script
             var sql = await File.ReadAllTextAsync(sqlPath, cancellationToken);
 
-            // Split by GO statements and execute each batch
-            var batches = sql.Split(new[] { "\nGO\n", "\nGO\r\n", "\r\nGO\r\n", "\r\nGO\n" },
-                StringSplitOptions.RemoveEmptyEntries);
+            // Split by GO statements (handles various line ending formats)
+            var batches = System.Text.RegularExpressions.Regex.Split(sql, @"^\s*GO\s*$",
+                System.Text.RegularExpressions.RegexOptions.Multiline | System.Text.RegularExpressions.RegexOptions.IgnoreCase);
 
+            var batchNumber = 0;
             foreach (var batch in batches)
             {
+                batchNumber++;
                 var trimmedBatch = batch.Trim();
                 if (!string.IsNullOrWhiteSpace(trimmedBatch))
                 {
-                    await connection.ExecuteAsync(trimmedBatch);
+                    try
+                    {
+                        await connection.ExecuteAsync(trimmedBatch);
+                    }
+                    catch (Exception ex)
+                    {
+                        // Log but continue - some migrations may fail if already applied
+                        _logger.LogWarning(ex, "Batch {BatchNumber} failed (may be expected if already applied): {Message}",
+                            batchNumber, ex.Message);
+                    }
                 }
             }
 

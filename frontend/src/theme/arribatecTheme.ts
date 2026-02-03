@@ -1,8 +1,9 @@
-import { createTheme, alpha } from '@mui/material/styles';
+import { alpha, createTheme } from '@mui/material/styles';
 
-// Arribatec Brand Colors (from official branding guidelines)
+// App Colors
 export const arribatecColors = {
-  rustyRed: '#A95F55',      // Primary accent, symbols, badges
+  teal: '#003d4d',          // Primary accent - teal/greenish
+  tealLight: '#00515f',     // Lighter teal for hover states
   darkBlue: '#18272F',      // Text, backgrounds, headers
   oceanBlue: '#5E7898',     // Secondary accent
   gold: '#C2AC6F',          // Highlights, premium elements
@@ -17,14 +18,14 @@ export const arribatecColors = {
   info: '#5E7898',          // Using Ocean Blue for info
 };
 
-// Create the Arribatec MUI Theme
+// Create the MUI Theme
 const arribatecTheme = createTheme({
   palette: {
     mode: 'light',
     primary: {
-      main: arribatecColors.rustyRed,
-      light: alpha(arribatecColors.rustyRed, 0.7),
-      dark: '#8B4D45',
+      main: arribatecColors.teal,
+      light: alpha(arribatecColors.teal, 0.7),
+      dark: arribatecColors.tealLight,
       contrastText: arribatecColors.white,
     },
     secondary: {
@@ -172,31 +173,58 @@ const arribatecTheme = createTheme({
           },
         },
         containedPrimary: {
-          background: `linear-gradient(135deg, ${arribatecColors.rustyRed} 0%, #8B4D45 100%)`,
+          background: `linear-gradient(135deg, ${arribatecColors.teal} 0%, #00515f 100%)`,
+          color: arribatecColors.white,
           '&:hover': {
-            background: `linear-gradient(135deg, #8B4D45 0%, ${arribatecColors.rustyRed} 100%)`,
+            background: `linear-gradient(135deg, #00515f 0%, ${arribatecColors.teal} 100%)`,
+            color: arribatecColors.white,
+          },
+          '&:active': {
+            color: arribatecColors.white,
+          },
+          '&:focus': {
+            color: arribatecColors.white,
+          },
+          '&.Mui-focusVisible': {
+            color: arribatecColors.white,
+          },
+          '&.Mui-disabled': {
+            background: `linear-gradient(135deg, ${arribatecColors.teal} 0%, #00515f 100%)`,
+            color: arribatecColors.white,
+            opacity: 0.7,
           },
         },
         containedSecondary: {
           background: `linear-gradient(135deg, ${arribatecColors.oceanBlue} 0%, #4A5F78 100%)`,
+          color: arribatecColors.white,
           '&:hover': {
             background: `linear-gradient(135deg, #4A5F78 0%, ${arribatecColors.oceanBlue} 100%)`,
+            color: arribatecColors.white,
+          },
+          '&:active': {
+            color: arribatecColors.white,
+          },
+          '&:focus': {
+            color: arribatecColors.white,
+          },
+          '&.Mui-focusVisible': {
+            color: arribatecColors.white,
           },
         },
         outlined: {
           borderWidth: 2,
           '&:hover': {
             borderWidth: 2,
-            backgroundColor: alpha(arribatecColors.rustyRed, 0.04),
+            backgroundColor: alpha(arribatecColors.teal, 0.04),
           },
         },
         outlinedPrimary: {
-          borderColor: arribatecColors.rustyRed,
-          color: arribatecColors.rustyRed,
+          borderColor: arribatecColors.teal,
+          color: arribatecColors.teal,
         },
         text: {
           '&:hover': {
-            backgroundColor: alpha(arribatecColors.rustyRed, 0.08),
+            backgroundColor: alpha(arribatecColors.teal, 0.08),
           },
         },
       },
@@ -276,7 +304,7 @@ const arribatecTheme = createTheme({
       styleOverrides: {
         root: {
           '&:hover': {
-            backgroundColor: alpha(arribatecColors.rustyRed, 0.04),
+            backgroundColor: alpha(arribatecColors.teal, 0.04),
           },
           '&:nth-of-type(even)': {
             backgroundColor: alpha(arribatecColors.almostWhite, 0.5),
@@ -297,7 +325,7 @@ const arribatecTheme = createTheme({
     MuiAvatar: {
       styleOverrides: {
         root: {
-          backgroundColor: arribatecColors.rustyRed,
+          backgroundColor: arribatecColors.teal,
           color: arribatecColors.white,
           fontWeight: 600,
         },
@@ -309,7 +337,7 @@ const arribatecTheme = createTheme({
         indicator: {
           height: 3,
           borderRadius: '3px 3px 0 0',
-          backgroundColor: arribatecColors.rustyRed,
+          backgroundColor: arribatecColors.teal,
         },
       },
     },
@@ -322,7 +350,7 @@ const arribatecTheme = createTheme({
           textTransform: 'none',
           minHeight: 56,
           '&.Mui-selected': {
-            color: arribatecColors.rustyRed,
+            color: arribatecColors.teal,
           },
         },
       },
@@ -374,7 +402,7 @@ const arribatecTheme = createTheme({
     MuiCircularProgress: {
       styleOverrides: {
         root: {
-          color: arribatecColors.rustyRed,
+          color: arribatecColors.teal,
         },
       },
     },
@@ -383,11 +411,11 @@ const arribatecTheme = createTheme({
       styleOverrides: {
         root: {
           borderRadius: 4,
-          backgroundColor: alpha(arribatecColors.rustyRed, 0.15),
+          backgroundColor: alpha(arribatecColors.teal, 0.15),
         },
         bar: {
           borderRadius: 4,
-          backgroundColor: arribatecColors.rustyRed,
+          backgroundColor: arribatecColors.teal,
         },
       },
     },
@@ -406,10 +434,10 @@ const arribatecTheme = createTheme({
           '& .MuiOutlinedInput-root': {
             borderRadius: 8,
             '&:hover .MuiOutlinedInput-notchedOutline': {
-              borderColor: arribatecColors.rustyRed,
+              borderColor: arribatecColors.teal,
             },
             '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
-              borderColor: arribatecColors.rustyRed,
+              borderColor: arribatecColors.teal,
               borderWidth: 2,
             },
           },
@@ -423,7 +451,7 @@ const arribatecTheme = createTheme({
         root: {
           color: alpha(arribatecColors.darkBlue, 0.6),
           '&.Mui-checked': {
-            color: arribatecColors.rustyRed,
+            color: arribatecColors.teal,
           },
           '&.Mui-disabled': {
             color: alpha(arribatecColors.darkBlue, 0.3),
@@ -437,7 +465,7 @@ const arribatecTheme = createTheme({
         root: {
           color: alpha(arribatecColors.darkBlue, 0.6),
           '&.Mui-checked': {
-            color: arribatecColors.rustyRed,
+            color: arribatecColors.teal,
           },
         },
       },
@@ -447,9 +475,9 @@ const arribatecTheme = createTheme({
       styleOverrides: {
         switchBase: {
           '&.Mui-checked': {
-            color: arribatecColors.rustyRed,
+            color: arribatecColors.teal,
             '& + .MuiSwitch-track': {
-              backgroundColor: arribatecColors.rustyRed,
+              backgroundColor: arribatecColors.teal,
               opacity: 0.7,
             },
           },
@@ -463,11 +491,11 @@ const arribatecTheme = createTheme({
     MuiSlider: {
       styleOverrides: {
         root: {
-          color: arribatecColors.rustyRed,
+          color: arribatecColors.teal,
         },
         thumb: {
           '&:hover, &.Mui-focusVisible': {
-            boxShadow: `0px 0px 0px 8px ${alpha(arribatecColors.rustyRed, 0.16)}`,
+            boxShadow: `0px 0px 0px 8px ${alpha(arribatecColors.teal, 0.16)}`,
           },
         },
         valueLabel: {
@@ -480,7 +508,7 @@ const arribatecTheme = createTheme({
       styleOverrides: {
         root: {
           '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
-            borderColor: arribatecColors.rustyRed,
+            borderColor: arribatecColors.teal,
           },
         },
       },
@@ -490,7 +518,7 @@ const arribatecTheme = createTheme({
       styleOverrides: {
         root: {
           '&.Mui-focused': {
-            color: arribatecColors.rustyRed,
+            color: arribatecColors.teal,
           },
         },
       },
@@ -500,7 +528,7 @@ const arribatecTheme = createTheme({
       styleOverrides: {
         root: {
           '&.Mui-focused': {
-            color: arribatecColors.rustyRed,
+            color: arribatecColors.teal,
           },
         },
       },
@@ -510,10 +538,10 @@ const arribatecTheme = createTheme({
       styleOverrides: {
         root: {
           '&:after': {
-            borderBottomColor: arribatecColors.rustyRed,
+            borderBottomColor: arribatecColors.teal,
           },
           '&.Mui-focused:after': {
-            borderBottomColor: arribatecColors.rustyRed,
+            borderBottomColor: arribatecColors.teal,
           },
         },
       },
@@ -523,10 +551,10 @@ const arribatecTheme = createTheme({
     MuiLink: {
       styleOverrides: {
         root: {
-          color: arribatecColors.rustyRed,
-          textDecorationColor: alpha(arribatecColors.rustyRed, 0.4),
+          color: arribatecColors.teal,
+          textDecorationColor: alpha(arribatecColors.teal, 0.4),
           '&:hover': {
-            color: '#8B4D45',
+            color: '#00515f',
           },
         },
       },
@@ -536,11 +564,11 @@ const arribatecTheme = createTheme({
       styleOverrides: {
         root: {
           '&:hover': {
-            backgroundColor: alpha(arribatecColors.rustyRed, 0.08),
+            backgroundColor: alpha(arribatecColors.teal, 0.08),
           },
         },
         colorPrimary: {
-          color: arribatecColors.rustyRed,
+          color: arribatecColors.teal,
         },
       },
     },
@@ -548,7 +576,7 @@ const arribatecTheme = createTheme({
     MuiBadge: {
       styleOverrides: {
         colorPrimary: {
-          backgroundColor: arribatecColors.rustyRed,
+          backgroundColor: arribatecColors.teal,
           color: arribatecColors.white,
         },
         colorSecondary: {
@@ -564,9 +592,9 @@ const arribatecTheme = createTheme({
           boxShadow: '0px 4px 12px rgba(169, 95, 85, 0.25)',
         },
         primary: {
-          backgroundColor: arribatecColors.rustyRed,
+          backgroundColor: arribatecColors.teal,
           '&:hover': {
-            backgroundColor: '#8B4D45',
+            backgroundColor: '#00515f',
           },
         },
         secondary: {
@@ -597,12 +625,12 @@ const arribatecTheme = createTheme({
       styleOverrides: {
         root: {
           '&:hover': {
-            backgroundColor: alpha(arribatecColors.rustyRed, 0.08),
+            backgroundColor: alpha(arribatecColors.teal, 0.08),
           },
           '&.Mui-selected': {
-            backgroundColor: alpha(arribatecColors.rustyRed, 0.12),
+            backgroundColor: alpha(arribatecColors.teal, 0.12),
             '&:hover': {
-              backgroundColor: alpha(arribatecColors.rustyRed, 0.16),
+              backgroundColor: alpha(arribatecColors.teal, 0.16),
             },
           },
         },
@@ -613,13 +641,13 @@ const arribatecTheme = createTheme({
       styleOverrides: {
         root: {
           '&:hover': {
-            backgroundColor: alpha(arribatecColors.rustyRed, 0.08),
+            backgroundColor: alpha(arribatecColors.teal, 0.08),
           },
           '&.Mui-selected': {
-            backgroundColor: alpha(arribatecColors.rustyRed, 0.12),
-            borderLeft: `3px solid ${arribatecColors.rustyRed}`,
+            backgroundColor: alpha(arribatecColors.teal, 0.12),
+            borderLeft: `3px solid ${arribatecColors.teal}`,
             '&:hover': {
-              backgroundColor: alpha(arribatecColors.rustyRed, 0.16),
+              backgroundColor: alpha(arribatecColors.teal, 0.16),
             },
           },
         },
@@ -640,10 +668,10 @@ const arribatecTheme = createTheme({
       styleOverrides: {
         root: {
           '&.Mui-selected': {
-            backgroundColor: arribatecColors.rustyRed,
+            backgroundColor: arribatecColors.teal,
             color: arribatecColors.white,
             '&:hover': {
-              backgroundColor: '#8B4D45',
+              backgroundColor: '#00515f',
             },
           },
         },
@@ -656,7 +684,7 @@ const arribatecTheme = createTheme({
         root: {
           color: alpha(arribatecColors.darkBlue, 0.3),
           '&.Mui-active': {
-            color: arribatecColors.rustyRed,
+            color: arribatecColors.teal,
           },
           '&.Mui-completed': {
             color: arribatecColors.success,
@@ -669,7 +697,7 @@ const arribatecTheme = createTheme({
       styleOverrides: {
         label: {
           '&.Mui-active': {
-            color: arribatecColors.rustyRed,
+            color: arribatecColors.teal,
             fontWeight: 600,
           },
         },
@@ -700,10 +728,10 @@ const arribatecTheme = createTheme({
       styleOverrides: {
         root: {
           '&.Mui-selected': {
-            backgroundColor: alpha(arribatecColors.rustyRed, 0.15),
-            color: arribatecColors.rustyRed,
+            backgroundColor: alpha(arribatecColors.teal, 0.15),
+            color: arribatecColors.teal,
             '&:hover': {
-              backgroundColor: alpha(arribatecColors.rustyRed, 0.25),
+              backgroundColor: alpha(arribatecColors.teal, 0.25),
             },
           },
         },
@@ -715,11 +743,11 @@ const arribatecTheme = createTheme({
       styleOverrides: {
         root: {
           '&.Mui-expanded': {
-            backgroundColor: alpha(arribatecColors.rustyRed, 0.04),
+            backgroundColor: alpha(arribatecColors.teal, 0.04),
           },
         },
         expandIconWrapper: {
-          color: arribatecColors.rustyRed,
+          color: arribatecColors.teal,
         },
       },
     },
@@ -729,7 +757,7 @@ const arribatecTheme = createTheme({
       styleOverrides: {
         root: {
           '&.Mui-selected': {
-            color: arribatecColors.rustyRed,
+            color: arribatecColors.teal,
           },
         },
       },
@@ -761,9 +789,9 @@ const arribatecTheme = createTheme({
       styleOverrides: {
         fab: {
           backgroundColor: arribatecColors.white,
-          color: arribatecColors.rustyRed,
+          color: arribatecColors.teal,
           '&:hover': {
-            backgroundColor: alpha(arribatecColors.rustyRed, 0.08),
+            backgroundColor: alpha(arribatecColors.teal, 0.08),
           },
         },
       },
@@ -774,4 +802,4 @@ const arribatecTheme = createTheme({
 export default arribatecTheme;
 
 // Export individual color for use in custom styling
-export const { rustyRed, darkBlue, oceanBlue, gold, almostWhite, almostBlack } = arribatecColors;
+export const { teal, darkBlue, oceanBlue, gold, almostWhite, almostBlack } = arribatecColors;

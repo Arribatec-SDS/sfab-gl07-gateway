@@ -1,12 +1,17 @@
 import { useAuth } from '@arribatec-sds/arribatec-nexus-react';
 import {
     CheckCircle as CheckCircleIcon,
+    ExpandMore as ExpandMoreIcon,
+    Lock as LockIcon,
     Refresh as RefreshIcon,
     Save as SaveIcon,
     Visibility as VisibilityIcon,
     VisibilityOff as VisibilityOffIcon,
 } from '@mui/icons-material';
 import {
+    Accordion,
+    AccordionDetails,
+    AccordionSummary,
     Alert,
     Box,
     Button,
@@ -15,7 +20,6 @@ import {
     IconButton,
     InputAdornment,
     MenuItem,
-    Paper,
     Select,
     Snackbar,
     Table,
@@ -41,6 +45,7 @@ interface SettingDefinition {
   required?: boolean;
   category: string;
   showWhen?: { key: string; value: string };
+  locked?: boolean;
 }
 
 const SETTING_DEFINITIONS: SettingDefinition[] = [
@@ -75,6 +80,13 @@ const SETTING_DEFINITIONS: SettingDefinition[] = [
     description: 'Unit4 REST API endpoint',
     type: 'url',
     required: true,
+    category: 'Unit4',
+  },
+  {
+    key: 'Unit4:BatchEndpoint',
+    label: 'Batch Endpoint',
+    description: 'Endpoint path for transaction batch posting (e.g., /v1/financial-transaction-batch)',
+    type: 'text',
     category: 'Unit4',
   },
   {
@@ -115,12 +127,36 @@ const SETTING_DEFINITIONS: SettingDefinition[] = [
     type: 'text',
     category: 'Unit4',
   },
+  // GL07 Report Settings
   {
-    key: 'Unit4:CompanyId',
-    label: 'Company ID',
-    description: 'Default company ID for transactions',
+    key: 'GL07:DefaultReportId',
+    label: 'Default Report ID',
+    description: 'Default Report ID for GL07 report setups (e.g., BI202)',
     type: 'text',
-    category: 'Unit4',
+    required: true,
+    category: 'GL07',
+  },
+  {
+    key: 'GL07:DefaultReportName',
+    label: 'Default Report Name',
+    description: 'Fixed report name for GL07 (cannot be changed)',
+    type: 'text',
+    category: 'GL07',
+    locked: true,
+  },
+  {
+    key: 'GL07:DefaultUserId',
+    label: 'Default User ID',
+    description: 'Default User ID for GL07 report setups',
+    type: 'text',
+    category: 'GL07',
+  },
+  {
+    key: 'GL07:DefaultCompanyId',
+    label: 'Default Company ID',
+    description: 'Default Company ID for GL07 report setups',
+    type: 'text',
+    category: 'GL07',
   },
 ];
 
@@ -128,6 +164,7 @@ const CATEGORIES = [
   { key: 'Unit4', label: 'Unit4 API', description: 'Unit4 ERP connection settings' },
   { key: 'FileSource', label: 'File Source', description: 'Configure where to read XML files from' },
   { key: 'AzureStorage', label: 'Azure Storage', description: 'Azure Blob Storage connection' },
+  { key: 'GL07', label: 'GL07 Report', description: 'GL07 report configuration defaults' },
 ];
 
 interface SettingValue {
@@ -292,6 +329,18 @@ export default function SettingsPage() {
         value={value}
         onChange={(e) => handleValueChange(def.key, e.target.value)}
         placeholder={def.type === 'url' ? 'https://...' : 'Enter value'}
+        disabled={def.locked}
+        slotProps={{
+          input: {
+            endAdornment: def.locked ? (
+              <InputAdornment position="end">
+                <Tooltip title="This value is fixed and cannot be changed">
+                  <LockIcon fontSize="small" color="action" />
+                </Tooltip>
+              </InputAdornment>
+            ) : undefined,
+          },
+        }}
       />
     );
   };
@@ -330,7 +379,6 @@ export default function SettingsPage() {
             startIcon={saving ? <CircularProgress size={20} color="inherit" /> : <SaveIcon />}
             onClick={handleSaveAll}
             disabled={!hasChanges() || saving}
-            sx={{ bgcolor: '#003d4d', '&:hover': { bgcolor: '#00717f' } }}
           >
             Save Changes
           </Button>
@@ -345,7 +393,7 @@ export default function SettingsPage() {
       )}
 
       {/* Settings Tables by Category */}
-      {CATEGORIES.map((category) => {
+      {CATEGORIES.map((category, index) => {
         const categorySettings = SETTING_DEFINITIONS.filter(
           (def) => def.category === category.key && shouldShowSetting(def)
         );
@@ -353,89 +401,108 @@ export default function SettingsPage() {
         if (categorySettings.length === 0) return null;
 
         return (
-          <Paper key={category.key} sx={{ mb: 3, overflow: 'hidden' }}>
-            <Box sx={{ bgcolor: '#003d4d', px: 3, py: 2 }}>
-              <Typography variant="h6" fontWeight={600} sx={{ color: '#ffffff' }}>
-                {category.label}
-              </Typography>
-              <Typography variant="body2" sx={{ color: 'rgba(255, 255, 255, 0.9)' }}>
-                {category.description}
-              </Typography>
-            </Box>
-            <TableContainer>
-              <Table>
-                <TableHead>
-                  <TableRow sx={{ bgcolor: 'grey.50' }}>
-                    <TableCell width="30%">
-                      <Typography variant="subtitle2" fontWeight={600}>
-                        Setting
-                      </Typography>
-                    </TableCell>
-                    <TableCell width="50%">
-                      <Typography variant="subtitle2" fontWeight={600}>
-                        Value
-                      </Typography>
-                    </TableCell>
-                    <TableCell width="20%">
-                      <Typography variant="subtitle2" fontWeight={600}>
-                        Status
-                      </Typography>
-                    </TableCell>
-                  </TableRow>
-                </TableHead>
-                <TableBody>
-                  {categorySettings.map((def) => {
-                    const isChanged = values[def.key] !== originalValues[def.key];
-                    const isEmpty = !values[def.key];
+          <Accordion 
+            key={category.key} 
+            defaultExpanded={index === 0}
+            sx={{ 
+              mb: 2, 
+              '&:before': { display: 'none' },
+              boxShadow: 1,
+            }}
+          >
+            <AccordionSummary
+              expandIcon={<ExpandMoreIcon sx={{ color: '#ffffff' }} />}
+              sx={{ 
+                bgcolor: '#003d4d',
+                '&:hover': { bgcolor: '#00515f' },
+                '&.Mui-expanded': { bgcolor: '#003d4d' },
+              }}
+            >
+              <Box>
+                <Typography variant="h6" fontWeight={600} sx={{ color: '#ffffff' }}>
+                  {category.label}
+                </Typography>
+                <Typography variant="body2" sx={{ color: 'rgba(255, 255, 255, 0.9)' }}>
+                  {category.description}
+                </Typography>
+              </Box>
+            </AccordionSummary>
+            <AccordionDetails sx={{ p: 0 }}>
+              <TableContainer>
+                <Table>
+                  <TableHead>
+                    <TableRow sx={{ bgcolor: 'grey.50' }}>
+                      <TableCell width="30%">
+                        <Typography variant="subtitle2" fontWeight={600}>
+                          Setting
+                        </Typography>
+                      </TableCell>
+                      <TableCell width="50%">
+                        <Typography variant="subtitle2" fontWeight={600}>
+                          Value
+                        </Typography>
+                      </TableCell>
+                      <TableCell width="20%">
+                        <Typography variant="subtitle2" fontWeight={600}>
+                          Status
+                        </Typography>
+                      </TableCell>
+                    </TableRow>
+                  </TableHead>
+                  <TableBody>
+                    {categorySettings.map((def) => {
+                      const isChanged = values[def.key] !== originalValues[def.key];
+                      const isEmpty = !values[def.key];
 
-                    return (
-                      <TableRow
-                        key={def.key}
-                        sx={{
-                          bgcolor: isChanged ? 'action.hover' : 'inherit',
-                          '&:last-child td': { borderBottom: 0 },
-                        }}
-                      >
-                        <TableCell>
-                          <Typography variant="body2" fontWeight={500}>
-                            {def.label}
-                            {def.required && (
-                              <Typography component="span" color="error.main" sx={{ ml: 0.5 }}>
-                                *
+                      return (
+                        <TableRow
+                          key={def.key}
+                          sx={{
+                            bgcolor: isChanged ? 'action.hover' : 'inherit',
+                            '&:last-child td': { borderBottom: 0 },
+                          }}
+                        >
+                          <TableCell>
+                            <Typography variant="body2" fontWeight={500}>
+                              {def.label}
+                              {def.required && (
+                                <Typography component="span" color="error.main" sx={{ ml: 0.5 }}>
+                                  *
+                                </Typography>
+                              )}
+                            </Typography>
+                            <Typography variant="caption" color="text.secondary">
+                              {def.description}
+                            </Typography>
+                          </TableCell>
+                          <TableCell>{renderInput(def)}</TableCell>
+                          <TableCell>
+                            {isChanged ? (
+                              <Typography variant="caption" color="warning.main" fontWeight={500}>
+                                Modified
+                              </Typography>
+                            ) : isEmpty && def.required ? (
+                              <Typography variant="caption" color="error.main" fontWeight={500}>
+                                Required
+                              </Typography>
+                            ) : !isEmpty ? (
+                              <Tooltip title="Configured">
+                                <CheckCircleIcon fontSize="small" color="success" />
+                              </Tooltip>
+                            ) : (
+                              <Typography variant="caption" color="text.secondary">
+                                Not set
                               </Typography>
                             )}
-                          </Typography>
-                          <Typography variant="caption" color="text.secondary">
-                            {def.description}
-                          </Typography>
-                        </TableCell>
-                        <TableCell>{renderInput(def)}</TableCell>
-                        <TableCell>
-                          {isChanged ? (
-                            <Typography variant="caption" color="warning.main" fontWeight={500}>
-                              Modified
-                            </Typography>
-                          ) : isEmpty && def.required ? (
-                            <Typography variant="caption" color="error.main" fontWeight={500}>
-                              Required
-                            </Typography>
-                          ) : !isEmpty ? (
-                            <Tooltip title="Configured">
-                              <CheckCircleIcon fontSize="small" color="success" />
-                            </Tooltip>
-                          ) : (
-                            <Typography variant="caption" color="text.secondary">
-                              Not set
-                            </Typography>
-                          )}
-                        </TableCell>
-                      </TableRow>
-                    );
-                  })}
-                </TableBody>
-              </Table>
-            </TableContainer>
-          </Paper>
+                          </TableCell>
+                        </TableRow>
+                      );
+                    })}
+                  </TableBody>
+                </Table>
+              </TableContainer>
+            </AccordionDetails>
+          </Accordion>
         );
       })}
 

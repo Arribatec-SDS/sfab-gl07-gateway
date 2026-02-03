@@ -167,7 +167,7 @@ public class GL07ProcessingWorker : ITaskHandler<GL07ProcessingParameters>
         {
             // Get the file source service for this source system's provider
             var fileSourceService = _fileSourceFactory.GetFileSourceService(sourceSystem);
-            
+
             // Get the transformer for this source system
             var transformer = _transformerFactory.GetTransformer(sourceSystem.TransformerType);
 
@@ -266,18 +266,18 @@ public class GL07ProcessingWorker : ITaskHandler<GL07ProcessingParameters>
             var content = await fileSourceService.DownloadAsStringAsync(sourceSystem, fileName);
             _logger.LogDebug("    Downloaded {Length} bytes", content.Length);
 
-            // Transform to Unit4 format
-            var request = transformer.Transform(content);
+            // Transform to Unit4 format (passing SourceSystem for configuration)
+            var request = transformer.Transform(content, sourceSystem);
 
-            var voucherCount = request.TransactionInformation.Count;
-            var transactionCount = request.TransactionInformation
-                .Sum(t => t.TransactionDetailInformation.Count);
+            var transactionCount = request.TransactionInformation?.TransactionDetailInformation != null
+                ? 1  // Single transaction per file
+                : 0;
 
-            logEntry.VoucherCount = voucherCount;
+            logEntry.VoucherCount = 1;
             logEntry.TransactionCount = transactionCount;
 
-            _logger.LogInformation("    Transformed: {VoucherCount} vouchers, {TransactionCount} transactions",
-                voucherCount, transactionCount);
+            _logger.LogInformation("    Transformed: BatchId={BatchId}, Interface={Interface}",
+                request.BatchInformation?.BatchId, request.BatchInformation?.Interface);
 
             if (dryRun)
             {

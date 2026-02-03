@@ -1,30 +1,30 @@
 import { useAuth } from '@arribatec-sds/arribatec-nexus-react';
+import {
+    CheckCircle as CheckIcon,
+    Error as ErrorIcon,
+    VpnKey as KeyIcon,
+    Login as LoginIcon,
+    Security as SecurityIcon,
+    Warning as WarningIcon
+} from '@mui/icons-material';
+import {
+    Alert,
+    AlertTitle,
+    Avatar,
+    Box,
+    Button,
+    CircularProgress,
+    Container,
+    Divider,
+    List,
+    ListItem,
+    ListItemIcon,
+    ListItemText,
+    Paper,
+    Typography
+} from '@mui/material';
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import {
-  Container,
-  Paper,
-  Typography,
-  Button,
-  Box,
-  Avatar,
-  Alert,
-  AlertTitle,
-  CircularProgress,
-  List,
-  ListItem,
-  ListItemIcon,
-  ListItemText,
-  Divider
-} from '@mui/material';
-import {
-  Login as LoginIcon,
-  Security as SecurityIcon,
-  Warning as WarningIcon,
-  Error as ErrorIcon,
-  CheckCircle as CheckIcon,
-  VpnKey as KeyIcon
-} from '@mui/icons-material';
 import { getAdminAppUrl } from '../utils/masterApiErrors';
 
 interface StartupError {
@@ -288,7 +288,7 @@ function LoginPage() {
               size="large"
               sx={{
                 minWidth: 200,
-                py: 1.5
+                py: 1.5,
               }}
               disabled={loading}
             >
@@ -311,7 +311,6 @@ function LoginPage() {
                   <Button
                     onClick={handleRefreshPage}
                     variant="outlined"
-                    color="secondary"
                     size="medium"
                     sx={{ minWidth: 200 }}
                   >

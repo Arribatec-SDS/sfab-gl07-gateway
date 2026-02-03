@@ -1,3 +1,4 @@
+using SfabGl07Gateway.Api.Models.Settings;
 using SfabGl07Gateway.Api.Models.Unit4;
 using SfabGl07Gateway.Api.Models.Xml;
 
@@ -29,20 +30,43 @@ public class ABWTransactionTransformer : ITransformationService
                fileContent.Contains("http://services.agresso.com/schema/ABWTransaction");
     }
 
-    public Unit4TransactionBatchRequest Transform(string fileContent)
+    public Unit4TransactionBatchRequest Transform(string fileContent, SourceSystem sourceSystem)
     {
-        _logger.LogDebug("Starting ABWTransaction transformation");
+        _logger.LogDebug("Starting ABWTransaction transformation for source system {SystemCode}", sourceSystem.SystemCode);
 
         var abwTransaction = _xmlParser.Parse(fileContent);
+
+        // Determine interface: use SourceSystem.Interface if set, otherwise use from XML
+        var interfaceValue = !string.IsNullOrWhiteSpace(sourceSystem.Interface)
+            ? sourceSystem.Interface
+            : abwTransaction.Interface;
+
+        // Determine batchId: 
+        // - If SourceSystem.BatchId is set, use it as prefix with timestamp: {prefix}-{yyMMddHHmmssff}
+        // - Otherwise, use batchId from XML or generate a default
+        string batchId;
+        if (!string.IsNullOrWhiteSpace(sourceSystem.BatchId))
+        {
+            // BatchId is configured as a prefix (max 10 chars) - append timestamp for uniqueness
+            batchId = $"{sourceSystem.BatchId}-{DateTime.UtcNow:yyMMddHHmmssff}";
+        }
+        else
+        {
+            // Use batchId from source file, or generate default if not present
+            batchId = abwTransaction.BatchId ?? $"BATCH-{DateTime.UtcNow:yyMMddHHmmssff}";
+        }
+
+        _logger.LogDebug("Using Interface: {Interface} (Override: {IsOverride}), BatchId: {BatchId} (Prefix: {IsPrefixMode})",
+            interfaceValue, !string.IsNullOrWhiteSpace(sourceSystem.Interface),
+            batchId, !string.IsNullOrWhiteSpace(sourceSystem.BatchId));
 
         var request = new Unit4TransactionBatchRequest
         {
             BatchInformation = new BatchInformation
             {
-                Interface = abwTransaction.Interface,
-                BatchId = abwTransaction.BatchId
-            },
-            TransactionInformation = new List<TransactionInformation>()
+                Interface = interfaceValue,
+                BatchId = batchId
+            }
         };
 
         if (abwTransaction.Vouchers == null || abwTransaction.Vouchers.Count == 0)
@@ -51,51 +75,60 @@ public class ABWTransactionTransformer : ITransformationService
             return request;
         }
 
-        foreach (var voucher in abwTransaction.Vouchers)
-        {
-            var transactionInfo = MapVoucherToTransactionInfo(voucher);
-            request.TransactionInformation.Add(transactionInfo);
-        }
+        // For the correct JSON structure, we have a single TransactionInformation
+        // If there are multiple vouchers, we need to handle differently based on requirements
+        // For now, take the first voucher as the main transaction
+        var firstVoucher = abwTransaction.Vouchers.First();
+        request.TransactionInformation = MapVoucherToTransactionInfo(firstVoucher, sourceSystem);
 
-        _logger.LogInformation("Transformed {VoucherCount} vouchers to Unit4 format",
-            request.TransactionInformation.Count);
+        _logger.LogInformation("Transformed voucher to Unit4 format (VoucherNo: {VoucherNo})",
+            firstVoucher.VoucherNo);
 
         return request;
     }
 
-    private TransactionInformation MapVoucherToTransactionInfo(Voucher voucher)
+    private TransactionInformation MapVoucherToTransactionInfo(Voucher voucher, SourceSystem sourceSystem)
     {
+        // Determine transactionType: use SourceSystem.TransactionType if set, otherwise use XML voucherType
+        var transactionType = !string.IsNullOrWhiteSpace(sourceSystem.TransactionType)
+            ? sourceSystem.TransactionType
+            : voucher.VoucherType;
+
         var transactionInfo = new TransactionInformation
         {
             CompanyId = voucher.CompanyCode,
-            Period = voucher.Period,
-            TransactionDate = voucher.VoucherDate,
-            VoucherNumber = voucher.VoucherNo,
-            VoucherType = voucher.VoucherType,
-            Description = voucher.Description,
-            TransactionDetailInformation = new List<TransactionDetailInformation>()
+            Period = ParsePeriod(voucher.Period),
+            TransactionDate = ParseDate(voucher.VoucherDate),
+            TransactionType = transactionType
         };
 
-        if (voucher.Transactions == null || voucher.Transactions.Count == 0)
+        if (voucher.Transactions != null && voucher.Transactions.Count > 0)
         {
-            return transactionInfo;
-        }
+            var firstTransaction = voucher.Transactions.First();
 
-        var sequenceNumber = 1;
-        foreach (var transaction in voucher.Transactions)
-        {
-            var detailInfo = MapTransactionToDetailInfo(transaction, sequenceNumber++);
-            transactionInfo.TransactionDetailInformation.Add(detailInfo);
+            // Map first transaction to detail info
+            transactionInfo.TransactionDetailInformation = MapTransactionToDetailInfo(firstTransaction, 1);
 
-            // Set invoice info from first transaction that has AP/AR info
-            if (transactionInfo.Invoice == null && transaction.ApArInfo != null)
+            // Set invoice info if AP/AR info exists
+            if (firstTransaction.ApArInfo != null)
             {
-                transactionInfo.Invoice = MapApArToInvoice(transaction.ApArInfo);
-                transactionInfo.TransactionType = transaction.TransType;
+                transactionInfo.Invoice = MapApArToInvoice(firstTransaction.ApArInfo);
             }
         }
 
         return transactionInfo;
+    }
+
+    private int? ParsePeriod(string? period)
+    {
+        if (string.IsNullOrWhiteSpace(period)) return null;
+        return int.TryParse(period, out var result) ? result : null;
+    }
+
+    private DateTime? ParseDate(string? dateStr)
+    {
+        if (string.IsNullOrWhiteSpace(dateStr)) return null;
+        return DateTime.TryParse(dateStr, out var result) ? result : null;
     }
 
     private TransactionDetailInformation MapTransactionToDetailInfo(Transaction transaction, int sequenceNumber)
@@ -105,12 +138,11 @@ public class ABWTransactionTransformer : ITransformationService
             SequenceNumber = transaction.SequenceNo ?? sequenceNumber,
             LineType = transaction.TransType,
             Description = transaction.Description,
-            ValueDate = transaction.TransDate,
+            ValueDate = ParseDate(transaction.TransDate),
             AccountingInformation = MapGLAnalysisToAccountingInfo(transaction.GLAnalysis),
             Amounts = MapAmounts(transaction.Amounts, transaction.GLAnalysis?.Currency),
             TaxInformation = MapTaxInfo(transaction.GLAnalysis, transaction.TaxTransInfo),
-            StatisticalInformation = MapStatisticalInfo(transaction.Amounts),
-            AdditionalInformation = MapAdditionalInfo(transaction.ApArInfo?.SundryInfo)
+            StatisticalInformation = MapStatisticalInfo(transaction.Amounts)
         };
 
         return detail;
@@ -133,17 +165,24 @@ public class ABWTransactionTransformer : ITransformationService
         };
     }
 
-    private AmountsDto? MapAmounts(Amounts? amounts, string? currency)
+    private Models.Unit4.Amounts? MapAmounts(Models.Xml.Amounts? amounts, string? currency)
     {
         if (amounts == null) return null;
 
-        return new AmountsDto
+        return new Models.Unit4.Amounts
         {
-            DebitCreditFlag = amounts.DcFlag,
+            DebitCreditFlag = ParseDebitCreditFlag(amounts.DcFlag),
             Amount = amounts.Amount,
             CurrencyAmount = amounts.CurrAmount,
             CurrencyCode = currency
         };
+    }
+
+    private int? ParseDebitCreditFlag(string? dcFlag)
+    {
+        // Convert D/C to 0/1
+        if (string.IsNullOrWhiteSpace(dcFlag)) return null;
+        return dcFlag.Equals("D", StringComparison.OrdinalIgnoreCase) ? 0 : 1;
     }
 
     private Invoice? MapApArToInvoice(ApArInfo? apArInfo)
@@ -153,9 +192,9 @@ public class ABWTransactionTransformer : ITransformationService
         return new Invoice
         {
             CustomerOrSupplierId = apArInfo.ApArNo,
-            LedgerType = apArInfo.ApArType,
+            LedgerType = apArInfo.ApArType?.ToLowerInvariant(), // 's' for supplier, 'c' for customer
             InvoiceNumber = apArInfo.InvoiceNo,
-            DueDate = apArInfo.DueDate,
+            DueDate = ParseDate(apArInfo.DueDate),
             PaymentMethod = apArInfo.PayMethod
         };
     }
@@ -170,44 +209,31 @@ public class ABWTransactionTransformer : ITransformationService
             TaxSystem = glAnalysis?.TaxSystem,
             TaxDetails = taxTransInfo != null ? new TaxDetails
             {
-                TaxAccount = taxTransInfo.Account2,
+                TaxBaseAccount = taxTransInfo.Account2,
                 BaseAmount = taxTransInfo.BaseAmount,
-                BaseCurrencyCode = taxTransInfo.BaseCurr,
-                TaxAmount = taxTransInfo.TaxAmount,
-                TaxCurrencyCode = taxTransInfo.TaxCurr
+                BaseCurrencyAmount = taxTransInfo.BaseCurr != null ? ParseDecimal(taxTransInfo.BaseCurr) : null
             } : null
         };
     }
 
-    private StatisticalInformation? MapStatisticalInfo(Amounts? amounts)
+    private decimal? ParseDecimal(string? value)
+    {
+        if (string.IsNullOrWhiteSpace(value)) return null;
+        return decimal.TryParse(value, out var result) ? result : null;
+    }
+
+    private StatisticalInformation? MapStatisticalInfo(Models.Xml.Amounts? amounts)
     {
         if (amounts == null ||
-            (amounts.Number1 == null && amounts.Value1 == null &&
-             amounts.Value2 == null && amounts.Value3 == null))
+            (amounts.Number1 == null && amounts.Value1 == null))
         {
             return null;
         }
 
         return new StatisticalInformation
         {
-            Number1 = amounts.Number1,
-            Value1 = amounts.Value1,
-            Value2 = amounts.Value2,
-            Value3 = amounts.Value3
-        };
-    }
-
-    private AdditionalInformation? MapAdditionalInfo(SundryInfo? sundryInfo)
-    {
-        if (sundryInfo == null) return null;
-
-        return new AdditionalInformation
-        {
-            Text1 = sundryInfo.Text1,
-            Text2 = sundryInfo.Text2,
-            Text3 = sundryInfo.Text3,
-            Text4 = sundryInfo.Text4,
-            Text5 = sundryInfo.Text5
+            Number = amounts.Number1.HasValue ? (int)amounts.Number1.Value : null,
+            Value = amounts.Value1
         };
     }
 }

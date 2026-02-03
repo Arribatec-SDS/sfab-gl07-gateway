@@ -1,8 +1,10 @@
 import { useAuth } from '@arribatec-sds/arribatec-nexus-react';
 import {
     Add as AddIcon,
+    Close as CloseIcon,
     Delete as DeleteIcon,
     Edit as EditIcon,
+    Info as InfoIcon,
     Pause as PauseIcon,
     PlayArrow as PlayArrowIcon,
     Refresh as RefreshIcon,
@@ -18,7 +20,9 @@ import {
     DialogContent,
     DialogTitle,
     FormControlLabel,
+    Grid,
     IconButton,
+    InputAdornment,
     Paper,
     Snackbar,
     Switch,
@@ -35,6 +39,13 @@ import {
 import { useCallback, useEffect, useState } from 'react';
 import { createApiClient } from '../../utils/api';
 
+interface Gl07ReportSetup {
+  id: number;
+  setupCode: string;
+  reportName: string | null;
+  isActive: boolean;
+}
+
 interface SourceSystem {
   id: number;
   systemCode: string;
@@ -45,6 +56,11 @@ interface SourceSystem {
   filePattern: string;
   transformerType: string;
   isActive: boolean;
+  gl07ReportSetupId: number;
+  gl07ReportSetup?: Gl07ReportSetup;
+  interface: string | null;
+  transactionType: string | null;
+  batchId: string | null;
 }
 
 interface SourceSystemRequest {
@@ -56,6 +72,10 @@ interface SourceSystemRequest {
   filePattern: string;
   transformerType: string;
   isActive: boolean;
+  gl07ReportSetupId: number;
+  interface: string;
+  transactionType: string;
+  batchId: string;
 }
 
 // Helper to join paths without double slashes
@@ -76,11 +96,16 @@ const emptySourceSystem: SourceSystemRequest = {
   filePattern: '*.xml',
   transformerType: 'ABWTransaction',
   isActive: true,
+  gl07ReportSetupId: 0,
+  interface: '',
+  transactionType: '',
+  batchId: '',
 };
 
 export default function SourceSystemsPage() {
   const { getToken } = useAuth();
   const [sourceSystems, setSourceSystems] = useState<SourceSystem[]>([]);
+  const [gl07ReportSetups, setGl07ReportSetups] = useState<Gl07ReportSetup[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
@@ -100,13 +125,15 @@ export default function SourceSystemsPage() {
       const apiClient = createApiClient();
       apiClient.defaults.headers.common['Authorization'] = `Bearer ${token}`;
       
-      // Fetch source systems and settings in parallel
-      const [systemsResponse, settingsResponse] = await Promise.all([
+      // Fetch source systems, GL07 report setups, and settings in parallel
+      const [systemsResponse, setupsResponse, settingsResponse] = await Promise.all([
         apiClient.get<SourceSystem[]>('/sourcesystems'),
+        apiClient.get<Gl07ReportSetup[]>('/gl07reportsetups/active'),
         apiClient.get<{ paramName: string; paramValue: string }[]>('/settings')
       ]);
       
       setSourceSystems(systemsResponse.data);
+      setGl07ReportSetups(setupsResponse.data);
       
       // Extract base paths from settings
       const settings = settingsResponse.data;
@@ -138,6 +165,10 @@ export default function SourceSystemsPage() {
         filePattern: system.filePattern,
         transformerType: system.transformerType,
         isActive: system.isActive,
+        gl07ReportSetupId: system.gl07ReportSetupId,
+        interface: system.interface || '',
+        transactionType: system.transactionType || '',
+        batchId: system.batchId || '',
       });
     } else {
       setEditingSystem(null);
@@ -204,11 +235,16 @@ export default function SourceSystemsPage() {
       await apiClient.put(`/sourcesystems/${system.id}`, {
         systemCode: system.systemCode,
         systemName: system.systemName,
-        description: system.description,
+        description: system.description || '',
+        provider: system.provider,
         folderPath: system.folderPath,
         filePattern: system.filePattern,
         transformerType: system.transformerType,
         isActive: !system.isActive,
+        gl07ReportSetupId: system.gl07ReportSetupId,
+        interface: system.interface || '',
+        transactionType: system.transactionType || '',
+        batchId: system.batchId || '',
       });
       
       setSuccess(`Source system ${system.isActive ? 'deactivated' : 'activated'} successfully`);
@@ -270,9 +306,7 @@ export default function SourceSystemsPage() {
               <TableRow>
                 <TableCell>Code</TableCell>
                 <TableCell>Name</TableCell>
-                <TableCell>Provider</TableCell>
-                <TableCell>Folder Path</TableCell>
-                <TableCell>Pattern</TableCell>
+                <TableCell>GL07 Setup</TableCell>
                 <TableCell>Transformer</TableCell>
                 <TableCell>Status</TableCell>
                 <TableCell align="right">Actions</TableCell>
@@ -290,35 +324,17 @@ export default function SourceSystemsPage() {
                     <Typography variant="body2">
                       {system.systemName}
                     </Typography>
-                    {system.description && (
-                      <Typography variant="caption" color="text.secondary">
-                        {system.description}
-                      </Typography>
-                    )}
                   </TableCell>
                   <TableCell>
-                    <Chip 
-                      label={system.provider || 'Local'} 
-                      size="small" 
-                      color={system.provider === 'AzureBlob' ? 'info' : 'default'}
-                    />
-                  </TableCell>
-                  <TableCell>
-                    <Tooltip title="Full path">
-                      <Typography variant="body2" sx={{ maxWidth: 300, overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                        {system.provider === 'AzureBlob' 
-                          ? joinPaths(azureContainerName, system.folderPath)
-                          : joinPaths(localBasePath, system.folderPath)}
-                      </Typography>
-                    </Tooltip>
-                    <Typography variant="caption" color="text.secondary" sx={{ display: 'block' }}>
-                      {system.folderPath}
+                    <Typography variant="body2">
+                      {system.gl07ReportSetup?.setupCode || <em style={{ color: '#999' }}>Not assigned</em>}
                     </Typography>
                   </TableCell>
                   <TableCell>
-                    <code>{system.filePattern}</code>
+                    <Typography variant="body2" fontFamily="monospace">
+                      {system.transformerType || '-'}
+                    </Typography>
                   </TableCell>
-                  <TableCell>{system.transformerType}</TableCell>
                   <TableCell>
                     <Chip
                       label={system.isActive ? 'Active' : 'Inactive'}
@@ -363,130 +379,250 @@ export default function SourceSystemsPage() {
       )}
 
       {/* Add/Edit Dialog */}
-      <Dialog open={dialogOpen} onClose={handleCloseDialog} maxWidth="sm" fullWidth>
-        <DialogTitle>
+      <Dialog 
+        open={dialogOpen} 
+        maxWidth="sm" 
+        fullWidth
+        disableEscapeKeyDown
+        onClose={(_, reason) => {
+          if (reason !== 'backdropClick') {
+            handleCloseDialog();
+          }
+        }}
+      >
+        <DialogTitle sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           {editingSystem ? 'Edit Source System' : 'Add Source System'}
+          <IconButton onClick={handleCloseDialog} size="small">
+            <CloseIcon />
+          </IconButton>
         </DialogTitle>
         <DialogContent>
-          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, mt: 1 }}>
-            <TextField
-              label="System Code"
-              fullWidth
-              required
-              value={formData.systemCode}
-              onChange={(e) => setFormData(prev => ({ ...prev, systemCode: e.target.value }))}
-              placeholder="e.g., ERP_PROD"
-              helperText="Unique identifier for this source system"
-              disabled={!!editingSystem}
-            />
-            <TextField
-              label="System Name"
-              fullWidth
-              required
-              value={formData.systemName}
-              onChange={(e) => setFormData(prev => ({ ...prev, systemName: e.target.value }))}
-              placeholder="e.g., Production ERP System"
-            />
-            <TextField
-              label="Description"
-              fullWidth
-              multiline
-              rows={2}
-              value={formData.description}
-              onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
-              placeholder="Optional description"
-            />
-            <TextField
-              label="File Source Provider"
-              fullWidth
-              required
-              select
-              value={formData.provider}
-              onChange={(e) => setFormData(prev => ({ ...prev, provider: e.target.value }))}
-              slotProps={{
-                select: {
-                  native: true,
-                },
-              }}
-              helperText="Where files are stored: Local filesystem or Azure Blob Storage"
-            >
-              <option value="Local">Local Filesystem</option>
-              <option value="AzureBlob">Azure Blob Storage</option>
-            </TextField>
-            <TextField
-              label="Relative Folder Path"
-              fullWidth
-              required
-              value={formData.folderPath}
-              onChange={(e) => setFormData(prev => ({ ...prev, folderPath: e.target.value }))}
-              placeholder={formData.provider === 'AzureBlob' ? 'erp/inbox' : 'erp'}
-              helperText={
-                formData.provider === 'AzureBlob' 
-                  ? 'Blob prefix path within the container (e.g., erp/inbox)' 
-                  : 'Relative folder path from base path (e.g., erp)'
-              }
-            />
-            {/* Full path preview */}
-            <Box sx={{ 
-              p: 1.5, 
-              bgcolor: 'action.hover', 
-              borderRadius: 1,
-              border: '1px solid',
-              borderColor: 'divider'
-            }}>
-              <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 0.5 }}>
-                Full Path Preview
+          <Grid container spacing={2} sx={{ mt: 0.5 }}>
+            {/* Basic Information Section */}
+            <Grid size={12}>
+              <Typography variant="subtitle2" color="primary">
+                Basic Information
               </Typography>
-              <Typography variant="body2" sx={{ fontFamily: 'monospace', wordBreak: 'break-all' }}>
-                {formData.provider === 'AzureBlob'
-                  ? joinPaths(azureContainerName || '(container)', formData.folderPath || '(folder)')
-                  : joinPaths(localBasePath || '(base path)', formData.folderPath || '(folder)')}
+            </Grid>
+            <Grid size={6}>
+              <TextField
+                label="System Code"
+                fullWidth
+                required
+                size="small"
+                value={formData.systemCode}
+                onChange={(e) => setFormData(prev => ({ ...prev, systemCode: e.target.value }))}
+                placeholder="e.g., ERP_PROD"
+                disabled={!!editingSystem}
+              />
+            </Grid>
+            <Grid size={6}>
+              <TextField
+                label="System Name"
+                fullWidth
+                required
+                size="small"
+                value={formData.systemName}
+                onChange={(e) => setFormData(prev => ({ ...prev, systemName: e.target.value }))}
+                placeholder="e.g., Production ERP"
+              />
+            </Grid>
+            <Grid size={12}>
+              <TextField
+                label="Description"
+                fullWidth
+                size="small"
+                value={formData.description}
+                onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
+                placeholder="Optional description"
+              />
+            </Grid>
+
+            {/* GL07 Configuration Section */}
+            <Grid size={12}>
+              <Typography variant="subtitle2" color="primary" sx={{ mt: 1 }}>
+                GL07 Report Configuration
               </Typography>
-            </Box>
-            <TextField
-              label="File Pattern"
-              fullWidth
-              required
-              value={formData.filePattern}
-              onChange={(e) => setFormData(prev => ({ ...prev, filePattern: e.target.value }))}
-              placeholder="*.xml"
-              helperText="File pattern to match (e.g., *.xml, GL07_*.xml)"
-            />
-            <TextField
-              label="Transformer Type"
-              fullWidth
-              required
-              select
-              value={formData.transformerType}
-              onChange={(e) => setFormData(prev => ({ ...prev, transformerType: e.target.value }))}
-              slotProps={{
-                select: {
-                  native: true,
-                },
-              }}
-              helperText="Transformation strategy for converting XML to Unit4 format"
-            >
-              <option value="ABWTransaction">ABW Transaction (Default)</option>
-            </TextField>
-            <FormControlLabel
-              control={
-                <Switch
-                  checked={formData.isActive}
-                  onChange={(e) => setFormData(prev => ({ ...prev, isActive: e.target.checked }))}
-                />
-              }
-              label="Active"
-            />
-          </Box>
+            </Grid>
+            <Grid size={6}>
+              <TextField
+                label="GL07 Report Setup"
+                fullWidth
+                required
+                size="small"
+                select
+                value={formData.gl07ReportSetupId || ''}
+                onChange={(e) => setFormData(prev => ({ ...prev, gl07ReportSetupId: Number(e.target.value) }))}
+                slotProps={{
+                  select: { native: true },
+                  inputLabel: { shrink: true },
+                }}
+                error={formData.gl07ReportSetupId === 0}
+              >
+                <option value="">-- Select Setup --</option>
+                {gl07ReportSetups.map((setup) => (
+                  <option key={setup.id} value={setup.id}>
+                    {setup.setupCode}
+                  </option>
+                ))}
+              </TextField>
+            </Grid>
+            <Grid size={6}>
+              <TextField
+                label="Transformer Type"
+                fullWidth
+                required
+                size="small"
+                select
+                value={formData.transformerType}
+                onChange={(e) => setFormData(prev => ({ ...prev, transformerType: e.target.value }))}
+                slotProps={{ select: { native: true } }}
+              >
+                <option value="ABWTransaction">ABW Transaction</option>
+              </TextField>
+            </Grid>
+            <Grid size={4}>
+              <TextField
+                label="Interface"
+                fullWidth
+                size="small"
+                value={formData.interface}
+                onChange={(e) => setFormData(prev => ({ ...prev, interface: e.target.value }))}
+                placeholder="e.g., GL07"
+              />
+            </Grid>
+            <Grid size={4}>
+              <TextField
+                label="Trans. Type"
+                fullWidth
+                size="small"
+                value={formData.transactionType}
+                onChange={(e) => setFormData(prev => ({ ...prev, transactionType: e.target.value }))}
+                placeholder="e.g., GL"
+              />
+            </Grid>
+            <Grid size={4}>
+              <TextField
+                label="Batch ID Prefix"
+                fullWidth
+                size="small"
+                value={formData.batchId}
+                onChange={(e) => setFormData(prev => ({ ...prev, batchId: e.target.value.slice(0, 10) }))}
+                placeholder="e.g., SFAB"
+                helperText={`${formData.batchId.length}/10 chars. Timestamp appended at runtime.`}
+                error={formData.batchId.length > 10}
+                slotProps={{
+                  input: { inputProps: { maxLength: 10 } }
+                }}
+              />
+            </Grid>
+
+            {/* File Source Configuration Section */}
+            <Grid size={12}>
+              <Typography variant="subtitle2" color="primary" sx={{ mt: 1 }}>
+                File Source Configuration
+              </Typography>
+            </Grid>
+            <Grid size={6}>
+              <TextField
+                label="Provider"
+                fullWidth
+                required
+                size="small"
+                select
+                value={formData.provider}
+                onChange={(e) => setFormData(prev => ({ ...prev, provider: e.target.value }))}
+                slotProps={{ select: { native: true } }}
+              >
+                <option value="Local">Local Filesystem</option>
+                <option value="AzureBlob">Azure Blob Storage</option>
+              </TextField>
+            </Grid>
+            <Grid size={6}>
+              <TextField
+                label="File Pattern"
+                fullWidth
+                required
+                size="small"
+                value={formData.filePattern}
+                onChange={(e) => setFormData(prev => ({ ...prev, filePattern: e.target.value }))}
+                placeholder="*.xml"
+              />
+            </Grid>
+            <Grid size={12}>
+              <TextField
+                label="Folder Path"
+                fullWidth
+                required
+                size="small"
+                value={formData.folderPath}
+                onChange={(e) => setFormData(prev => ({ ...prev, folderPath: e.target.value }))}
+                placeholder={formData.provider === 'AzureBlob' ? 'erp/inbox' : 'erp'}
+                slotProps={{
+                  input: {
+                    endAdornment: (
+                      <InputAdornment position="end">
+                        <Tooltip 
+                          title={
+                            <Typography variant="body2" sx={{ fontFamily: 'monospace', fontSize: '0.875rem' }}>
+                              {formData.provider === 'AzureBlob'
+                                ? joinPaths(azureContainerName || '(container)', formData.folderPath || '(folder)')
+                                : joinPaths(localBasePath || '(base path)', formData.folderPath || '(folder)')}
+                            </Typography>
+                          }
+                          arrow
+                          slotProps={{
+                            tooltip: {
+                              sx: {
+                                bgcolor: 'white',
+                                color: '#18272F',
+                                border: '1px solid #ccc',
+                                boxShadow: '0 2px 8px rgba(0,0,0,0.15)',
+                                '& .MuiTooltip-arrow': {
+                                  color: 'white',
+                                  '&::before': {
+                                    border: '1px solid #ccc',
+                                  },
+                                },
+                              },
+                            },
+                          }}
+                        >
+                          <InfoIcon fontSize="small" color="action" sx={{ cursor: 'pointer' }} />
+                        </Tooltip>
+                      </InputAdornment>
+                    ),
+                  },
+                }}
+              />
+            </Grid>
+            <Grid size={12}>
+              <FormControlLabel
+                control={
+                  <Switch
+                    checked={formData.isActive}
+                    onChange={(e) => setFormData(prev => ({ ...prev, isActive: e.target.checked }))}
+                  />
+                }
+                label="Active"
+              />
+            </Grid>
+          </Grid>
         </DialogContent>
         <DialogActions>
           <Button onClick={handleCloseDialog}>Cancel</Button>
           <Button
             variant="contained"
             onClick={handleSave}
-            disabled={!formData.systemCode || !formData.systemName || !formData.folderPath || saving}
+            disabled={
+              !formData.systemCode || 
+              !formData.systemName || 
+              !formData.folderPath || 
+              formData.gl07ReportSetupId === 0 ||
+              saving
+            }
           >
-            {saving ? <CircularProgress size={24} /> : (editingSystem ? 'Update' : 'Create')}
+            {saving ? <CircularProgress size={24} color="inherit" /> : (editingSystem ? 'Update' : 'Create')}
           </Button>
         </DialogActions>
       </Dialog>

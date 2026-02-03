@@ -174,6 +174,11 @@ public class Unit4Settings
     public string ClientSecret { get; set; } = string.Empty;
     public string Scope { get; set; } = "api";
     public string TenantId { get; set; } = string.Empty;
+
+    /// <summary>
+    /// API endpoint path for financial transaction batches (default: /v1/financial-transaction-batch)
+    /// </summary>
+    public string BatchEndpoint { get; set; } = "/v1/financial-transaction-batch";
 }
 
 /// <summary>

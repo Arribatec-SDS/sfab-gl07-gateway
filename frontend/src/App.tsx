@@ -5,6 +5,7 @@ import { Navigate, Route, BrowserRouter as Router, Routes } from 'react-router-d
 import ErrorBoundary from './components/ErrorBoundary';
 import HomePage from './components/HomePage';
 import LoginPage from './components/LoginPage';
+import Gl07ReportSetupsPage from './components/admin/Gl07ReportSetupsPage';
 import ProcessingLogsPage from './components/admin/ProcessingLogsPage';
 import RunWorkerPage from './components/admin/RunWorkerPage';
 import SettingsPage from './components/admin/SettingsPage';
@@ -144,6 +145,7 @@ function App() {
               >
                 <Route path="settings" element={<SettingsPage />} />
                 <Route path="source-systems" element={<SourceSystemsPage />} />
+                <Route path="gl07-setups" element={<Gl07ReportSetupsPage />} />
                 <Route path="logs" element={<ProcessingLogsPage />} />
                 <Route path="run" element={<RunWorkerPage />} />
               </Route>

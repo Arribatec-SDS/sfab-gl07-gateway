@@ -1,6 +1,7 @@
 import { useAuth } from '@arribatec-sds/arribatec-nexus-react';
 import {
     AccountCircle as AccountCircleIcon,
+    Assignment as AssignmentIcon,
     ChevronLeft as ChevronLeftIcon,
     History as HistoryIcon,
     Home as HomeIcon,
@@ -42,6 +43,7 @@ interface NavItem {
 
 const navItems: NavItem[] = [
   { text: 'Home', icon: <HomeIcon />, path: '/' },
+  { text: 'GL07 Report Setups', icon: <AssignmentIcon />, path: '/admin/gl07-setups' },
   { text: 'Source Systems', icon: <StorageIcon />, path: '/admin/source-systems' },
   { text: 'Run Worker', icon: <PlayArrowIcon />, path: '/admin/run' },
   { text: 'Processing Logs', icon: <HistoryIcon />, path: '/admin/logs' },
@@ -104,8 +106,10 @@ export default function AdminLayout() {
                 borderRadius: 2,
                 '&.Mui-selected': {
                   backgroundColor: theme.palette.primary.main,
-                  color: 'white',
                   '& .MuiListItemIcon-root': {
+                    color: 'white',
+                  },
+                  '& .MuiListItemText-primary': {
                     color: 'white',
                   },
                   '&:hover': {

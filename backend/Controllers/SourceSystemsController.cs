@@ -16,15 +16,18 @@ namespace SfabGl07Gateway.Api.Controllers;
 public class SourceSystemsController : ControllerBase
 {
     private readonly ISourceSystemRepository _repository;
+    private readonly IGl07ReportSetupRepository _reportSetupRepository;
     private readonly ITransformationServiceFactory _transformerFactory;
     private readonly ILogger<SourceSystemsController> _logger;
 
     public SourceSystemsController(
         ISourceSystemRepository repository,
+        IGl07ReportSetupRepository reportSetupRepository,
         ITransformationServiceFactory transformerFactory,
         ILogger<SourceSystemsController> logger)
     {
         _repository = repository;
+        _reportSetupRepository = reportSetupRepository;
         _transformerFactory = transformerFactory;
         _logger = logger;
     }
@@ -77,14 +80,21 @@ public class SourceSystemsController : ControllerBase
         var availableTransformers = _transformerFactory.GetAvailableTransformerTypes().ToList();
         if (!availableTransformers.Contains(request.TransformerType, StringComparer.OrdinalIgnoreCase))
         {
-            return BadRequest($"Invalid transformer type '{request.TransformerType}'. Available: {string.Join(", ", availableTransformers)}");
+            return BadRequest(new { message = $"Invalid transformer type '{request.TransformerType}'. Available: {string.Join(", ", availableTransformers)}" });
         }
 
         // Check for duplicate system code
         var existing = await _repository.GetByCodeAsync(request.SystemCode);
         if (existing != null)
         {
-            return Conflict($"Source system with code '{request.SystemCode}' already exists");
+            return Conflict(new { message = $"Source system with code '{request.SystemCode}' already exists" });
+        }
+
+        // Validate GL07 report setup exists
+        var reportSetup = await _reportSetupRepository.GetByIdAsync(request.Gl07ReportSetupId);
+        if (reportSetup == null)
+        {
+            return BadRequest(new { message = $"GL07 report setup with ID {request.Gl07ReportSetupId} not found" });
         }
 
         var sourceSystem = new SourceSystem
@@ -96,11 +106,16 @@ public class SourceSystemsController : ControllerBase
             TransformerType = request.TransformerType,
             FilePattern = request.FilePattern,
             IsActive = request.IsActive,
-            Description = request.Description
+            Description = request.Description,
+            Gl07ReportSetupId = request.Gl07ReportSetupId,
+            Interface = request.Interface,
+            TransactionType = request.TransactionType,
+            BatchId = request.BatchId
         };
 
         var id = await _repository.CreateAsync(sourceSystem);
         sourceSystem.Id = id;
+        sourceSystem.Gl07ReportSetup = reportSetup;
 
         _logger.LogInformation("Created source system: {SystemCode} (ID: {Id})", request.SystemCode, id);
 
@@ -118,14 +133,14 @@ public class SourceSystemsController : ControllerBase
         var existing = await _repository.GetByIdAsync(id);
         if (existing == null)
         {
-            return NotFound($"Source system with ID {id} not found");
+            return NotFound(new { message = $"Source system with ID {id} not found" });
         }
 
         // Validate transformer type exists
         var availableTransformers = _transformerFactory.GetAvailableTransformerTypes().ToList();
         if (!availableTransformers.Contains(request.TransformerType, StringComparer.OrdinalIgnoreCase))
         {
-            return BadRequest($"Invalid transformer type '{request.TransformerType}'. Available: {string.Join(", ", availableTransformers)}");
+            return BadRequest(new { message = $"Invalid transformer type '{request.TransformerType}'. Available: {string.Join(", ", availableTransformers)}" });
         }
 
         // Check for duplicate system code (if changed)
@@ -134,8 +149,15 @@ public class SourceSystemsController : ControllerBase
             var duplicate = await _repository.GetByCodeAsync(request.SystemCode);
             if (duplicate != null)
             {
-                return Conflict($"Source system with code '{request.SystemCode}' already exists");
+                return Conflict(new { message = $"Source system with code '{request.SystemCode}' already exists" });
             }
+        }
+
+        // Validate GL07 report setup exists
+        var reportSetup = await _reportSetupRepository.GetByIdAsync(request.Gl07ReportSetupId);
+        if (reportSetup == null)
+        {
+            return BadRequest(new { message = $"GL07 report setup with ID {request.Gl07ReportSetupId} not found" });
         }
 
         existing.SystemCode = request.SystemCode;
@@ -146,6 +168,10 @@ public class SourceSystemsController : ControllerBase
         existing.FilePattern = request.FilePattern;
         existing.IsActive = request.IsActive;
         existing.Description = request.Description;
+        existing.Gl07ReportSetupId = request.Gl07ReportSetupId;
+        existing.Interface = request.Interface;
+        existing.TransactionType = request.TransactionType;
+        existing.BatchId = request.BatchId;
 
         await _repository.UpdateAsync(existing);
 

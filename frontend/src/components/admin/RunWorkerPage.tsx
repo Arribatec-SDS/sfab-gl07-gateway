@@ -294,7 +294,6 @@ export default function RunWorkerPage() {
             <Box sx={{ display: 'flex', gap: 2 }}>
               <Button
                 variant="contained"
-                color="primary"
                 size="large"
                 startIcon={running ? <CircularProgress size={20} color="inherit" /> : <PlayArrowIcon />}
                 onClick={handleStartWorker}

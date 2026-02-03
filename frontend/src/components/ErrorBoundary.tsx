@@ -1,17 +1,17 @@
-import React from 'react';
 import {
-  Container,
-  Paper,
-  Typography,
-  Button,
-  Box,
-  Alert,
-  AlertTitle
-} from '@mui/material';
-import {
-  Error as ErrorIcon,
-  Refresh as RefreshIcon
+    Error as ErrorIcon,
+    Refresh as RefreshIcon
 } from '@mui/icons-material';
+import {
+    Alert,
+    AlertTitle,
+    Box,
+    Button,
+    Container,
+    Paper,
+    Typography
+} from '@mui/material';
+import React from 'react';
 
 interface ErrorBoundaryState {
   hasError: boolean;

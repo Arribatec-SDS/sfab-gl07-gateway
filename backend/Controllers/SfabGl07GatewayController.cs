@@ -1,7 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using Arribatec.Nexus.Client.Services;
 using Microsoft.AspNetCore.Authorization;
-using SfabGl07Gateway.Api.Services;
 using System.Security.Claims;
 
 namespace SfabGl07Gateway.Api.Controllers;
@@ -12,16 +11,13 @@ public class SfabGl07GatewayController : ControllerBase
 {
     private readonly ILogger<SfabGl07GatewayController> _logger;
     private readonly IContextProvider _contextProvider;
-    private readonly IDatabaseInitializer _dbInitializer;
 
     public SfabGl07GatewayController(
         ILogger<SfabGl07GatewayController> logger,
-        IContextProvider contextProvider,
-        IDatabaseInitializer dbInitializer)
+        IContextProvider contextProvider)
     {
         _logger = logger;
         _contextProvider = contextProvider;
-        _dbInitializer = dbInitializer;
     }
 
     [Authorize]
@@ -30,8 +26,7 @@ public class SfabGl07GatewayController : ControllerBase
     {
         try
         {
-            // Initialize database on first authenticated request
-            await _dbInitializer.InitializeAsync();
+            // Database initialization handled by middleware
 
             // Get user validation information from context provider
             var validation = _contextProvider.GetUserValidation();
