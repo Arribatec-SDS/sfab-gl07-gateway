@@ -15,13 +15,14 @@ public interface ITransformationService
     string TransformerType { get; }
 
     /// <summary>
-    /// Transform file content to Unit4 transaction batch request.
-    /// The transformer uses SourceSystem config for Interface, TransactionType, and BatchId logic.
+    /// Transform file content to Unit4 transaction batch requests.
+    /// Each XML Transaction element maps to one array item.
+    /// BatchInformation (Interface, BatchId) is the same on all items.
     /// </summary>
     /// <param name="fileContent">Raw file content</param>
     /// <param name="sourceSystem">Source system configuration containing Interface, TransactionType, BatchId settings</param>
-    /// <returns>Transformed Unit4 batch request</returns>
-    Unit4TransactionBatchRequest Transform(string fileContent, SourceSystem sourceSystem);
+    /// <returns>List of Unit4 batch requests - one per XML Transaction element</returns>
+    List<Unit4TransactionBatchRequest> Transform(string fileContent, SourceSystem sourceSystem);
 
     /// <summary>
     /// Check if this transformer can handle the given file content.

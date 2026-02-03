@@ -9,9 +9,10 @@ public interface IUnit4ApiClient
 {
     /// <summary>
     /// Post a transaction batch to Unit4 API.
+    /// The API accepts an array of transaction batch requests.
     /// </summary>
-    Task<Unit4TransactionBatchResponse> PostTransactionBatchAsync(Unit4TransactionBatchRequest request);
-    
+    Task<Unit4TransactionBatchResponse> PostTransactionBatchAsync(List<Unit4TransactionBatchRequest> requests);
+
     /// <summary>
     /// Test connection to Unit4 API by validating OAuth token.
     /// </summary>

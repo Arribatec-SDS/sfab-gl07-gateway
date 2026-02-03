@@ -28,7 +28,7 @@ public class Unit4ApiClient : IUnit4ApiClient
         _logger = logger;
     }
 
-    public async Task<Unit4TransactionBatchResponse> PostTransactionBatchAsync(Unit4TransactionBatchRequest request)
+    public async Task<Unit4TransactionBatchResponse> PostTransactionBatchAsync(List<Unit4TransactionBatchRequest> requests)
     {
         var token = await GetAccessTokenAsync();
         var settings = await _settingsService.GetSettingsGroupAsync<Unit4Settings>("Unit4");
@@ -46,11 +46,13 @@ public class Unit4ApiClient : IUnit4ApiClient
             url += $"?tenant={settings.TenantId}";
         }
 
-        _logger.LogInformation("Posting transaction batch to Unit4: {Url}", url);
+        _logger.LogInformation("Posting transaction batch to Unit4: {Url} ({Count} rows)", url, requests.Count);
         _logger.LogDebug("Request batchId: {BatchId}, interface: {Interface}",
-            request.BatchInformation?.BatchId, request.BatchInformation?.Interface);
+            requests.FirstOrDefault()?.BatchInformation?.BatchId,
+            requests.FirstOrDefault()?.BatchInformation?.Interface);
 
-        var response = await _httpClient.PostAsJsonAsync(url, request);
+        // Post the array of transactions
+        var response = await _httpClient.PostAsJsonAsync(url, requests);
 
         var responseContent = await response.Content.ReadAsStringAsync();
 

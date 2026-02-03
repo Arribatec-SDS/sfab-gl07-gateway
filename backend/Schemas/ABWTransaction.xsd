@@ -1,0 +1,275 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--  edited with XMLSpy v2005 sp1 U (http://www.xmlspy.com) by Per Øyvind Solhaug (Agresso R&D AS)  -->
+<!--  edited with XMLSPY v2004 rel. 3 U (http://www.xmlspy.com) by OJ (Agresso R&D AS)  -->
+<xs:schema xmlns:agrlib="http://services.agresso.com/schema/ABWSchemaLib/2011/11/14" xmlns:agr="http://services.agresso.com/schema/ABWTransaction/2011/11/14" xmlns:xs="http://www.w3.org/2001/XMLSchema" targetNamespace="http://services.agresso.com/schema/ABWTransaction/2011/11/14" elementFormDefault="qualified">
+	<xs:import namespace="http://services.agresso.com/schema/ABWSchemaLib/2011/11/14" schemaLocation="http://services.agresso.com/schema/ABWSchemaLib/2011/11/14/ABWSchemaLib.xsd"/>
+	<xs:annotation>
+		<xs:documentation>The ABWTransaction element is the root element of a document instance containing transactions (GL07) for AGRESSO Business World.</xs:documentation>
+	</xs:annotation>
+	<xs:element name="ABWTransaction">
+		<xs:complexType>
+			<xs:sequence>
+				<xs:element name="Interface" type="agrlib:String25">
+					<xs:annotation>
+						<xs:documentation>Code for external system. Must be valid in AGRESSO.</xs:documentation>
+					</xs:annotation>
+				</xs:element>
+				<xs:element ref="agrlib:BatchId"/>
+				<xs:element ref="agrlib:ReportClient" minOccurs="0"/>
+				<xs:element name="Voucher" maxOccurs="unbounded">
+					<xs:complexType>
+						<xs:sequence>
+							<xs:element name="VoucherNo" type="agrlib:Counter" minOccurs="0">
+								<xs:annotation>
+									<xs:documentation>Voucher number or counter to group transactions in a voucher. Voucher numbers could be assign from a transaction type set in a report parameter in GL07.</xs:documentation>
+								</xs:annotation>
+							</xs:element>
+							<xs:element ref="agrlib:VoucherType" minOccurs="0"/>
+							<xs:element ref="agrlib:CompanyCode"/>
+							<xs:element ref="agrlib:Period" minOccurs="0"/>
+							<xs:element name="VoucherDate" type="agrlib:date" minOccurs="0">
+								<xs:annotation>
+									<xs:documentation>Voucher date/Invoice date.</xs:documentation>
+								</xs:annotation>
+							</xs:element>
+							<xs:element name="Transaction" maxOccurs="unbounded">
+								<xs:complexType>
+									<xs:sequence>
+										<xs:element ref="agrlib:TransType" minOccurs="0"/>
+										<xs:element ref="agrlib:Description" minOccurs="0"/>
+										<xs:element ref="agrlib:Status" minOccurs="0"/>
+										<xs:element name="TransDate" type="agrlib:date" minOccurs="0">
+											<xs:annotation>
+												<xs:documentation>Value date</xs:documentation>
+											</xs:annotation>
+										</xs:element>
+										<xs:element ref="agrlib:AllocationKey" minOccurs="0"/>
+										<xs:element name="PeriodNo" type="xs:int" minOccurs="0">
+											<xs:annotation>
+												<xs:documentation>Defines the start period for the accrual calculated from the transaction's period.</xs:documentation>
+											</xs:annotation>
+										</xs:element>
+										<xs:element name="PayTransfer" type="agrlib:String2" minOccurs="0">
+											<xs:annotation>
+												<xs:documentation>external payment instruction on transaction - only for suppliers</xs:documentation>
+											</xs:annotation>
+										</xs:element>
+										<xs:element name="ExternalRef" type="agrlib:String255" minOccurs="0">
+											<xs:annotation>
+												<xs:documentation>external transaction reference - only for GL</xs:documentation>
+											</xs:annotation>
+										</xs:element>
+										<xs:element name="Amounts" minOccurs="0">
+											<xs:complexType>
+												<xs:sequence>
+													<xs:element name="DcFlag" type="xs:int" minOccurs="0">
+														<xs:annotation>
+															<xs:documentation>In use if debit-credit accounting: 1 - Debit, -1 - Credit</xs:documentation>
+														</xs:annotation>
+													</xs:element>
+													<xs:element ref="agrlib:Amount" minOccurs="0"/>
+													<xs:element ref="agrlib:CurrAmount" minOccurs="0"/>
+													<xs:element name="Number1" type="xs:int" minOccurs="0">
+														<xs:annotation>
+															<xs:documentation>Number field with leading sign</xs:documentation>
+														</xs:annotation>
+													</xs:element>
+													<xs:element name="Value1" type="xs:float" minOccurs="0">
+														<xs:annotation>
+															<xs:documentation>Value field multiplied with 100.</xs:documentation>
+														</xs:annotation>
+													</xs:element>
+													<xs:element name="Value2" type="agrlib:amount" minOccurs="0">
+														<xs:annotation>
+															<xs:documentation>Amount 3 in pence with leading sign,</xs:documentation>
+														</xs:annotation>
+													</xs:element>
+													<xs:element name="Value3" type="agrlib:amount" minOccurs="0">
+														<xs:annotation>
+															<xs:documentation>Amount 4 in pence with leading sign.</xs:documentation>
+														</xs:annotation>
+													</xs:element>
+												</xs:sequence>
+											</xs:complexType>
+										</xs:element>
+										<xs:element name="GLAnalysis" minOccurs="0">
+											<xs:complexType>
+												<xs:sequence>
+													<xs:element ref="agrlib:Account" minOccurs="0"/>
+													<xs:element name="Dim1" type="agrlib:DimValue" minOccurs="0">
+														<xs:annotation>
+															<xs:documentation>Content determined by the account's accounting rule, i.e COSTC.</xs:documentation>
+														</xs:annotation>
+													</xs:element>
+													<xs:element name="Dim2" type="agrlib:DimValue" minOccurs="0">
+														<xs:annotation>
+															<xs:documentation>Content determined by the account's accounting rule, i.e PROJECT.</xs:documentation>
+														</xs:annotation>
+													</xs:element>
+													<xs:element name="Dim3" type="agrlib:DimValue" minOccurs="0">
+														<xs:annotation>
+															<xs:documentation>Content determined by the account's accounting rule.</xs:documentation>
+														</xs:annotation>
+													</xs:element>
+													<xs:element name="Dim4" type="agrlib:DimValue" minOccurs="0">
+														<xs:annotation>
+															<xs:documentation>Content determined by the account's accounting rule.</xs:documentation>
+														</xs:annotation>
+													</xs:element>
+													<xs:element name="Dim5" type="agrlib:DimValue" minOccurs="0">
+														<xs:annotation>
+															<xs:documentation>Content determined by the account's accounting rule.</xs:documentation>
+														</xs:annotation>
+													</xs:element>
+													<xs:element name="Dim6" type="agrlib:DimValue" minOccurs="0">
+														<xs:annotation>
+															<xs:documentation>Content determined by the account's accounting rule.</xs:documentation>
+														</xs:annotation>
+													</xs:element>
+													<xs:element name="Dim7" type="agrlib:DimValue" minOccurs="0">
+														<xs:annotation>
+															<xs:documentation>Content determined by the account's accounting rule.</xs:documentation>
+														</xs:annotation>
+													</xs:element>
+													<xs:element ref="agrlib:Currency" minOccurs="0"/>
+													<xs:element ref="agrlib:TaxCode" minOccurs="0"/>
+													<xs:element ref="agrlib:TaxSystem" minOccurs="0"/>
+													<xs:element name="TaxId" type="xs:int" minOccurs="0">
+														<xs:annotation>
+															<xs:documentation>Triangle trade indicator (EU)</xs:documentation>
+														</xs:annotation>
+													</xs:element>
+												</xs:sequence>
+											</xs:complexType>
+										</xs:element>
+										<xs:element name="TaxTransInfo" minOccurs="0">
+											<xs:annotation>
+												<xs:documentation>Must be filled out for TX transactions.</xs:documentation>
+											</xs:annotation>
+											<xs:complexType>
+												<xs:sequence>
+													<xs:element name="Account2" type="agrlib:DimValue" minOccurs="0">
+														<xs:annotation>
+															<xs:documentation>Account from which tax was calculated.</xs:documentation>
+														</xs:annotation>
+													</xs:element>
+													<xs:element name="BaseAmount" type="agrlib:amount" minOccurs="0">
+														<xs:annotation>
+															<xs:documentation>Tax calculation base in company currency.</xs:documentation>
+														</xs:annotation>
+													</xs:element>
+													<xs:element name="BaseCurr" type="agrlib:amount" minOccurs="0">
+														<xs:annotation>
+															<xs:documentation>Tax calculation base in any currency. </xs:documentation>
+														</xs:annotation>
+													</xs:element>
+												</xs:sequence>
+											</xs:complexType>
+										</xs:element>
+										<xs:element name="ApArInfo" minOccurs="0">
+											<xs:annotation>
+												<xs:documentation>Must be filled out for AP/AR transactions.</xs:documentation>
+											</xs:annotation>
+											<xs:complexType>
+												<xs:sequence>
+													<xs:element ref="agrlib:ApArType" minOccurs="0"/>
+													<xs:element ref="agrlib:ApArNo" minOccurs="0"/>
+													<xs:element name="FactorShort" type="agrlib:DimValue" minOccurs="0">
+														<xs:annotation>
+															<xs:documentation>Payment recipient. Must be valid in AGRESSO. Could be left blank.</xs:documentation>
+														</xs:annotation>
+													</xs:element>
+													<xs:element ref="agrlib:InvoiceNo" minOccurs="0"/>
+													<xs:element ref="agrlib:Responsible" minOccurs="0"/>
+													<xs:element ref="agrlib:DueDate" minOccurs="0"/>
+													<xs:element name="DiscDate" type="agrlib:date" minOccurs="0"/>
+													<xs:element ref="agrlib:Discount" minOccurs="0"/>
+													<xs:element ref="agrlib:BacsId" minOccurs="0"/>
+													<xs:element ref="agrlib:PayMethod" minOccurs="0"/>
+													<xs:element name="PayFlag" type="xs:int" minOccurs="0">
+														<xs:annotation>
+															<xs:documentation>1 - Pay in advance</xs:documentation>
+														</xs:annotation>
+													</xs:element>
+													<xs:element name="CurrLicense" type="agrlib:String3" minOccurs="0">
+														<xs:annotation>
+															<xs:documentation>ID for currency documenation for foreign invoices. Must be valid in AGRESSO.</xs:documentation>
+														</xs:annotation>
+													</xs:element>
+													<xs:element ref="agrlib:VoucherRef" minOccurs="0"/>
+													<xs:element ref="agrlib:SequenceRef" minOccurs="0"/>
+													<xs:element name="ArriveId" type="agrlib:Counter" minOccurs="0">
+														<xs:annotation>
+															<xs:documentation>Reference pre-registered invoice.</xs:documentation>
+														</xs:annotation>
+													</xs:element>
+													<xs:element name="Commitment" type="agrlib:DimValue" minOccurs="0">
+														<xs:annotation>
+															<xs:documentation>Reference contract/commitment.</xs:documentation>
+														</xs:annotation>
+													</xs:element>
+													<xs:element name="OrderNo" type="agrlib:Counter" minOccurs="0">
+														<xs:annotation>
+															<xs:documentation>Reference OrderID from Purchasing</xs:documentation>
+														</xs:annotation>
+													</xs:element>
+													<xs:element ref="agrlib:IntruleId" minOccurs="0"/>
+													<xs:element name="PayTemplate" type="agrlib:String4" minOccurs="0">
+														<xs:annotation>
+															<xs:documentation>Pay schedule template. Must be valid in AGRESSO. Could be left blank.</xs:documentation>
+														</xs:annotation>
+													</xs:element>
+													<xs:element name="SundryInfo" minOccurs="0">
+														<xs:complexType>
+															<xs:sequence>
+																<xs:element name="ApArName" type="agrlib:String255" minOccurs="0">
+																	<xs:annotation>
+																		<xs:documentation>Supplier/customer name.</xs:documentation>
+																	</xs:annotation>
+																</xs:element>
+																<xs:element ref="agrlib:Address" minOccurs="0"/>
+																<xs:element ref="agrlib:ZipCode" minOccurs="0"/>
+																<xs:element ref="agrlib:Place" minOccurs="0"/>
+																<xs:element ref="agrlib:Province" minOccurs="0"/>
+																<xs:element ref="agrlib:VatRegNo" minOccurs="0"/>
+																<xs:element name="BankAccountType" type="agrlib:String2" minOccurs="0">
+																	<xs:annotation>
+																		<xs:documentation>Bank account type</xs:documentation>
+																	</xs:annotation>
+																</xs:element>
+																<xs:element ref="agrlib:BankAccount" minOccurs="0"/>
+																<xs:element ref="agrlib:ClearingCode" minOccurs="0"/>
+																<xs:element ref="agrlib:Swift" minOccurs="0"/>
+															</xs:sequence>
+														</xs:complexType>
+													</xs:element>
+													<xs:element name="OrigReference" type="agrlib:Counter" minOccurs="0">
+														<xs:annotation>
+															<xs:documentation>The credit note's reference to its original invoice</xs:documentation>
+														</xs:annotation>
+													</xs:element>
+													<xs:element name="ArrivalDate" type="agrlib:date" minOccurs="0">
+														<xs:annotation>
+															<xs:documentation>The date the invoice was received</xs:documentation>
+														</xs:annotation>
+													</xs:element>
+													<xs:element name="PayCurrency" type="agrlib:DimValue" minOccurs="0">
+														<xs:annotation>
+															<xs:documentation>The currency in which payment will be made</xs:documentation>
+														</xs:annotation>
+													</xs:element>
+													<xs:element name="ComplaintCode" type="agrlib:DimValue" minOccurs="0"/>
+													<xs:element name="ComplaintDate" type="agrlib:date" minOccurs="0"/>
+												</xs:sequence>
+											</xs:complexType>
+										</xs:element>
+									</xs:sequence>
+								</xs:complexType>
+							</xs:element>
+						</xs:sequence>
+					</xs:complexType>
+				</xs:element>
+			</xs:sequence>
+		</xs:complexType>
+	</xs:element>
+</xs:schema>

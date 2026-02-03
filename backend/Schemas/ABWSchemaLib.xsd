@@ -1,0 +1,1167 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--  edited with XMLSpy v2005 sp1 U (http://www.xmlspy.com) by Agresso R&D AS (Agresso R&D AS)  -->
+<!--  edited with XMLSPY v2004 rel. 3 U (http://www.xmlspy.com) by Rune Lien (Agresso)  -->
+<xs:schema xmlns:agrlib="http://services.agresso.com/schema/ABWSchemaLib/2011/11/14" xmlns:xs="http://www.w3.org/2001/XMLSchema" targetNamespace="http://services.agresso.com/schema/ABWSchemaLib/2011/11/14" elementFormDefault="qualified" attributeFormDefault="unqualified">
+	<xs:element name="ABWXmlSchemaLib">
+		<xs:annotation>
+			<xs:documentation>XML Schema Library</xs:documentation>
+		</xs:annotation>
+	</xs:element>
+	<!-- **************** Complex types with corresponing elements*************************  -->
+	<xs:element name="AddressInfo" type="agrlib:tAddressInfo">
+		<xs:annotation>
+			<xs:documentation>AddressInfo documentation (element)</xs:documentation>
+		</xs:annotation>
+	</xs:element>
+	<xs:complexType name="tAddressInfo">
+		<xs:annotation>
+			<xs:documentation>AddressInfo documentation (complex type)</xs:documentation>
+		</xs:annotation>
+		<xs:sequence>
+			<xs:element ref="agrlib:Address" minOccurs="0"/>
+			<xs:element ref="agrlib:Place" minOccurs="0"/>
+			<xs:element ref="agrlib:Province" minOccurs="0"/>
+			<xs:element ref="agrlib:ZipCode" minOccurs="0"/>
+			<xs:element name="Country" type="agrlib:String255" minOccurs="0"/>
+			<xs:element name="Email" type="agrlib:email" minOccurs="0"/>
+			<xs:element name="Phone" type="agrlib:String35" minOccurs="0"/>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="tAddressInfo2">
+		<xs:annotation>
+			<xs:documentation>Complete addressInfo, used when importing masterfiles(complex type)</xs:documentation>
+		</xs:annotation>
+		<xs:sequence>
+			<xs:element ref="agrlib:UpdateFlag"/>
+			<xs:element ref="agrlib:AddressType"/>
+			<xs:element ref="agrlib:ContactName" minOccurs="0"/>
+			<xs:element ref="agrlib:ContactPosition" minOccurs="0"/>
+			<xs:element ref="agrlib:Address" minOccurs="0"/>
+			<xs:element ref="agrlib:Place" minOccurs="0"/>
+			<xs:element ref="agrlib:Province" minOccurs="0"/>
+			<xs:element ref="agrlib:ZipCode" minOccurs="0"/>
+			<xs:element ref="agrlib:CountryCode"/>
+			<xs:element ref="agrlib:SequenceNo" minOccurs="0"/>
+			<xs:element ref="agrlib:InternetInfo" minOccurs="0"/>
+			<xs:element ref="agrlib:Phone" minOccurs="0"/>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="tAddressInfo3">
+		<xs:annotation>
+			<xs:documentation>Complete addressInfo without updateFlag, used when importing masterfiles(complex type)</xs:documentation>
+		</xs:annotation>
+		<xs:sequence>
+			<xs:element ref="agrlib:AddressType"/>
+			<xs:element ref="agrlib:ContactName" minOccurs="0"/>
+			<xs:element ref="agrlib:ContactPosition" minOccurs="0"/>
+			<xs:element ref="agrlib:Address" minOccurs="0"/>
+			<xs:element ref="agrlib:Place" minOccurs="0"/>
+			<xs:element ref="agrlib:Province" minOccurs="0"/>
+			<xs:element ref="agrlib:ZipCode" minOccurs="0"/>
+			<xs:element ref="agrlib:CountryCode"/>
+			<xs:element ref="agrlib:SequenceNo" minOccurs="0"/>
+			<xs:element ref="agrlib:InternetInfo" minOccurs="0"/>
+			<xs:element ref="agrlib:Phone" minOccurs="0"/>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:element name="ApArBaseInfo" type="agrlib:tApArBaseInfo">
+		<xs:annotation>
+			<xs:documentation>ApARBaseInfo documentation (element)</xs:documentation>
+		</xs:annotation>
+	</xs:element>
+	<xs:element name="ApArBaseInfo2" type="agrlib:tApArBaseInfo2">
+		<xs:annotation>
+			<xs:documentation>ApARBaseInfo documentation (element) with optional address</xs:documentation>
+		</xs:annotation>
+	</xs:element>
+	<xs:complexType name="tApArBaseInfo">
+		<xs:annotation>
+			<xs:documentation>ApARBaseInfo documentation (complex type)</xs:documentation>
+		</xs:annotation>
+		<xs:sequence>
+			<xs:element ref="agrlib:Name"/>
+			<xs:element ref="agrlib:AddressInfo"/>
+			<xs:element ref="agrlib:CompRegNo" minOccurs="0"/>
+			<xs:element ref="agrlib:VatRegNo" minOccurs="0"/>
+			<xs:element ref="agrlib:EANCode" minOccurs="0"/>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="tApArBaseInfo2">
+		<xs:annotation>
+			<xs:documentation>ApARBaseInfo documentation (complex type) with optional address</xs:documentation>
+		</xs:annotation>
+		<xs:sequence>
+			<xs:element ref="agrlib:Name" minOccurs="0"/>
+			<xs:element ref="agrlib:AddressInfo" minOccurs="0"/>
+			<xs:element ref="agrlib:CompRegNo" minOccurs="0"/>
+			<xs:element ref="agrlib:VatRegNo" minOccurs="0"/>
+			<xs:element ref="agrlib:EANCode" minOccurs="0"/>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:element name="Documents" type="agrlib:tDocuments">
+		<xs:annotation>
+			<xs:documentation>Embedded documents (data is base64 encoded)</xs:documentation>
+		</xs:annotation>
+	</xs:element>
+	<xs:complexType name="tDocuments">
+		<xs:sequence>
+			<xs:element name="Document" minOccurs="0" maxOccurs="unbounded">
+				<xs:complexType>
+					<xs:sequence>
+						<xs:element name="DocumentLine" type="xs:integer"/>
+						<xs:element name="OriginalDocumentName" type="agrlib:String255"/>
+						<xs:element name="MimeType" type="agrlib:String255"/>
+						<xs:element name="DocumentData" type="agrlib:StringUnlimited"/>
+					</xs:sequence>
+				</xs:complexType>
+			</xs:element>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:element name="Bespoke" type="agrlib:tBespoke">
+		<xs:annotation>
+			<xs:documentation>Bespoke documentation (element)</xs:documentation>
+		</xs:annotation>
+	</xs:element>
+	<xs:complexType name="tBespoke">
+		<xs:annotation>
+			<xs:documentation>Bespoke documentation (complex type)</xs:documentation>
+		</xs:annotation>
+		<xs:sequence>
+			<xs:element name="FreeText" type="agrlib:String50" minOccurs="0"/>
+		</xs:sequence>
+		<xs:attribute name="BespokeId" type="agrlib:String50"/>
+	</xs:complexType>
+	<xs:element name="Delivery" type="agrlib:tDelivery">
+		<xs:annotation>
+			<xs:documentation>Delivery (element)</xs:documentation>
+		</xs:annotation>
+	</xs:element>
+	<xs:complexType name="tDelivery">
+		<xs:annotation>
+			<xs:documentation>Delivery documentation (complex type)</xs:documentation>
+		</xs:annotation>
+		<xs:sequence>
+			<xs:element ref="agrlib:Warehouse" minOccurs="0"/>
+			<xs:element ref="agrlib:Location" minOccurs="0"/>
+			<xs:element name="Batch" type="agrlib:String10" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>Batch used.</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="SerialNo" type="agrlib:String20" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>Serial number.</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:element name="DeliveryInfo" type="agrlib:tDeliveryInfo">
+		<xs:annotation>
+			<xs:documentation>DeliveryInfo (element)</xs:documentation>
+		</xs:annotation>
+	</xs:element>
+	<xs:complexType name="tDeliveryInfo">
+		<xs:annotation>
+			<xs:documentation>DeliveryInfo documentation (complex type)</xs:documentation>
+		</xs:annotation>
+		<xs:sequence>
+			<xs:element ref="agrlib:DelivDate" minOccurs="0"/>
+			<xs:element ref="agrlib:DelivDateDescr" minOccurs="0"/>
+			<xs:element ref="agrlib:DelivTerms" minOccurs="0"/>
+			<xs:element ref="agrlib:DelivTermsDescr" minOccurs="0"/>
+			<xs:element ref="agrlib:DelivMethod" minOccurs="0"/>
+			<xs:element ref="agrlib:DelivMethodDescr" minOccurs="0"/>
+			<xs:element name="DelivAttention" type="agrlib:String50" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>Comments to the delivery address.</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="MarkAddr" type="agrlib:String255" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>Marking address.</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="MarkAttention" type="agrlib:String50" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>Comments to the marking address.</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="MarkCtryCd" type="agrlib:String25" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>Marking country code.</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:element name="GLAnalysis" type="agrlib:tGLAnalysis">
+		<xs:annotation>
+			<xs:documentation>Element for the GLAnalysis</xs:documentation>
+		</xs:annotation>
+	</xs:element>
+	<xs:complexType name="tGLAnalysis">
+		<xs:annotation>
+			<xs:documentation>Complex type for the GLAnalysis</xs:documentation>
+		</xs:annotation>
+		<xs:sequence>
+			<xs:element name="Dim1" type="agrlib:DimValue" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>Content determined by the account's accounting rule, i.e COSTC.</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="Dim2" type="agrlib:DimValue" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>Content determined by the account's accounting rule, i.e PROJECT.</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="Dim3" type="agrlib:DimValue" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>Content determined by the account's accounting rule.</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="Dim4" type="agrlib:DimValue" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>Content determined by the account's accounting rule.</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="Dim5" type="agrlib:DimValue" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>Content determined by the account's accounting rule.</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="Dim6" type="agrlib:DimValue" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>Content determined by the account's accounting rule.</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="Dim7" type="agrlib:DimValue" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>Content determined by the account's accounting rule.</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:element name="InternetInfo" type="agrlib:tInternetInfo">
+		<xs:annotation>
+			<xs:documentation>Email, Cc and Internet address</xs:documentation>
+		</xs:annotation>
+	</xs:element>
+	<xs:complexType name="tInternetInfo">
+		<xs:annotation>
+			<xs:documentation>Global base type for email information (complex type)</xs:documentation>
+		</xs:annotation>
+		<xs:sequence>
+			<xs:element name="Email" type="agrlib:email" minOccurs="0"/>
+			<xs:element name="EmailCc" type="agrlib:email" minOccurs="0"/>
+			<xs:element name="Internet" type="agrlib:String255" minOccurs="0"/>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:element name="InvoiceInfo" type="agrlib:tInvoiceInfo">
+		<xs:annotation>
+			<xs:documentation>Invoice info description (element)</xs:documentation>
+		</xs:annotation>
+	</xs:element>
+	<xs:complexType name="tInvoiceInfo">
+		<xs:annotation>
+			<xs:documentation>Invoice info description (complex type)</xs:documentation>
+		</xs:annotation>
+		<xs:sequence>
+			<xs:element name="InvoiceRecipient" type="agrlib:DimValue" minOccurs="0"/>
+			<xs:element name="PayTerms" type="agrlib:String25" minOccurs="0"/>
+			<xs:element name="PayMethod" type="agrlib:String2" minOccurs="0"/>
+			<xs:element name="IntruleId" type="agrlib:DimValue" minOccurs="0"/>
+			<xs:element name="Advance" type="xs:int" minOccurs="0"/>
+			<xs:element name="AmountLimit" type="agrlib:amount" minOccurs="0"/>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:element name="OrderSummary" type="agrlib:tOrderSummary">
+		<xs:annotation>
+			<xs:documentation>Order Summary (element)</xs:documentation>
+		</xs:annotation>
+	</xs:element>
+	<xs:complexType name="tOrderSummary">
+		<xs:annotation>
+			<xs:documentation>Order summary(complex type)</xs:documentation>
+		</xs:annotation>
+		<xs:sequence>
+			<xs:element name="TotalExclTax" type="agrlib:amount" minOccurs="0"/>
+			<xs:element name="TotalTax" type="agrlib:amount" minOccurs="0"/>
+			<xs:element name="OrderDiscPct" type="xs:float" minOccurs="0"/>
+			<xs:element name="OrderDiscAmount" type="agrlib:amount" minOccurs="0"/>
+			<xs:element name="TotalInclTax" type="agrlib:amount" minOccurs="0"/>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="tProductSpecification">
+		<xs:annotation>
+			<xs:documentation>ProductSpecification (complex type)</xs:documentation>
+		</xs:annotation>
+		<xs:sequence>
+			<xs:element name="SeqNo" type="xs:int" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>Counter within order/invoice detail for additional text lines.</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="Info" type="agrlib:String60" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>Additional text line for each detail line.</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:element name="ProductSpecification" type="agrlib:tProductSpecification">
+		<xs:annotation>
+			<xs:documentation>ProductSpecification (element)</xs:documentation>
+		</xs:annotation>
+	</xs:element>
+	<xs:element name="ReferenceCode" type="agrlib:tReferenceCode">
+		<xs:annotation>
+			<xs:documentation>Reference code documentation (element)</xs:documentation>
+		</xs:annotation>
+	</xs:element>
+	<xs:complexType name="tReferenceCode">
+		<xs:annotation>
+			<xs:documentation>Reference code documentation (complex type)</xs:documentation>
+		</xs:annotation>
+		<xs:sequence>
+			<xs:element name="Code" type="agrlib:String4" minOccurs="0"/>
+			<xs:element name="Value" type="agrlib:DimValue" minOccurs="0"/>
+			<xs:element name="Description" type="agrlib:String255" minOccurs="0"/>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:element name="Relation" type="agrlib:tRelation">
+		<xs:annotation>
+			<xs:documentation>Complete relation value info - used when importing masterfiles(element)</xs:documentation>
+		</xs:annotation>
+	</xs:element>
+	<xs:complexType name="tRelation">
+		<xs:sequence>
+			<xs:element ref="agrlib:UpdateFlag"/>
+			<xs:element ref="agrlib:RelAttrId"/>
+			<xs:element ref="agrlib:RelValue"/>
+			<xs:element ref="agrlib:OldRelValue" minOccurs="0"/>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="tRelation2">
+		<xs:annotation>
+			<xs:documentation>Complete relation value info with dates and without updateFlag- used when importing masterfiles(complex type)</xs:documentation>
+		</xs:annotation>
+		<xs:sequence>
+			<xs:element ref="agrlib:RelAttrId"/>
+			<xs:element ref="agrlib:RelValue"/>
+			<xs:element ref="agrlib:DateFrom" minOccurs="0"/>
+			<xs:element ref="agrlib:DateTo" minOccurs="0"/>
+			<xs:element ref="agrlib:OldRelValue" minOccurs="0"/>
+			<xs:element name="OldDateFrom" type="agrlib:date" minOccurs="0"/>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:element name="Phone" type="agrlib:tPhone">
+		<xs:annotation>
+			<xs:documentation>Element for phone and fax numbers</xs:documentation>
+		</xs:annotation>
+	</xs:element>
+	<xs:complexType name="tPhone">
+		<xs:annotation>
+			<xs:documentation>Complex type for phone and fax numbers</xs:documentation>
+		</xs:annotation>
+		<xs:sequence>
+			<xs:element name="Telephone1" type="agrlib:Telephone" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>Telephone/Fax number</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="Telephone2" type="agrlib:Telephone" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>Telephone/Fax number</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="Telephone3" type="agrlib:Telephone" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>Telephone/Fax number</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="Telephone4" type="agrlib:Telephone" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>Telephone/Fax number</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="Telephone5" type="agrlib:Telephone" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>Telephone/Fax number</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="Telephone6" type="agrlib:Telephone" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>Telephone/Fax number</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="Telephone7" type="agrlib:Telephone" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>Telephone/Fax number</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+		</xs:sequence>
+	</xs:complexType>
+	<!-- **************** Elements*************************  -->
+	<xs:element name="Account" type="agrlib:DimValue">
+		<xs:annotation>
+			<xs:documentation>Account</xs:documentation>
+		</xs:annotation>
+	</xs:element>
+	<xs:element name="AccountType" type="agrlib:String2">
+		<xs:annotation>
+			<xs:documentation>Account type(GL/AP/AR/TX)</xs:documentation>
+		</xs:annotation>
+	</xs:element>
+	<xs:element name="Address" type="agrlib:String160">
+		<xs:annotation>
+			<xs:documentation>Address.</xs:documentation>
+		</xs:annotation>
+	</xs:element>
+	<xs:element name="AddressType" type="agrlib:DimValue">
+		<xs:annotation>
+			<xs:documentation>The address type. </xs:documentation>
+		</xs:annotation>
+	</xs:element>
+	<xs:element name="AgressoDocId" type="agrlib:String255">
+		<xs:annotation>
+			<xs:documentation>The document id allocated in Agresso. (May be blank if there was an error with this document)</xs:documentation>
+		</xs:annotation>
+	</xs:element>
+	<xs:element name="AllocationKey" type="xs:int">
+		<xs:annotation>
+			<xs:documentation>A key defining how to split the amount across periods. </xs:documentation>
+		</xs:annotation>
+	</xs:element>
+	<xs:element name="Amount" type="agrlib:amount">
+		<xs:annotation>
+			<xs:documentation>Amount in company currency</xs:documentation>
+		</xs:annotation>
+	</xs:element>
+	<xs:element name="ApArNo" type="agrlib:DimValue">
+		<xs:annotation>
+			<xs:documentation>The supplier/customer number</xs:documentation>
+		</xs:annotation>
+	</xs:element>
+	<xs:element name="ApArType" type="agrlib:String1">
+		<xs:annotation>
+			<xs:documentation>The AP/AR type: P - Supplier, R - Customer</xs:documentation>
+		</xs:annotation>
+	</xs:element>
+	<xs:element name="BacsId" type="agrlib:String27">
+		<xs:annotation>
+			<xs:documentation>BacsId</xs:documentation>
+		</xs:annotation>
+	</xs:element>
+	<xs:element name="BankAccount" type="agrlib:String35">
+		<xs:annotation>
+			<xs:documentation>Bank account</xs:documentation>
+		</xs:annotation>
+	</xs:element>
+	<xs:element name="BuyerNo" type="agrlib:DimValue">
+		<xs:annotation>
+			<xs:documentation>Seller's unique identificator for the buyer (buyer number).</xs:documentation>
+		</xs:annotation>
+	</xs:element>
+	<xs:element name="BatchId" type="agrlib:String25">
+		<xs:annotation>
+			<xs:documentation>Batch ID from the external system.</xs:documentation>
+		</xs:annotation>
+	</xs:element>
+	<xs:element name="ClearingCode" type="agrlib:String13">
+		<xs:annotation>
+			<xs:documentation>The branch code of the suppliers/customer's bank. This is used for foreign and currency payments.</xs:documentation>
+		</xs:annotation>
+	</xs:element>
+	<xs:element name="CompanyCode" type="agrlib:DimValue">
+		<xs:annotation>
+			<xs:documentation>The company code</xs:documentation>
+		</xs:annotation>
+	</xs:element>
+	<xs:element name="CompRegNo" type="agrlib:String25">
+		<xs:annotation>
+			<xs:documentation>CompRegNo</xs:documentation>
+		</xs:annotation>
+	</xs:element>
+	<xs:element name="ContactName" type="agrlib:String255">
+		<xs:annotation>
+			<xs:documentation>The name of the contact person.</xs:documentation>
+		</xs:annotation>
+	</xs:element>
+	<xs:element name="ContactPosition" type="agrlib:String35">
+		<xs:annotation>
+			<xs:documentation>The contact person's position.</xs:documentation>
+		</xs:annotation>
+	</xs:element>
+	<xs:element name="ContractId" type="agrlib:DimValue">
+		<xs:annotation>
+			<xs:documentation>Contract identifier</xs:documentation>
+		</xs:annotation>
+	</xs:element>
+	<xs:element name="CountryCode" type="agrlib:DimValue">
+		<xs:annotation>
+			<xs:documentation>Country code (ISO standard)</xs:documentation>
+		</xs:annotation>
+	</xs:element>
+	<xs:element name="Currency" type="agrlib:DimValue">
+		<xs:annotation>
+			<xs:documentation> Currency, must be a valid currency code defined in AGRESSO</xs:documentation>
+		</xs:annotation>
+	</xs:element>
+	<xs:element name="CurrAmount" type="agrlib:amount">
+		<xs:annotation>
+			<xs:documentation>Amount in transaction currency</xs:documentation>
+		</xs:annotation>
+	</xs:element>
+	<xs:element name="CustomerNo" type="agrlib:DimValue">
+		<xs:annotation>
+			<xs:documentation>CustomerNo</xs:documentation>
+		</xs:annotation>
+	</xs:element>
+	<xs:element name="CustomerRef" type="agrlib:String255">
+		<xs:annotation>
+			<xs:documentation>Reference to find Customer ID</xs:documentation>
+		</xs:annotation>
+	</xs:element>
+	<xs:element name="DateFrom" type="agrlib:date">
+		<xs:annotation>
+			<xs:documentation>Date from</xs:documentation>
+		</xs:annotation>
+	</xs:element>
+	<xs:element name="DateTo" type="agrlib:date">
+		<xs:annotation>
+			<xs:documentation>Date to</xs:documentation>
+		</xs:annotation>
+	</xs:element>
+	<xs:element name="DelivDate" type="agrlib:date">
+		<xs:annotation>
+			<xs:documentation>Delivery date. If no value is given, the OrderDate is used. </xs:documentation>
+		</xs:annotation>
+	</xs:element>
+	<xs:element name="DelivDateDescr" type="agrlib:String255">
+		<xs:annotation>
+			<xs:documentation>Delivery date.</xs:documentation>
+		</xs:annotation>
+	</xs:element>
+	<xs:element name="DelivMethod" type="agrlib:DimValue">
+		<xs:annotation>
+			<xs:documentation>Delivery method. </xs:documentation>
+		</xs:annotation>
+	</xs:element>
+	<xs:element name="DelivMethodDescr" type="agrlib:String255">
+		<xs:annotation>
+			<xs:documentation>Description of the delivery method. </xs:documentation>
+		</xs:annotation>
+	</xs:element>
+	<xs:element name="DelivTerms" type="agrlib:DimValue">
+		<xs:annotation>
+			<xs:documentation>Terms of delivery.</xs:documentation>
+		</xs:annotation>
+	</xs:element>
+	<xs:element name="DelivTermsDescr" type="agrlib:String255">
+		<xs:annotation>
+			<xs:documentation>Description of the delivery terms.</xs:documentation>
+		</xs:annotation>
+	</xs:element>
+	<xs:element name="Description" type="agrlib:String255">
+		<xs:annotation>
+			<xs:documentation>Description</xs:documentation>
+		</xs:annotation>
+	</xs:element>
+	<xs:element name="Discount" type="agrlib:amount">
+		<xs:annotation>
+			<xs:documentation>Discount in transaction currency</xs:documentation>
+		</xs:annotation>
+	</xs:element>
+	<xs:element name="DiscountPct" type="xs:float">
+		<xs:annotation>
+			<xs:documentation> Discount, given in per cent (5.5% should be entered as 5.5).</xs:documentation>
+		</xs:annotation>
+	</xs:element>
+	<xs:element name="DocId" type="agrlib:String255">
+		<xs:annotation>
+			<xs:documentation>DocId</xs:documentation>
+		</xs:annotation>
+	</xs:element>
+	<xs:element name="DocLibrary" type="agrlib:String25">
+		<xs:annotation>
+			<xs:documentation>The document library to process</xs:documentation>
+		</xs:annotation>
+	</xs:element>
+	<xs:element name="DocType" type="agrlib:DimValue">
+		<xs:annotation>
+			<xs:documentation>DocType</xs:documentation>
+		</xs:annotation>
+	</xs:element>
+	<xs:element name="DueDate" type="agrlib:date">
+		<xs:annotation>
+			<xs:documentation>Date the invoice payment is due</xs:documentation>
+		</xs:annotation>
+	</xs:element>
+	<xs:element name="Ean" type="agrlib:String50">
+		<xs:annotation>
+			<xs:documentation>Bar code information field (e.g. EAN code).</xs:documentation>
+		</xs:annotation>
+	</xs:element>
+	<xs:element name="EANCode" type="agrlib:String50">
+		<xs:annotation>
+			<xs:documentation>EAN code</xs:documentation>
+		</xs:annotation>
+	</xs:element>
+	<xs:element name="ExternalDocId" type="agrlib:String255">
+		<xs:annotation>
+			<xs:documentation>The document id as known to the 3rd party system that it is being loaded from. This is relevant simply for error feedback if something goes wrong.</xs:documentation>
+		</xs:annotation>
+	</xs:element>
+	<xs:element name="ExternalRef" type="agrlib:String255">
+		<xs:annotation>
+			<xs:documentation>Referance to original invoice. To be used for e.g. credti notes.</xs:documentation>
+		</xs:annotation>
+	</xs:element>
+	<xs:element name="Filename" type="agrlib:String255">
+		<xs:annotation>
+			<xs:documentation>Filename</xs:documentation>
+		</xs:annotation>
+	</xs:element>
+	<xs:element name="FolderName" type="agrlib:String255">
+		<xs:annotation>
+			<xs:documentation>FolderName</xs:documentation>
+		</xs:annotation>
+	</xs:element>
+	<xs:element name="IntruleId" type="agrlib:DimValue">
+		<xs:annotation>
+			<xs:documentation>Collection code. Used for reminder letters, calculation of interest charges and the payment plan</xs:documentation>
+		</xs:annotation>
+	</xs:element>
+	<xs:element name="InvoiceDate" type="agrlib:date">
+		<xs:annotation>
+			<xs:documentation>Invoice date.</xs:documentation>
+		</xs:annotation>
+	</xs:element>
+	<xs:element name="InvoiceNo" type="agrlib:String100">
+		<xs:annotation>
+			<xs:documentation>Invoice reference.</xs:documentation>
+		</xs:annotation>
+	</xs:element>
+	<xs:element name="InvoiceRecipient" type="agrlib:DimValue">
+		<xs:annotation>
+			<xs:documentation>InvoiceRecipient</xs:documentation>
+		</xs:annotation>
+	</xs:element>
+	<xs:element name="LongInfo" type="agrlib:String120">
+		<xs:annotation>
+			<xs:documentation>Long info</xs:documentation>
+		</xs:annotation>
+	</xs:element>
+	<xs:element name="Location" type="agrlib:String25">
+		<xs:annotation>
+			<xs:documentation>Location within warehouse.</xs:documentation>
+		</xs:annotation>
+	</xs:element>
+	<xs:element name="MainBuyerNo" type="agrlib:String25">
+		<xs:annotation>
+			<xs:documentation>The buyer to be invoiced (Head office)</xs:documentation>
+		</xs:annotation>
+	</xs:element>
+	<xs:element name="Name" type="agrlib:String255">
+		<xs:annotation>
+			<xs:documentation>Name</xs:documentation>
+		</xs:annotation>
+	</xs:element>
+	<xs:element name="OldRelValue" type="agrlib:DimValue">
+		<xs:annotation>
+			<xs:documentation>Old Relation value that you want to update/overwrite.</xs:documentation>
+		</xs:annotation>
+	</xs:element>
+	<xs:element name="OrderNo" type="agrlib:Counter">
+		<xs:annotation>
+			<xs:documentation>Order ID</xs:documentation>
+		</xs:annotation>
+	</xs:element>
+	<xs:element name="PayMethod" type="agrlib:String2">
+		<xs:annotation>
+			<xs:documentation>Pay transfer method. Must be valid in AGRESSO. Could be left blank.</xs:documentation>
+		</xs:annotation>
+	</xs:element>
+	<xs:element name="PayTemplate" type="agrlib:String4">
+		<xs:annotation>
+			<xs:documentation>Payment plan template</xs:documentation>
+		</xs:annotation>
+	</xs:element>
+	<xs:element name="PayTerms" type="agrlib:DimValue">
+		<xs:annotation>
+			<xs:documentation>PayTerms</xs:documentation>
+		</xs:annotation>
+	</xs:element>
+	<xs:element name="PayTermsDescr" type="agrlib:String255">
+		<xs:annotation>
+			<xs:documentation>Description of the payment terms.</xs:documentation>
+		</xs:annotation>
+	</xs:element>
+	<xs:element name="Period" type="agrlib:period">
+		<xs:annotation>
+			<xs:documentation>Transaction period. Must be valid in AGRESSO. Will be used if filled out(GL07)</xs:documentation>
+		</xs:annotation>
+	</xs:element>
+	<xs:element name="Place" type="agrlib:String40">
+		<xs:annotation>
+			<xs:documentation>Place.</xs:documentation>
+		</xs:annotation>
+	</xs:element>
+	<xs:element name="Province" type="agrlib:String40">
+		<xs:annotation>
+			<xs:documentation>Province.</xs:documentation>
+		</xs:annotation>
+	</xs:element>
+	<xs:element name="RelAttrId" type="agrlib:String4">
+		<xs:annotation>
+			<xs:documentation>Attribute ID. The given value must be a valid attribute ID defined as a relation on attribute SUPP.ID (A5) or CUST.ID (A4) in AGRESSO.</xs:documentation>
+		</xs:annotation>
+	</xs:element>
+	<xs:element name="RelValue" type="agrlib:DimValue">
+		<xs:annotation>
+			<xs:documentation>Relation value.</xs:documentation>
+		</xs:annotation>
+	</xs:element>
+	<xs:element name="Responsible" type="agrlib:DimValue">
+		<xs:annotation>
+			<xs:documentation>Responsible reference code</xs:documentation>
+		</xs:annotation>
+	</xs:element>
+	<xs:element name="PropertyNo" type="agrlib:DimValue">
+		<xs:annotation>
+			<xs:documentation>Internal identifier for the property</xs:documentation>
+		</xs:annotation>
+	</xs:element>
+	<xs:element name="PurchPrice" type="agrlib:amount">
+		<xs:annotation>
+			<xs:documentation>PurchPrice</xs:documentation>
+		</xs:annotation>
+	</xs:element>
+	<xs:element name="Quantity" type="xs:float">
+		<xs:annotation>
+			<xs:documentation>Quantity</xs:documentation>
+		</xs:annotation>
+	</xs:element>
+	<xs:element name="QuantityFrom" type="xs:float">
+		<xs:annotation>
+			<xs:documentation>The quantity from which the supplier-independent purchase price and the customer-independent sales price are valid. Overlaps are not allowed!</xs:documentation>
+		</xs:annotation>
+	</xs:element>
+	<xs:element name="QuantityTo" type="xs:float">
+		<xs:annotation>
+			<xs:documentation>The quantity to which the supplier-independent purchase price and the customer-independent sales price are valid. Overlaps are not allowed!</xs:documentation>
+		</xs:annotation>
+	</xs:element>
+	<xs:element name="ReportClient" type="agrlib:DimValue">
+		<xs:annotation>
+			<xs:documentation>ReportClient => company code for a client to run a process, example GL07: if ordering GL07 from AIC</xs:documentation>
+		</xs:annotation>
+	</xs:element>
+	<xs:element name="SalesPrice" type="agrlib:amount">
+		<xs:annotation>
+			<xs:documentation>The customer-independent (standard) sales price.</xs:documentation>
+		</xs:annotation>
+	</xs:element>
+	<xs:element name="SequenceNo" type="xs:int"/>
+	<xs:annotation>
+		<xs:documentation>Sequence number of the adress.</xs:documentation>
+	</xs:annotation>
+	<xs:element name="SequenceRef" type="xs:int">
+		<xs:annotation>
+			<xs:documentation>Sequence number of referenced transaction/voucher.</xs:documentation>
+		</xs:annotation>
+	</xs:element>
+	<xs:element name="SellerNo" type="agrlib:DimValue">
+		<xs:annotation>
+			<xs:documentation>Buyer's unique identificator for the seller (seller number).</xs:documentation>
+		</xs:annotation>
+	</xs:element>
+	<xs:element name="ShortInfo" type="agrlib:String60">
+		<xs:annotation>
+			<xs:documentation>Short info</xs:documentation>
+		</xs:annotation>
+	</xs:element>
+	<xs:element name="Status" type="agrlib:String1">
+		<xs:annotation>
+			<xs:documentation>Status</xs:documentation>
+		</xs:annotation>
+	</xs:element>
+	<xs:element name="SubscriptionNo" type="agrlib:DimValue">
+		<xs:annotation>
+			<xs:documentation>SubscriptionNo</xs:documentation>
+		</xs:annotation>
+	</xs:element>
+	<xs:element name="SupplierNo" type="agrlib:DimValue">
+		<xs:annotation>
+			<xs:documentation>The main supplier of this product. Given value must be a valid supplier in AGRESSO.</xs:documentation>
+		</xs:annotation>
+	</xs:element>
+	<xs:element name="Swift" type="agrlib:String11">
+		<xs:annotation>
+			<xs:documentation>Swift - The Swift code for the customer's bank. This is used for foreign and currency payments</xs:documentation>
+		</xs:annotation>
+	</xs:element>
+	<xs:element name="TaxCode" type="agrlib:DimValue">
+		<xs:annotation>
+			<xs:documentation>Tax code. Must be valid in AGRESSO.</xs:documentation>
+		</xs:annotation>
+	</xs:element>
+	<xs:element name="TaxSystem" type="agrlib:DimValue">
+		<xs:annotation>
+			<xs:documentation>AGRESSO internal use only. Tax System.</xs:documentation>
+		</xs:annotation>
+	</xs:element>
+	<xs:element name="TemplateId" type="xs:int">
+		<xs:annotation>
+			<xs:documentation>GL analysis template</xs:documentation>
+		</xs:annotation>
+	</xs:element>
+	<xs:element name="Text1" type="agrlib:String100">
+		<xs:annotation>
+			<xs:documentation>Optional text/information</xs:documentation>
+		</xs:annotation>
+	</xs:element>
+	<xs:element name="Text2" type="agrlib:String100">
+		<xs:annotation>
+			<xs:documentation>Optional text/information</xs:documentation>
+		</xs:annotation>
+	</xs:element>
+	<xs:element name="Text3" type="agrlib:String100">
+		<xs:annotation>
+			<xs:documentation>Optional text/information</xs:documentation>
+		</xs:annotation>
+	</xs:element>
+	<xs:element name="Text4" type="agrlib:String100">
+		<xs:annotation>
+			<xs:documentation>Optional text/information</xs:documentation>
+		</xs:annotation>
+	</xs:element>
+	<xs:element name="TransDate" type="agrlib:date">
+		<xs:annotation>
+			<xs:documentation>Transaction date</xs:documentation>
+		</xs:annotation>
+	</xs:element>
+	<xs:element name="TransType" type="agrlib:transType">
+		<xs:annotation>
+			<xs:documentation>Transaction type. Use this if you don't need any legal values for the transtype. See simple types LegalTransTypesXX and transtype.</xs:documentation>
+		</xs:annotation>
+	</xs:element>
+	<xs:element name="Unit" type="agrlib:DimValue">
+		<xs:annotation>
+			<xs:documentation>Time unit used for PCB. Values: Hours, days, weeks, bi-weekly, month, time from/to</xs:documentation>
+		</xs:annotation>
+	</xs:element>
+	<xs:element name="UnitCode" type="agrlib:String3">
+		<xs:annotation>
+			<xs:documentation>The default unit code for the product (stocked unit). If not given, a report parameter will be used for new products. Default unit for the product cannot be altered.</xs:documentation>
+		</xs:annotation>
+	</xs:element>
+	<xs:element name="UnitDescr" type="agrlib:String255">
+		<xs:annotation>
+			<xs:documentation>The description of the default unit code. Mandatory for new unit codes (if given UnitCode is not already defined as a valid unit code in AGRESSO). </xs:documentation>
+		</xs:annotation>
+	</xs:element>
+	<xs:element name="UpdateFlag" type="xs:boolean">
+		<xs:annotation>
+			<xs:documentation>States whether this is an update or a new entry: 0 = New (default if not given), 1 = Update</xs:documentation>
+		</xs:annotation>
+	</xs:element>
+	<xs:element name="UserId" type="agrlib:DimValue">
+		<xs:annotation>
+			<xs:documentation>UserId</xs:documentation>
+		</xs:annotation>
+	</xs:element>
+	<xs:element name="UseLineTotal" type="xs:boolean">
+		<xs:annotation>
+			<xs:documentation>AGRESSO internal use only. </xs:documentation>
+		</xs:annotation>
+	</xs:element>
+	<xs:element name="Warehouse" type="agrlib:DimValue">
+		<xs:annotation>
+			<xs:documentation>Warehouse stock is added to/taken from.</xs:documentation>
+		</xs:annotation>
+	</xs:element>
+	<xs:element name="VatRegNo" type="agrlib:String25">
+		<xs:annotation>
+			<xs:documentation>VAT registration number.</xs:documentation>
+		</xs:annotation>
+	</xs:element>
+	<xs:element name="Volume" type="xs:float">
+		<xs:annotation>
+			<xs:documentation>Volume per unit in the standard volume unit.</xs:documentation>
+		</xs:annotation>
+	</xs:element>
+	<xs:element name="VoucherRef" type="agrlib:Counter">
+		<xs:annotation>
+			<xs:documentation>Transaction number of referenced transaction/voucher</xs:documentation>
+		</xs:annotation>
+	</xs:element>
+	<xs:element name="VoucherType" type="agrlib:DimValue">
+		<xs:annotation>
+			<xs:documentation>Voucher type/Number type. Must be valid in AGRESSO.</xs:documentation>
+		</xs:annotation>
+	</xs:element>
+	<xs:element name="Weight" type="xs:float">
+		<xs:annotation>
+			<xs:documentation>Weight per unit in the standard weight unit.</xs:documentation>
+		</xs:annotation>
+	</xs:element>
+	<xs:element name="ZipCode" type="agrlib:String15">
+		<xs:annotation>
+			<xs:documentation>Zip code. Must be a valid postcode in AGRESSO if the actual country is defined with the postcode field marked.</xs:documentation>
+		</xs:annotation>
+	</xs:element>
+	<!-- ************** Simple types *************************' -->
+	<xs:simpleType name="amount">
+		<xs:annotation>
+			<xs:documentation>Different amounts</xs:documentation>
+		</xs:annotation>
+		<xs:restriction base="xs:decimal"/>
+	</xs:simpleType>
+	<xs:simpleType name="Counter">
+		<xs:restriction base="xs:integer">
+			<xs:minInclusive value="0"/>
+			<xs:maxInclusive value="999999999999999"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="date">
+		<xs:annotation>
+			<xs:documentation>Date</xs:documentation>
+		</xs:annotation>
+		<xs:restriction base="xs:date">
+			<xs:minInclusive value="1900-01-01"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="dateTime">
+		<xs:annotation>
+			<xs:documentation>DateTime</xs:documentation>
+		</xs:annotation>
+		<xs:restriction base="xs:dateTime">
+			<xs:minInclusive value="1900-01-01T00:00:00"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="email">
+		<xs:annotation>
+			<xs:documentation>E-mail address</xs:documentation>
+		</xs:annotation>
+		<xs:restriction base="xs:string">
+			<xs:minLength value="1"/>
+			<xs:maxLength value="255"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="DimValue">
+		<xs:restriction base="xs:string">
+			<xs:minLength value="0"/>
+			<xs:maxLength value="25"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="Guid">
+		<xs:restriction base="xs:string">
+			<xs:minLength value="16"/>
+			<xs:maxLength value="38"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="period">
+		<xs:annotation>
+			<xs:documentation>Simple type Period. Used for all period types. </xs:documentation>
+		</xs:annotation>
+		<xs:restriction base="xs:integer">
+			<xs:minInclusive value="0"/>
+			<xs:maxInclusive value="999999"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="Telephone">
+		<xs:annotation>
+			<xs:documentation>Simple type Telephone</xs:documentation>
+		</xs:annotation>
+		<xs:restriction base="agrlib:String35"/>
+	</xs:simpleType>
+	<xs:simpleType name="transType">
+		<xs:annotation>
+			<xs:documentation>Simple type trans type. Use this if you need a union with legalTransTypesXX</xs:documentation>
+		</xs:annotation>
+		<xs:restriction base="agrlib:String2"/>
+	</xs:simpleType>
+	<xs:simpleType name="Bool">
+		<xs:annotation>
+			<xs:documentation>Simple boolean type.</xs:documentation>
+		</xs:annotation>
+		<xs:restriction base="xs:boolean"/>
+	</xs:simpleType>
+	<!-- ********** Simple String types ****************** -->
+	<xs:simpleType name="String0">
+		<xs:restriction base="xs:string">
+			<xs:annotation>
+				<xs:documentation>Empty string. Used for validation if empty strings are allowed(typically in a union)</xs:documentation>
+			</xs:annotation>
+			<xs:minLength value="0"/>
+			<xs:maxLength value="0"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="String1">
+		<xs:restriction base="xs:string">
+			<xs:minLength value="0"/>
+			<xs:maxLength value="1"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="String2">
+		<xs:restriction base="xs:string">
+			<xs:minLength value="0"/>
+			<xs:maxLength value="2"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="String3">
+		<xs:restriction base="xs:string">
+			<xs:minLength value="0"/>
+			<xs:maxLength value="3"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="String4">
+		<xs:restriction base="xs:string">
+			<xs:minLength value="0"/>
+			<xs:maxLength value="4"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="String8">
+		<xs:restriction base="xs:string">
+			<xs:minLength value="0"/>
+			<xs:maxLength value="8"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="String10">
+		<xs:restriction base="xs:string">
+			<xs:minLength value="0"/>
+			<xs:maxLength value="10"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="String11">
+		<xs:restriction base="xs:string">
+			<xs:minLength value="0"/>
+			<xs:maxLength value="11"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="String12">
+		<xs:restriction base="xs:string">
+			<xs:minLength value="0"/>
+			<xs:maxLength value="12"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="String13">
+		<xs:restriction base="xs:string">
+			<xs:minLength value="0"/>
+			<xs:maxLength value="13"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="String15">
+		<xs:restriction base="xs:string">
+			<xs:minLength value="0"/>
+			<xs:maxLength value="15"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="String20">
+		<xs:restriction base="xs:string">
+			<xs:minLength value="0"/>
+			<xs:maxLength value="20"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="String25">
+		<xs:restriction base="xs:string">
+			<xs:minLength value="0"/>
+			<xs:maxLength value="25"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="String27">
+		<xs:restriction base="xs:string">
+			<xs:minLength value="0"/>
+			<xs:maxLength value="27"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="String34">
+		<xs:restriction base="xs:string">
+			<xs:minLength value="0"/>
+			<xs:maxLength value="34"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="String35">
+		<xs:restriction base="xs:string">
+			<xs:minLength value="0"/>
+			<xs:maxLength value="35"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="String40">
+		<xs:restriction base="xs:string">
+			<xs:minLength value="0"/>
+			<xs:maxLength value="40"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="String50">
+		<xs:restriction base="xs:string">
+			<xs:minLength value="0"/>
+			<xs:maxLength value="50"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="String60">
+		<xs:restriction base="xs:string">
+			<xs:minLength value="0"/>
+			<xs:maxLength value="60"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="String70">
+		<xs:restriction base="xs:string">
+			<xs:minLength value="0"/>
+			<xs:maxLength value="70"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="String80">
+		<xs:restriction base="xs:string">
+			<xs:minLength value="0"/>
+			<xs:maxLength value="80"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="String100">
+		<xs:restriction base="xs:string">
+			<xs:minLength value="0"/>
+			<xs:maxLength value="100"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="String120">
+		<xs:restriction base="xs:string">
+			<xs:minLength value="0"/>
+			<xs:maxLength value="120"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="String140">
+		<xs:restriction base="xs:string">
+			<xs:minLength value="0"/>
+			<xs:maxLength value="140"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="String160">
+		<xs:restriction base="xs:string">
+			<xs:minLength value="0"/>
+			<xs:maxLength value="160"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="String255">
+		<xs:restriction base="xs:string">
+			<xs:minLength value="0"/>
+			<xs:maxLength value="255"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="String720">
+		<xs:restriction base="xs:string">
+			<xs:minLength value="0"/>
+			<xs:maxLength value="720"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="String1500">
+		<xs:restriction base="xs:string">
+			<xs:minLength value="0"/>
+			<xs:maxLength value="1500"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="StringUnlimited">
+		<xs:restriction base="xs:string">
+			<xs:minLength value="0"/>
+		</xs:restriction>
+	</xs:simpleType>
+</xs:schema>

@@ -35,7 +35,7 @@ public class ABWTransaction
 /// </summary>
 public class Voucher
 {
-    [XmlElement("VoucherNo", Namespace = AgressoNamespaces.SchemaLib)]
+    [XmlElement("VoucherNo", Namespace = AgressoNamespaces.Transaction)]
     public string? VoucherNo { get; set; }
 
     [XmlElement("VoucherType", Namespace = AgressoNamespaces.SchemaLib)]
@@ -50,9 +50,6 @@ public class Voucher
     [XmlElement("VoucherDate", Namespace = AgressoNamespaces.Transaction)]
     public string? VoucherDate { get; set; }
 
-    [XmlElement("Description", Namespace = AgressoNamespaces.SchemaLib)]
-    public string? Description { get; set; }
-
     // Transactions are directly under Voucher (no wrapper element)
     [XmlElement("Transaction", Namespace = AgressoNamespaces.Transaction)]
     public List<Transaction> Transactions { get; set; } = new();
@@ -66,9 +63,6 @@ public class Transaction
     [XmlElement("TransType", Namespace = AgressoNamespaces.SchemaLib)]
     public string? TransType { get; set; }
 
-    [XmlElement("Client", Namespace = AgressoNamespaces.SchemaLib)]
-    public string? Client { get; set; }
-
     [XmlElement("Description", Namespace = AgressoNamespaces.SchemaLib)]
     public string? Description { get; set; }
 
@@ -78,11 +72,17 @@ public class Transaction
     [XmlElement("TransDate", Namespace = AgressoNamespaces.Transaction)]
     public string? TransDate { get; set; }
 
+    [XmlElement("AllocationKey", Namespace = AgressoNamespaces.SchemaLib)]
+    public string? AllocationKey { get; set; }
+
+    [XmlElement("PeriodNo", Namespace = AgressoNamespaces.Transaction)]
+    public int? PeriodNo { get; set; }
+
+    [XmlElement("PayTransfer", Namespace = AgressoNamespaces.Transaction)]
+    public string? PayTransfer { get; set; }
+
     [XmlElement("ExternalRef", Namespace = AgressoNamespaces.Transaction)]
     public string? ExternalRef { get; set; }
-
-    [XmlElement("SequenceNo", Namespace = AgressoNamespaces.SchemaLib)]
-    public int? SequenceNo { get; set; }
 
     [XmlElement("Amounts", Namespace = AgressoNamespaces.Transaction)]
     public Amounts? Amounts { get; set; }
@@ -102,8 +102,8 @@ public class Transaction
 /// </summary>
 public class Amounts
 {
-    [XmlElement("DcFlag", Namespace = AgressoNamespaces.SchemaLib)]
-    public string? DcFlag { get; set; } // 'D' for Debit, 'C' for Credit
+    [XmlElement("DcFlag", Namespace = AgressoNamespaces.Transaction)]
+    public int? DcFlag { get; set; } // 1 = Debit, -1 = Credit
 
     [XmlElement("Amount", Namespace = AgressoNamespaces.SchemaLib)]
     public decimal? Amount { get; set; }
@@ -111,20 +111,17 @@ public class Amounts
     [XmlElement("CurrAmount", Namespace = AgressoNamespaces.SchemaLib)]
     public decimal? CurrAmount { get; set; }
 
-    [XmlElement("Number1", Namespace = AgressoNamespaces.SchemaLib)]
-    public decimal? Number1 { get; set; }
+    [XmlElement("Number1", Namespace = AgressoNamespaces.Transaction)]
+    public int? Number1 { get; set; }
 
-    [XmlElement("Value1", Namespace = AgressoNamespaces.SchemaLib)]
-    public decimal? Value1 { get; set; }
+    [XmlElement("Value1", Namespace = AgressoNamespaces.Transaction)]
+    public decimal? Value1 { get; set; } // xs:float in XSD, decimal is safer
 
-    [XmlElement("Value2", Namespace = AgressoNamespaces.SchemaLib)]
+    [XmlElement("Value2", Namespace = AgressoNamespaces.Transaction)]
     public decimal? Value2 { get; set; }
 
-    [XmlElement("Value3", Namespace = AgressoNamespaces.SchemaLib)]
+    [XmlElement("Value3", Namespace = AgressoNamespaces.Transaction)]
     public decimal? Value3 { get; set; }
-
-    [XmlElement("CurrencyCode", Namespace = AgressoNamespaces.SchemaLib)]
-    public string? CurrencyCode { get; set; }
 }
 
 /// <summary>
@@ -164,6 +161,9 @@ public class GLAnalysis
 
     [XmlElement("TaxSystem", Namespace = AgressoNamespaces.SchemaLib)]
     public string? TaxSystem { get; set; }
+
+    [XmlElement("TaxId", Namespace = AgressoNamespaces.Transaction)]
+    public int? TaxId { get; set; } // Triangle trade indicator (EU)
 }
 
 /// <summary>
@@ -171,63 +171,129 @@ public class GLAnalysis
 /// </summary>
 public class ApArInfo
 {
-    [XmlElement("ApArType")]
+    [XmlElement("ApArType", Namespace = AgressoNamespaces.SchemaLib)]
     public string? ApArType { get; set; } // 'S' for Supplier, 'C' for Customer
 
-    [XmlElement("ApArNo")]
+    [XmlElement("ApArNo", Namespace = AgressoNamespaces.SchemaLib)]
     public string? ApArNo { get; set; }
 
-    [XmlElement("InvoiceNo")]
+    [XmlElement("FactorShort", Namespace = AgressoNamespaces.Transaction)]
+    public string? FactorShort { get; set; } // Payment recipient
+
+    [XmlElement("InvoiceNo", Namespace = AgressoNamespaces.SchemaLib)]
     public string? InvoiceNo { get; set; }
 
-    [XmlElement("DueDate")]
+    [XmlElement("Responsible", Namespace = AgressoNamespaces.SchemaLib)]
+    public string? Responsible { get; set; }
+
+    [XmlElement("DueDate", Namespace = AgressoNamespaces.SchemaLib)]
     public string? DueDate { get; set; }
 
-    [XmlElement("PayMethod")]
+    [XmlElement("DiscDate", Namespace = AgressoNamespaces.Transaction)]
+    public string? DiscDate { get; set; }
+
+    [XmlElement("Discount", Namespace = AgressoNamespaces.SchemaLib)]
+    public decimal? Discount { get; set; }
+
+    [XmlElement("BacsId", Namespace = AgressoNamespaces.SchemaLib)]
+    public string? BacsId { get; set; }
+
+    [XmlElement("PayMethod", Namespace = AgressoNamespaces.SchemaLib)]
     public string? PayMethod { get; set; }
 
-    [XmlElement("SundryInfo")]
+    [XmlElement("PayFlag", Namespace = AgressoNamespaces.Transaction)]
+    public int? PayFlag { get; set; } // 1 = Pay in advance
+
+    [XmlElement("CurrLicense", Namespace = AgressoNamespaces.Transaction)]
+    public string? CurrLicense { get; set; }
+
+    [XmlElement("VoucherRef", Namespace = AgressoNamespaces.SchemaLib)]
+    public string? VoucherRef { get; set; }
+
+    [XmlElement("SequenceRef", Namespace = AgressoNamespaces.SchemaLib)]
+    public string? SequenceRef { get; set; }
+
+    [XmlElement("ArriveId", Namespace = AgressoNamespaces.Transaction)]
+    public string? ArriveId { get; set; }
+
+    [XmlElement("Commitment", Namespace = AgressoNamespaces.Transaction)]
+    public string? Commitment { get; set; }
+
+    [XmlElement("OrderNo", Namespace = AgressoNamespaces.Transaction)]
+    public string? OrderNo { get; set; }
+
+    [XmlElement("IntruleId", Namespace = AgressoNamespaces.SchemaLib)]
+    public string? IntruleId { get; set; }
+
+    [XmlElement("PayTemplate", Namespace = AgressoNamespaces.Transaction)]
+    public string? PayTemplate { get; set; }
+
+    [XmlElement("SundryInfo", Namespace = AgressoNamespaces.Transaction)]
     public SundryInfo? SundryInfo { get; set; }
+
+    [XmlElement("OrigReference", Namespace = AgressoNamespaces.Transaction)]
+    public string? OrigReference { get; set; }
+
+    [XmlElement("ArrivalDate", Namespace = AgressoNamespaces.Transaction)]
+    public string? ArrivalDate { get; set; }
+
+    [XmlElement("PayCurrency", Namespace = AgressoNamespaces.Transaction)]
+    public string? PayCurrency { get; set; }
+
+    [XmlElement("ComplaintCode", Namespace = AgressoNamespaces.Transaction)]
+    public string? ComplaintCode { get; set; }
+
+    [XmlElement("ComplaintDate", Namespace = AgressoNamespaces.Transaction)]
+    public string? ComplaintDate { get; set; }
 }
 
 /// <summary>
-/// Additional sundry information for AP/AR.
+/// Additional sundry information for AP/AR (for sundry suppliers/customers).
 /// </summary>
 public class SundryInfo
 {
-    [XmlElement("Text1")]
-    public string? Text1 { get; set; }
+    [XmlElement("ApArName", Namespace = AgressoNamespaces.Transaction)]
+    public string? ApArName { get; set; } // Supplier/customer name
 
-    [XmlElement("Text2")]
-    public string? Text2 { get; set; }
+    [XmlElement("Address", Namespace = AgressoNamespaces.SchemaLib)]
+    public string? Address { get; set; }
 
-    [XmlElement("Text3")]
-    public string? Text3 { get; set; }
+    [XmlElement("ZipCode", Namespace = AgressoNamespaces.SchemaLib)]
+    public string? ZipCode { get; set; }
 
-    [XmlElement("Text4")]
-    public string? Text4 { get; set; }
+    [XmlElement("Place", Namespace = AgressoNamespaces.SchemaLib)]
+    public string? Place { get; set; }
 
-    [XmlElement("Text5")]
-    public string? Text5 { get; set; }
+    [XmlElement("Province", Namespace = AgressoNamespaces.SchemaLib)]
+    public string? Province { get; set; }
+
+    [XmlElement("VatRegNo", Namespace = AgressoNamespaces.SchemaLib)]
+    public string? VatRegNo { get; set; }
+
+    [XmlElement("BankAccountType", Namespace = AgressoNamespaces.Transaction)]
+    public string? BankAccountType { get; set; }
+
+    [XmlElement("BankAccount", Namespace = AgressoNamespaces.SchemaLib)]
+    public string? BankAccount { get; set; }
+
+    [XmlElement("ClearingCode", Namespace = AgressoNamespaces.SchemaLib)]
+    public string? ClearingCode { get; set; }
+
+    [XmlElement("Swift", Namespace = AgressoNamespaces.SchemaLib)]
+    public string? Swift { get; set; }
 }
 
 /// <summary>
-/// Tax transaction information.
+/// Tax transaction information. Must be filled out for TX transactions.
 /// </summary>
 public class TaxTransInfo
 {
-    [XmlElement("Account2")]
-    public string? Account2 { get; set; }
+    [XmlElement("Account2", Namespace = AgressoNamespaces.Transaction)]
+    public string? Account2 { get; set; } // Account from which tax was calculated
 
-    [XmlElement("BaseAmount")]
-    public decimal? BaseAmount { get; set; }
+    [XmlElement("BaseAmount", Namespace = AgressoNamespaces.Transaction)]
+    public decimal? BaseAmount { get; set; } // Tax calculation base in company currency
 
-    [XmlElement("BaseCurr")]
-    public string? BaseCurr { get; set; }
-
-    [XmlElement("TaxAmount")]
-    public decimal? TaxAmount { get; set; }
-
-    [XmlElement("TaxCurr")]
-    public string? TaxCurr { get; set; }
+    [XmlElement("BaseCurr", Namespace = AgressoNamespaces.Transaction)]
+    public decimal? BaseCurr { get; set; } // Tax calculation base in any currency
 }

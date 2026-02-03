@@ -267,33 +267,39 @@ public class GL07ProcessingWorker : ITaskHandler<GL07ProcessingParameters>
             _logger.LogDebug("    Downloaded {Length} bytes", content.Length);
 
             // Transform to Unit4 format (passing SourceSystem for configuration)
-            var request = transformer.Transform(content, sourceSystem);
+            // Returns an array - one item per XML Transaction element
+            var requests = transformer.Transform(content, sourceSystem);
 
-            var transactionCount = request.TransactionInformation?.TransactionDetailInformation != null
-                ? 1  // Single transaction per file
-                : 0;
+            var transactionCount = requests.Count;
+            var voucherCount = requests
+                .Select(r => r.TransactionInformation?.TransactionNumber)
+                .Distinct()
+                .Count();
 
-            logEntry.VoucherCount = 1;
+            logEntry.VoucherCount = voucherCount;
             logEntry.TransactionCount = transactionCount;
 
-            _logger.LogInformation("    Transformed: BatchId={BatchId}, Interface={Interface}",
-                request.BatchInformation?.BatchId, request.BatchInformation?.Interface);
+            _logger.LogInformation("    Transformed: BatchId={BatchId}, Interface={Interface}, Vouchers={VoucherCount}, Rows={RowCount}",
+                requests.FirstOrDefault()?.BatchInformation?.BatchId,
+                requests.FirstOrDefault()?.BatchInformation?.Interface,
+                voucherCount,
+                transactionCount);
 
             if (dryRun)
             {
-                _logger.LogInformation("    [DRY RUN] Would post to Unit4 API");
+                _logger.LogInformation("    [DRY RUN] Would post {Count} rows to Unit4 API", transactionCount);
                 logEntry.Status = "Success";
                 logEntry.ErrorMessage = "Dry run - not posted";
             }
             else
             {
-                // Post to Unit4 API
-                var response = await _unit4Client.PostTransactionBatchAsync(request);
+                // Post to Unit4 API (array of transactions)
+                var response = await _unit4Client.PostTransactionBatchAsync(requests);
 
                 if (response.Status == "Success" || response.Status == "Accepted")
                 {
                     logEntry.Status = "Success";
-                    _logger.LogInformation("    ✓ Posted to Unit4 successfully");
+                    _logger.LogInformation("    ✓ Posted {Count} rows to Unit4 successfully", transactionCount);
                 }
                 else
                 {
@@ -310,9 +316,9 @@ public class GL07ProcessingWorker : ITaskHandler<GL07ProcessingParameters>
                 await fileSourceService.MoveToProcessedAsync(sourceSystem, fileName);
                 _logger.LogDebug("    Moved to archive folder");
 
-                // Save the transformed JSON alongside the XML
+                // Save the transformed JSON alongside the XML (array format)
                 var jsonOptions = new JsonSerializerOptions { WriteIndented = true };
-                var jsonContent = JsonSerializer.Serialize(request, jsonOptions);
+                var jsonContent = JsonSerializer.Serialize(requests, jsonOptions);
                 await fileSourceService.SaveJsonToArchiveAsync(sourceSystem, fileName, jsonContent);
                 _logger.LogDebug("    Saved JSON to archive folder");
             }
