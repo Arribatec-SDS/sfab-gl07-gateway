@@ -75,4 +75,48 @@ public class ProcessingLogsController : ControllerBase
         }
         return Ok(ProcessingLogDto.FromEntity(log));
     }
+
+    /// <summary>
+    /// Get processing logs grouped by TaskExecutionId.
+    /// Returns one entry per execution with nested source system details.
+    /// </summary>
+    [HttpGet("grouped")]
+    public async Task<ActionResult<IEnumerable<ExecutionLogDto>>> GetGrouped([FromQuery] int limit = 50)
+    {
+        _logger.LogInformation("Getting grouped processing logs (limit: {Limit})", limit);
+        var logs = await _repository.GetAllAsync(limit * 10); // Get more to ensure we have enough groups
+        
+        // Group by TaskExecutionId
+        var grouped = logs
+            .GroupBy(l => l.TaskExecutionId)
+            .Take(limit)
+            .Select(g => new ExecutionLogDto
+            {
+                TaskExecutionId = g.Key,
+                ProcessedAt = g.Max(l => l.ProcessedAt),
+                Status = g.Any(l => l.Status == "Error") ? "Error" 
+                       : g.Any(l => l.Status == "Warning") ? "Warning" 
+                       : "Success",
+                TotalVouchers = g.Sum(l => l.VoucherCount ?? 0),
+                TotalTransactions = g.Sum(l => l.TransactionCount ?? 0),
+                TotalDurationMs = g.Sum(l => l.DurationMs ?? 0),
+                SourceSystemCount = g.Count(),
+                SourceSystems = g.Select(l => new SourceSystemLogDto
+                {
+                    Id = l.Id,
+                    SourceSystemId = l.SourceSystemId,
+                    SourceSystemName = l.SourceSystem?.SystemName,
+                    FileName = l.FileName,
+                    Status = l.Status,
+                    VoucherCount = l.VoucherCount,
+                    TransactionCount = l.TransactionCount,
+                    ErrorMessage = l.ErrorMessage,
+                    DurationMs = l.DurationMs
+                }).OrderBy(s => s.SourceSystemName).ToList()
+            })
+            .OrderByDescending(e => e.ProcessedAt)
+            .ToList();
+        
+        return Ok(grouped);
+    }
 }

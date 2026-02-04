@@ -5,7 +5,6 @@ import {
     Error as ErrorIcon,
     ExpandLess as ExpandLessIcon,
     ExpandMore as ExpandMoreIcon,
-    Info as InfoIcon,
     Refresh as RefreshIcon,
     Warning as WarningIcon,
 } from '@mui/icons-material';
@@ -34,7 +33,7 @@ import {
 import React, { useCallback, useEffect, useState } from 'react';
 import { createApiClient } from '../../utils/api';
 
-interface ProcessingLog {
+interface SourceSystemLog {
   id: number;
   sourceSystemId: number;
   sourceSystemName: string | null;
@@ -43,24 +42,33 @@ interface ProcessingLog {
   voucherCount: number | null;
   transactionCount: number | null;
   errorMessage: string | null;
-  processedAt: string;
   durationMs: number | null;
-  taskExecutionId: string | null;
 }
 
-type LogStatus = 'Success' | 'Failed' | 'Warning' | 'Processing' | '';
+interface ExecutionLog {
+  taskExecutionId: string | null;
+  processedAt: string;
+  status: string;
+  totalVouchers: number;
+  totalTransactions: number;
+  totalDurationMs: number;
+  sourceSystemCount: number;
+  sourceSystems: SourceSystemLog[];
+}
+
+type LogStatus = 'Success' | 'Error' | 'Warning' | '';
 
 export default function ProcessingLogsPage() {
   const { getToken } = useAuth();
-  const [logs, setLogs] = useState<ProcessingLog[]>([]);
+  const [executions, setExecutions] = useState<ExecutionLog[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(25);
   const [statusFilter, setStatusFilter] = useState<LogStatus>('');
-  const [expandedRows, setExpandedRows] = useState<Set<number>>(new Set());
-  const [downloadingLogId, setDownloadingLogId] = useState<number | null>(null);
+  const [expandedRows, setExpandedRows] = useState<Set<string>>(new Set());
+  const [downloadingId, setDownloadingId] = useState<string | null>(null);
 
   const fetchLogs = useCallback(async () => {
     setLoading(true);
@@ -71,22 +79,22 @@ export default function ProcessingLogsPage() {
       const apiClient = createApiClient();
       apiClient.defaults.headers.common['Authorization'] = `Bearer ${token}`;
       
-      const params = new URLSearchParams();
-      params.append('page', (page + 1).toString());
-      params.append('pageSize', rowsPerPage.toString());
+      const response = await apiClient.get<ExecutionLog[]>(`/processinglogs/grouped?limit=${rowsPerPage}`);
+      let data = response.data;
+      
+      // Apply status filter client-side
       if (statusFilter) {
-        params.append('status', statusFilter);
+        data = data.filter(e => e.status === statusFilter);
       }
       
-      const response = await apiClient.get<ProcessingLog[]>(`/processinglogs?${params.toString()}`);
-      setLogs(response.data);
+      setExecutions(data);
     } catch (err: unknown) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to load processing logs';
       setError(errorMessage);
     } finally {
       setLoading(false);
     }
-  }, [getToken, page, rowsPerPage, statusFilter]);
+  }, [getToken, rowsPerPage, statusFilter]);
 
   useEffect(() => {
     fetchLogs();
@@ -106,7 +114,7 @@ export default function ProcessingLogsPage() {
     setPage(0);
   };
 
-  const toggleRowExpansion = (id: number) => {
+  const toggleRowExpansion = (id: string) => {
     setExpandedRows(prev => {
       const newSet = new Set(prev);
       if (newSet.has(id)) {
@@ -118,16 +126,16 @@ export default function ProcessingLogsPage() {
     });
   };
 
-  const handleDownloadLog = async (log: ProcessingLog) => {
-    if (!log.taskExecutionId) return;
+  const handleDownloadLog = async (execution: ExecutionLog) => {
+    if (!execution.taskExecutionId) return;
     
-    setDownloadingLogId(log.id);
+    setDownloadingId(execution.taskExecutionId);
     try {
       const token = await getToken();
       const apiClient = createApiClient();
       apiClient.defaults.headers.common['Authorization'] = `Bearer ${token}`;
       
-      const response = await apiClient.get(`/worker/logs/${log.taskExecutionId}`, {
+      const response = await apiClient.get(`/worker/logs/${execution.taskExecutionId}`, {
         responseType: 'blob',
       });
       
@@ -137,7 +145,7 @@ export default function ProcessingLogsPage() {
       const link = document.createElement('a');
       link.href = url;
       // Format: log_YYYY-MM-DD_HH-MM-SS.log
-      const processedDate = new Date(log.processedAt.endsWith('Z') ? log.processedAt : log.processedAt + 'Z');
+      const processedDate = new Date(execution.processedAt.endsWith('Z') ? execution.processedAt : execution.processedAt + 'Z');
       const timestamp = processedDate.toISOString().slice(0, 19).replace('T', '_').replace(/:/g, '-');
       link.download = `log_${timestamp}.log`;
       document.body.appendChild(link);
@@ -150,7 +158,7 @@ export default function ProcessingLogsPage() {
       const errorMessage = err instanceof Error ? err.message : 'Failed to download log file';
       setError(errorMessage);
     } finally {
-      setDownloadingLogId(null);
+      setDownloadingId(null);
     }
   };
 
@@ -158,39 +166,44 @@ export default function ProcessingLogsPage() {
     switch (status) {
       case 'Success':
         return <CheckCircleIcon sx={{ color: 'success.main' }} />;
-      case 'Failed':
+      case 'Error':
         return <ErrorIcon sx={{ color: 'error.main' }} />;
       case 'Warning':
         return <WarningIcon sx={{ color: 'warning.main' }} />;
-      case 'Processing':
-        return <InfoIcon sx={{ color: 'info.main' }} />;
       default:
         return undefined;
     }
   };
 
-  const getStatusColor = (status: string): 'success' | 'error' | 'warning' | 'info' | 'default' => {
+  const getStatusColor = (status: string): 'success' | 'error' | 'warning' | 'default' => {
     switch (status) {
       case 'Success':
         return 'success';
-      case 'Failed':
+      case 'Error':
         return 'error';
       case 'Warning':
         return 'warning';
-      case 'Processing':
-        return 'info';
       default:
         return 'default';
     }
   };
 
   const formatDate = (dateString: string): string => {
-    // Database stores UTC, append 'Z' to tell JavaScript it's UTC
     const utcDate = dateString.endsWith('Z') ? dateString : dateString + 'Z';
     return new Date(utcDate).toLocaleString();
   };
 
-  if (loading && logs.length === 0) {
+  const formatDuration = (ms: number): string => {
+    if (ms < 1000) return `${ms} ms`;
+    return `${(ms / 1000).toFixed(1)} s`;
+  };
+
+  // Generate a unique key for each execution
+  const getExecutionKey = (execution: ExecutionLog, index: number): string => {
+    return execution.taskExecutionId || `no-task-${index}`;
+  };
+
+  if (loading && executions.length === 0) {
     return (
       <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: 400 }}>
         <CircularProgress />
@@ -215,9 +228,8 @@ export default function ProcessingLogsPage() {
           >
             <MenuItem value="">All Statuses</MenuItem>
             <MenuItem value="Success">Success</MenuItem>
-            <MenuItem value="Failed">Failed</MenuItem>
+            <MenuItem value="Error">Error</MenuItem>
             <MenuItem value="Warning">Warning</MenuItem>
-            <MenuItem value="Processing">Processing</MenuItem>
           </TextField>
           <Button
             startIcon={<RefreshIcon />}
@@ -236,7 +248,7 @@ export default function ProcessingLogsPage() {
         </Alert>
       )}
 
-      {logs.length === 0 ? (
+      {executions.length === 0 ? (
         <Paper sx={{ p: 4, textAlign: 'center' }}>
           <Typography color="text.secondary">
             No processing logs found.
@@ -249,130 +261,176 @@ export default function ProcessingLogsPage() {
               <TableHead>
                 <TableRow>
                   <TableCell width={50} />
-                  <TableCell>File Name</TableCell>
-                  <TableCell>Source System</TableCell>
-                  <TableCell>Status</TableCell>
-                  <TableCell>Vouchers / Trans</TableCell>
                   <TableCell>Processed At</TableCell>
+                  <TableCell>Status</TableCell>
+                  <TableCell align="center">Source Systems</TableCell>
+                  <TableCell align="center">Vouchers / Trans</TableCell>
+                  <TableCell align="center">Duration</TableCell>
                   <TableCell width={60} align="center">Log</TableCell>
                 </TableRow>
               </TableHead>
               <TableBody>
-                {logs.map((log) => (
-                  <React.Fragment key={log.id}>
-                    <TableRow hover>
-                      <TableCell>
-                        <IconButton
-                          size="small"
-                          onClick={() => toggleRowExpansion(log.id)}
-                        >
-                          {expandedRows.has(log.id) ? <ExpandLessIcon /> : <ExpandMoreIcon />}
-                        </IconButton>
-                      </TableCell>
-                      <TableCell>
-                        <Typography variant="body2" fontWeight={500}>
-                          {log.fileName}
-                        </Typography>
-                      </TableCell>
-                      <TableCell>
-                        {log.sourceSystemName || `System #${log.sourceSystemId}`}
-                      </TableCell>
-                      <TableCell>
-                        <Chip
-                          icon={getStatusIcon(log.status)}
-                          label={log.status}
-                          size="small"
-                          color={getStatusColor(log.status)}
-                        />
-                      </TableCell>
-                      <TableCell>
-                        {log.voucherCount ?? 0} / {log.transactionCount ?? 0}
-                      </TableCell>
-                      <TableCell>
-                        <Typography variant="body2" color="text.secondary">
-                          {formatDate(log.processedAt)}
-                        </Typography>
-                      </TableCell>
-                      <TableCell align="center">
-                        {log.taskExecutionId ? (
-                          <Tooltip title="Download execution log">
-                            <IconButton
-                              size="small"
-                              onClick={() => handleDownloadLog(log)}
-                              disabled={downloadingLogId === log.id}
-                            >
-                              {downloadingLogId === log.id ? (
-                                <CircularProgress size={18} />
-                              ) : (
-                                <DownloadIcon fontSize="small" />
-                              )}
-                            </IconButton>
-                          </Tooltip>
-                        ) : (
-                          <Tooltip title="No execution log available">
-                            <span>
-                              <IconButton size="small" disabled>
-                                <DownloadIcon fontSize="small" />
+                {executions.map((execution, index) => {
+                  const key = getExecutionKey(execution, index);
+                  const isExpanded = expandedRows.has(key);
+                  
+                  return (
+                    <React.Fragment key={key}>
+                      <TableRow hover sx={{ '& > *': { borderBottom: isExpanded ? 'none' : undefined } }}>
+                        <TableCell>
+                          <IconButton
+                            size="small"
+                            onClick={() => toggleRowExpansion(key)}
+                          >
+                            {isExpanded ? <ExpandLessIcon /> : <ExpandMoreIcon />}
+                          </IconButton>
+                        </TableCell>
+                        <TableCell>
+                          <Typography variant="body2" fontWeight={500}>
+                            {formatDate(execution.processedAt)}
+                          </Typography>
+                        </TableCell>
+                        <TableCell>
+                          <Chip
+                            icon={getStatusIcon(execution.status)}
+                            label={execution.status}
+                            size="small"
+                            color={getStatusColor(execution.status)}
+                          />
+                        </TableCell>
+                        <TableCell align="center">
+                          <Typography variant="body2">
+                            {execution.sourceSystemCount}
+                          </Typography>
+                        </TableCell>
+                        <TableCell align="center">
+                          <Typography variant="body2">
+                            {execution.totalVouchers} / {execution.totalTransactions}
+                          </Typography>
+                        </TableCell>
+                        <TableCell align="center">
+                          <Typography variant="body2" color="text.secondary">
+                            {formatDuration(execution.totalDurationMs)}
+                          </Typography>
+                        </TableCell>
+                        <TableCell align="center">
+                          {execution.taskExecutionId ? (
+                            <Tooltip title="Download execution log">
+                              <IconButton
+                                size="small"
+                                onClick={() => handleDownloadLog(execution)}
+                                disabled={downloadingId === execution.taskExecutionId}
+                              >
+                                {downloadingId === execution.taskExecutionId ? (
+                                  <CircularProgress size={18} />
+                                ) : (
+                                  <DownloadIcon fontSize="small" />
+                                )}
                               </IconButton>
-                            </span>
-                          </Tooltip>
-                        )}
-                      </TableCell>
-                    </TableRow>
-                    <TableRow>
-                      <TableCell style={{ paddingBottom: 0, paddingTop: 0 }} colSpan={7}>
-                        <Collapse in={expandedRows.has(log.id)} timeout="auto" unmountOnExit>
-                          <Box sx={{ py: 2, px: 2, backgroundColor: 'grey.50' }}>
-                            <Box sx={{ display: 'flex', gap: 4, flexWrap: 'wrap', mb: 2 }}>
-                              <Box>
-                                <Typography variant="caption" color="text.secondary">Vouchers</Typography>
-                                <Typography variant="body2" fontWeight={500}>{log.voucherCount ?? 0}</Typography>
-                              </Box>
-                              <Box>
-                                <Typography variant="caption" color="text.secondary">Transactions</Typography>
-                                <Typography variant="body2" fontWeight={500}>{log.transactionCount ?? 0}</Typography>
-                              </Box>
-                              <Box>
-                                <Typography variant="caption" color="text.secondary">Duration</Typography>
-                                <Typography variant="body2" fontWeight={500}>{log.durationMs ?? 0} ms</Typography>
-                              </Box>
+                            </Tooltip>
+                          ) : (
+                            <Tooltip title="No execution log available">
+                              <span>
+                                <IconButton size="small" disabled>
+                                  <DownloadIcon fontSize="small" />
+                                </IconButton>
+                              </span>
+                            </Tooltip>
+                          )}
+                        </TableCell>
+                      </TableRow>
+                      <TableRow>
+                        <TableCell style={{ paddingBottom: 0, paddingTop: 0 }} colSpan={7}>
+                          <Collapse in={isExpanded} timeout="auto" unmountOnExit>
+                            <Box sx={{ py: 2, px: 2, backgroundColor: 'grey.50' }}>
+                              <Typography variant="subtitle2" gutterBottom sx={{ fontWeight: 600 }}>
+                                Source Systems
+                              </Typography>
+                              <Table size="small">
+                                <TableHead>
+                                  <TableRow>
+                                    <TableCell>Source System</TableCell>
+                                    <TableCell>File Name</TableCell>
+                                    <TableCell>Status</TableCell>
+                                    <TableCell align="center">Vouchers / Trans</TableCell>
+                                    <TableCell align="center">Duration</TableCell>
+                                  </TableRow>
+                                </TableHead>
+                                <TableBody>
+                                  {execution.sourceSystems.map((ss) => (
+                                    <TableRow key={ss.id}>
+                                      <TableCell>
+                                        <Typography variant="body2">
+                                          {ss.sourceSystemName || `System #${ss.sourceSystemId}`}
+                                        </Typography>
+                                      </TableCell>
+                                      <TableCell>
+                                        <Typography variant="body2" color="text.secondary">
+                                          {ss.fileName}
+                                        </Typography>
+                                      </TableCell>
+                                      <TableCell>
+                                        <Chip
+                                          icon={getStatusIcon(ss.status)}
+                                          label={ss.status}
+                                          size="small"
+                                          color={getStatusColor(ss.status)}
+                                          variant="outlined"
+                                        />
+                                      </TableCell>
+                                      <TableCell align="center">
+                                        <Typography variant="body2">
+                                          {ss.voucherCount ?? 0} / {ss.transactionCount ?? 0}
+                                        </Typography>
+                                      </TableCell>
+                                      <TableCell align="center">
+                                        <Typography variant="body2" color="text.secondary">
+                                          {formatDuration(ss.durationMs ?? 0)}
+                                        </Typography>
+                                      </TableCell>
+                                    </TableRow>
+                                  ))}
+                                </TableBody>
+                              </Table>
+                              {execution.sourceSystems.some(ss => ss.errorMessage) && (
+                                <Box sx={{ mt: 2 }}>
+                                  {execution.sourceSystems
+                                    .filter(ss => ss.errorMessage)
+                                    .map((ss) => (
+                                      <Paper
+                                        key={ss.id}
+                                        variant="outlined"
+                                        sx={{
+                                          p: 1,
+                                          mb: 1,
+                                          backgroundColor: ss.status === 'Error' ? 'error.50' : 'grey.100',
+                                          borderColor: ss.status === 'Error' ? 'error.200' : 'grey.300',
+                                        }}
+                                      >
+                                        <Typography variant="caption" color="text.secondary">
+                                          {ss.sourceSystemName}: 
+                                        </Typography>
+                                        <Typography variant="body2" color={ss.status === 'Error' ? 'error.main' : 'text.secondary'}>
+                                          {ss.errorMessage}
+                                        </Typography>
+                                      </Paper>
+                                    ))}
+                                </Box>
+                              )}
                             </Box>
-                            {log.errorMessage && (
-                              <Box>
-                                <Typography 
-                                  variant="subtitle2" 
-                                  color={log.status === 'Error' ? 'error' : 'text.secondary'} 
-                                  gutterBottom
-                                >
-                                  {log.status === 'Error' ? 'Error Message' : 'Notes'}
-                                </Typography>
-                                <Paper
-                                  variant="outlined"
-                                  sx={{
-                                    p: 1,
-                                    backgroundColor: log.status === 'Error' ? 'error.50' : 'grey.100',
-                                    borderColor: log.status === 'Error' ? 'error.200' : 'grey.300',
-                                  }}
-                                >
-                                  <Typography variant="body2" color={log.status === 'Error' ? 'error.main' : 'text.secondary'}>
-                                    {log.errorMessage}
-                                  </Typography>
-                                </Paper>
-                              </Box>
-                            )}
-                          </Box>
-                        </Collapse>
-                      </TableCell>
-                    </TableRow>
-                  </React.Fragment>
-                ))}
+                          </Collapse>
+                        </TableCell>
+                      </TableRow>
+                    </React.Fragment>
+                  );
+                })}
               </TableBody>
             </Table>
           </TableContainer>
           <TablePagination
             rowsPerPageOptions={[10, 25, 50, 100]}
             component="div"
-            count={-1} // Unknown total
+            count={-1}
             rowsPerPage={rowsPerPage}
             page={page}
             onPageChange={handleChangePage}
@@ -382,7 +440,6 @@ export default function ProcessingLogsPage() {
         </Paper>
       )}
 
-      {/* Success Snackbar */}
       <Snackbar
         open={!!success}
         autoHideDuration={3000}

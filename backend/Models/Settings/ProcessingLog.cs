@@ -55,3 +55,34 @@ public class ProcessingLogDto
         };
     }
 }
+
+/// <summary>
+/// DTO for grouped execution logs - one row per TaskExecutionId with nested source system entries.
+/// </summary>
+public class ExecutionLogDto
+{
+    public Guid? TaskExecutionId { get; set; }
+    public DateTime ProcessedAt { get; set; }
+    public string Status { get; set; } = string.Empty;
+    public int TotalVouchers { get; set; }
+    public int TotalTransactions { get; set; }
+    public int TotalDurationMs { get; set; }
+    public int SourceSystemCount { get; set; }
+    public List<SourceSystemLogDto> SourceSystems { get; set; } = new();
+}
+
+/// <summary>
+/// DTO for source system entries within an execution.
+/// </summary>
+public class SourceSystemLogDto
+{
+    public int Id { get; set; }
+    public int SourceSystemId { get; set; }
+    public string? SourceSystemName { get; set; }
+    public string FileName { get; set; } = string.Empty;
+    public string Status { get; set; } = string.Empty;
+    public int? VoucherCount { get; set; }
+    public int? TransactionCount { get; set; }
+    public string? ErrorMessage { get; set; }
+    public int? DurationMs { get; set; }
+}
