@@ -1,4 +1,3 @@
-using Arribatec.Nexus.Client.Services;
 using Dapper;
 
 namespace SfabGl07Gateway.Api.Services;
@@ -14,18 +13,18 @@ public interface IDatabaseInitializer
 
 public class DatabaseInitializer : IDatabaseInitializer
 {
-    private readonly IContextAwareDatabaseService _dbService;
+    private readonly IScopedDbConnectionProvider _connectionProvider;
     private readonly ILogger<DatabaseInitializer> _logger;
     private readonly IWebHostEnvironment _environment;
     private static bool _initialized = false;
     private static readonly object _lock = new();
 
     public DatabaseInitializer(
-        IContextAwareDatabaseService dbService,
+        IScopedDbConnectionProvider connectionProvider,
         ILogger<DatabaseInitializer> logger,
         IWebHostEnvironment environment)
     {
-        _dbService = dbService;
+        _connectionProvider = connectionProvider;
         _logger = logger;
         _environment = environment;
     }
@@ -47,7 +46,7 @@ public class DatabaseInitializer : IDatabaseInitializer
         {
             _logger.LogInformation("Running database schema initialization/migration...");
 
-            using var connection = (await _dbService.CreateProductConnectionAsync())!;
+            var connection = await _connectionProvider.GetConnectionAsync(cancellationToken);
 
             // Find the SQL script
             var sqlPath = FindInitScript();

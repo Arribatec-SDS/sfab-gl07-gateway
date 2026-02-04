@@ -101,7 +101,7 @@ public class Unit4ApiClient : IUnit4ApiClient
             // Log the actual response content for debugging
             _logger.LogWarning("Could not parse Unit4 response as JSON: {Error}. StatusCode: {StatusCode}, ContentLength: {Length}, Content: {Content}",
                 ex.Message, response.StatusCode, responseContent?.Length ?? 0, responseContent);
-            
+
             // If we got a success status code but can't parse the response, treat it as success
             return new Unit4TransactionBatchResponse
             {

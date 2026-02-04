@@ -177,6 +177,21 @@ public class GL07ProcessingWorker : ITaskHandler<GL07ProcessingParameters>
             if (!files.Any())
             {
                 _logger.LogInformation("  No files to process in {Folder}/inbox", sourceSystem.FolderPath);
+
+                // Create a log entry even when no files to process, so the execution log is accessible
+                var noFilesLogEntry = new ProcessingLog
+                {
+                    SourceSystemId = sourceSystem.Id,
+                    FileName = "(no files)",
+                    Status = "Success",
+                    VoucherCount = 0,
+                    TransactionCount = 0,
+                    ErrorMessage = "No files to process",
+                    DurationMs = 0,
+                    TaskExecutionId = _context.TaskExecutionId
+                };
+                await _processingLogRepository.CreateAsync(noFilesLogEntry);
+
                 return (0, 0, 0);
             }
 
@@ -255,7 +270,8 @@ public class GL07ProcessingWorker : ITaskHandler<GL07ProcessingParameters>
         {
             SourceSystemId = sourceSystem.Id,
             FileName = fileName,
-            Status = "Processing"
+            Status = "Processing",
+            TaskExecutionId = _context.TaskExecutionId
         };
 
         try

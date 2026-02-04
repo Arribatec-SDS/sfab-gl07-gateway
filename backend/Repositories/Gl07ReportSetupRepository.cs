@@ -1,6 +1,6 @@
-using Arribatec.Nexus.Client.Services;
 using Dapper;
 using SfabGl07Gateway.Api.Models.Settings;
+using SfabGl07Gateway.Api.Services;
 
 namespace SfabGl07Gateway.Api.Repositories;
 
@@ -9,20 +9,20 @@ namespace SfabGl07Gateway.Api.Repositories;
 /// </summary>
 public class Gl07ReportSetupRepository : IGl07ReportSetupRepository
 {
-    private readonly IContextAwareDatabaseService _dbService;
+    private readonly IScopedDbConnectionProvider _connectionProvider;
     private readonly ILogger<Gl07ReportSetupRepository> _logger;
 
     public Gl07ReportSetupRepository(
-        IContextAwareDatabaseService dbService,
+        IScopedDbConnectionProvider connectionProvider,
         ILogger<Gl07ReportSetupRepository> logger)
     {
-        _dbService = dbService;
+        _connectionProvider = connectionProvider;
         _logger = logger;
     }
 
     public async Task<IEnumerable<Gl07ReportSetup>> GetAllAsync()
     {
-        using var connection = (await _dbService.CreateProductConnectionAsync())!;
+        var connection = await _connectionProvider.GetConnectionAsync();
         return await connection.QueryAsync<Gl07ReportSetup>(@"
             SELECT Id, SetupCode, SetupName, Description, ReportId, ReportName, Variant, UserId, CompanyId,
                    Priority, EmailConfirmation, Status, OutputType, IsActive, CreatedAt, UpdatedAt
@@ -32,7 +32,7 @@ public class Gl07ReportSetupRepository : IGl07ReportSetupRepository
 
     public async Task<IEnumerable<Gl07ReportSetup>> GetAllActiveAsync()
     {
-        using var connection = (await _dbService.CreateProductConnectionAsync())!;
+        var connection = await _connectionProvider.GetConnectionAsync();
         return await connection.QueryAsync<Gl07ReportSetup>(@"
             SELECT Id, SetupCode, SetupName, Description, ReportId, ReportName, Variant, UserId, CompanyId,
                    Priority, EmailConfirmation, Status, OutputType, IsActive, CreatedAt, UpdatedAt
@@ -43,7 +43,7 @@ public class Gl07ReportSetupRepository : IGl07ReportSetupRepository
 
     public async Task<Gl07ReportSetup?> GetByIdAsync(int id)
     {
-        using var connection = (await _dbService.CreateProductConnectionAsync())!;
+        var connection = await _connectionProvider.GetConnectionAsync();
         return await connection.QueryFirstOrDefaultAsync<Gl07ReportSetup>(@"
             SELECT Id, SetupCode, SetupName, Description, ReportId, ReportName, Variant, UserId, CompanyId,
                    Priority, EmailConfirmation, Status, OutputType, IsActive, CreatedAt, UpdatedAt
@@ -54,7 +54,7 @@ public class Gl07ReportSetupRepository : IGl07ReportSetupRepository
 
     public async Task<Gl07ReportSetup?> GetByIdWithParametersAsync(int id)
     {
-        using var connection = (await _dbService.CreateProductConnectionAsync())!;
+        var connection = await _connectionProvider.GetConnectionAsync();
 
         var setup = await connection.QueryFirstOrDefaultAsync<Gl07ReportSetup>(@"
             SELECT Id, SetupCode, SetupName, Description, ReportId, ReportName, Variant, UserId, CompanyId,
@@ -80,7 +80,7 @@ public class Gl07ReportSetupRepository : IGl07ReportSetupRepository
 
     public async Task<Gl07ReportSetup?> GetBySetupCodeAsync(string setupCode)
     {
-        using var connection = (await _dbService.CreateProductConnectionAsync())!;
+        var connection = await _connectionProvider.GetConnectionAsync();
         return await connection.QueryFirstOrDefaultAsync<Gl07ReportSetup>(@"
             SELECT Id, SetupCode, SetupName, Description, ReportId, ReportName, Variant, UserId, CompanyId,
                    Priority, EmailConfirmation, Status, OutputType, IsActive, CreatedAt, UpdatedAt
@@ -91,7 +91,7 @@ public class Gl07ReportSetupRepository : IGl07ReportSetupRepository
 
     public async Task<int> CreateAsync(Gl07ReportSetup setup)
     {
-        using var connection = (await _dbService.CreateProductConnectionAsync())!;
+        var connection = await _connectionProvider.GetConnectionAsync();
 
         var setupId = await connection.QuerySingleAsync<int>(@"
             INSERT INTO Gl07ReportSetups (SetupCode, SetupName, Description, ReportId, ReportName, Variant, UserId, CompanyId,
@@ -119,7 +119,7 @@ public class Gl07ReportSetupRepository : IGl07ReportSetupRepository
 
     public async Task<bool> UpdateAsync(Gl07ReportSetup setup)
     {
-        using var connection = (await _dbService.CreateProductConnectionAsync())!;
+        var connection = await _connectionProvider.GetConnectionAsync();
 
         var rowsAffected = await connection.ExecuteAsync(@"
             UPDATE Gl07ReportSetups 
@@ -162,7 +162,7 @@ public class Gl07ReportSetupRepository : IGl07ReportSetupRepository
 
     public async Task<bool> DeleteAsync(int id)
     {
-        using var connection = (await _dbService.CreateProductConnectionAsync())!;
+        var connection = await _connectionProvider.GetConnectionAsync();
         // Parameters are deleted via CASCADE
         var rowsAffected = await connection.ExecuteAsync(
             "DELETE FROM Gl07ReportSetups WHERE Id = @Id",
@@ -172,7 +172,7 @@ public class Gl07ReportSetupRepository : IGl07ReportSetupRepository
 
     public async Task<bool> IsSetupCodeUniqueAsync(string setupCode, int? excludeId = null)
     {
-        using var connection = (await _dbService.CreateProductConnectionAsync())!;
+        var connection = await _connectionProvider.GetConnectionAsync();
 
         var sql = @"SELECT COUNT(1) FROM Gl07ReportSetups WHERE SetupCode = @SetupCode";
         if (excludeId.HasValue)
@@ -186,7 +186,7 @@ public class Gl07ReportSetupRepository : IGl07ReportSetupRepository
 
     public async Task<int> AddParameterAsync(int setupId, Gl07ReportSetupParameter parameter)
     {
-        using var connection = (await _dbService.CreateProductConnectionAsync())!;
+        var connection = await _connectionProvider.GetConnectionAsync();
         parameter.Gl07ReportSetupId = setupId;
 
         return await connection.QuerySingleAsync<int>(@"
@@ -198,7 +198,7 @@ public class Gl07ReportSetupRepository : IGl07ReportSetupRepository
 
     public async Task<bool> UpdateParameterAsync(Gl07ReportSetupParameter parameter)
     {
-        using var connection = (await _dbService.CreateProductConnectionAsync())!;
+        var connection = await _connectionProvider.GetConnectionAsync();
 
         var rowsAffected = await connection.ExecuteAsync(@"
             UPDATE Gl07ReportSetupParameters 
@@ -211,7 +211,7 @@ public class Gl07ReportSetupRepository : IGl07ReportSetupRepository
 
     public async Task<bool> DeleteParameterAsync(int parameterId)
     {
-        using var connection = (await _dbService.CreateProductConnectionAsync())!;
+        var connection = await _connectionProvider.GetConnectionAsync();
         var rowsAffected = await connection.ExecuteAsync(
             "DELETE FROM Gl07ReportSetupParameters WHERE Id = @Id",
             new { Id = parameterId });
@@ -220,7 +220,7 @@ public class Gl07ReportSetupRepository : IGl07ReportSetupRepository
 
     public async Task<IEnumerable<Gl07ReportSetupParameter>> GetParametersAsync(int setupId)
     {
-        using var connection = (await _dbService.CreateProductConnectionAsync())!;
+        var connection = await _connectionProvider.GetConnectionAsync();
         return await connection.QueryAsync<Gl07ReportSetupParameter>(@"
             SELECT Id, Gl07ReportSetupId, ParameterId, ParameterValue
             FROM Gl07ReportSetupParameters

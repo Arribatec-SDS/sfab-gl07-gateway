@@ -194,6 +194,7 @@ BEGIN
         ErrorMessage NVARCHAR(MAX),
         ProcessedAt DATETIME2 DEFAULT GETUTCDATE(),
         DurationMs INT,
+        TaskExecutionId UNIQUEIDENTIFIER NULL,      -- Nexus task execution ID for log retrieval
         CONSTRAINT FK_ProcessingLog_SourceSystem 
             FOREIGN KEY (SourceSystemId) REFERENCES SourceSystems(Id)
     );
@@ -201,6 +202,15 @@ BEGIN
     CREATE INDEX IX_ProcessingLog_Status ON ProcessingLog(Status);
     CREATE INDEX IX_ProcessingLog_ProcessedAt ON ProcessingLog(ProcessedAt);
     CREATE INDEX IX_ProcessingLog_SourceSystemId ON ProcessingLog(SourceSystemId);
+    CREATE INDEX IX_ProcessingLog_TaskExecutionId ON ProcessingLog(TaskExecutionId);
+END
+GO
+
+-- Add TaskExecutionId column if it doesn't exist (migration for existing tables)
+IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('ProcessingLog') AND name = 'TaskExecutionId')
+BEGIN
+    ALTER TABLE ProcessingLog ADD TaskExecutionId UNIQUEIDENTIFIER NULL;
+    CREATE INDEX IX_ProcessingLog_TaskExecutionId ON ProcessingLog(TaskExecutionId);
 END
 GO
 
@@ -257,6 +267,14 @@ IF NOT EXISTS (SELECT 1 FROM AppSettings WHERE ParamName = 'GL07:DefaultCompanyI
 BEGIN
     INSERT INTO AppSettings (ParamName, ParamValue, Sensitive, Category, Description) VALUES
     ('GL07:DefaultCompanyId', '', 0, 'GL07', 'Default Company ID for GL07 report setups');
+END
+GO
+
+-- Add log retention setting if it doesn't exist
+IF NOT EXISTS (SELECT 1 FROM AppSettings WHERE ParamName = 'LogRetention:Days')
+BEGIN
+    INSERT INTO AppSettings (ParamName, ParamValue, Sensitive, Category, Description) VALUES
+    ('LogRetention:Days', '90', 0, 'General', 'Number of days to retain processing logs (minimum 7)');
 END
 GO
 

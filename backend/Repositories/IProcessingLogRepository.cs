@@ -14,4 +14,5 @@ public interface IProcessingLogRepository
     Task<int> CreateAsync(ProcessingLog log);
     Task CreateBatchAsync(IEnumerable<ProcessingLog> logs);
     Task UpdateAsync(ProcessingLog log);
+    Task<int> DeleteOlderThanAsync(DateTime cutoffDate);
 }

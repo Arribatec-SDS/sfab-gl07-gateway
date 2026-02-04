@@ -1,6 +1,6 @@
-using Arribatec.Nexus.Client.Services;
 using Dapper;
 using SfabGl07Gateway.Api.Models.Settings;
+using SfabGl07Gateway.Api.Services;
 
 namespace SfabGl07Gateway.Api.Repositories;
 
@@ -9,27 +9,27 @@ namespace SfabGl07Gateway.Api.Repositories;
 /// </summary>
 public class AppSettingsRepository : IAppSettingsRepository
 {
-    private readonly IContextAwareDatabaseService _dbService;
+    private readonly IScopedDbConnectionProvider _connectionProvider;
     private readonly ILogger<AppSettingsRepository> _logger;
 
     public AppSettingsRepository(
-        IContextAwareDatabaseService dbService,
+        IScopedDbConnectionProvider connectionProvider,
         ILogger<AppSettingsRepository> logger)
     {
-        _dbService = dbService;
+        _connectionProvider = connectionProvider;
         _logger = logger;
     }
 
     public async Task<IEnumerable<AppSetting>> GetAllAsync()
     {
-        using var connection = (await _dbService.CreateProductConnectionAsync())!;
+        var connection = await _connectionProvider.GetConnectionAsync();
         return await connection.QueryAsync<AppSetting>(
             "SELECT Id, ParamName, ParamValue, Sensitive, Category, Description, CreatedAt, UpdatedAt FROM AppSettings ORDER BY Category, ParamName");
     }
 
     public async Task<AppSetting?> GetByNameAsync(string paramName)
     {
-        using var connection = (await _dbService.CreateProductConnectionAsync())!;
+        var connection = await _connectionProvider.GetConnectionAsync();
         return await connection.QueryFirstOrDefaultAsync<AppSetting>(
             "SELECT Id, ParamName, ParamValue, Sensitive, Category, Description, CreatedAt, UpdatedAt FROM AppSettings WHERE ParamName = @ParamName",
             new { ParamName = paramName });
@@ -37,7 +37,7 @@ public class AppSettingsRepository : IAppSettingsRepository
 
     public async Task<IEnumerable<AppSetting>> GetByCategoryAsync(string category)
     {
-        using var connection = (await _dbService.CreateProductConnectionAsync())!;
+        var connection = await _connectionProvider.GetConnectionAsync();
         return await connection.QueryAsync<AppSetting>(
             "SELECT Id, ParamName, ParamValue, Sensitive, Category, Description, CreatedAt, UpdatedAt FROM AppSettings WHERE Category = @Category ORDER BY ParamName",
             new { Category = category });
@@ -45,7 +45,7 @@ public class AppSettingsRepository : IAppSettingsRepository
 
     public async Task UpdateAsync(string paramName, string? paramValue)
     {
-        using var connection = (await _dbService.CreateProductConnectionAsync())!;
+        var connection = await _connectionProvider.GetConnectionAsync();
         await connection.ExecuteAsync(
             "UPDATE AppSettings SET ParamValue = @ParamValue, UpdatedAt = GETUTCDATE() WHERE ParamName = @ParamName",
             new { ParamName = paramName, ParamValue = paramValue });
@@ -53,7 +53,7 @@ public class AppSettingsRepository : IAppSettingsRepository
 
     public async Task UpsertAsync(AppSetting setting)
     {
-        using var connection = (await _dbService.CreateProductConnectionAsync())!;
+        var connection = await _connectionProvider.GetConnectionAsync();
 
         var existing = await GetByNameAsync(setting.ParamName);
         if (existing != null)

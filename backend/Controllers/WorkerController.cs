@@ -378,4 +378,176 @@ public class WorkerController : ControllerBase
             return StatusCode(500, new { Message = "Failed to get recent executions: " + ex.Message });
         }
     }
+
+    /// <summary>
+    /// Download task execution logs from Nexus.
+    /// </summary>
+    [HttpGet("logs/{taskExecutionId}")]
+    public async Task<ActionResult> DownloadTaskLogs(Guid taskExecutionId)
+    {
+        try
+        {
+            _logger.LogInformation("Downloading logs for task execution: {TaskExecutionId}", taskExecutionId);
+
+            var masterApiUrl = GetMasterApiUrl();
+            var authHeader = Request.Headers["Authorization"].FirstOrDefault();
+
+            if (string.IsNullOrEmpty(authHeader))
+            {
+                return Unauthorized(new { Message = "No authorization token found" });
+            }
+
+            var client = _httpClientFactory.CreateClient();
+            client.DefaultRequestHeaders.TryAddWithoutValidation("Authorization", authHeader);
+
+            // Call Master API to get task execution logs (returns JSON)
+            var url = $"{masterApiUrl}/api/task-executions/{taskExecutionId}/logs?limit=10000";
+            _logger.LogDebug("Fetching logs from: {Url}", url);
+
+            var response = await client.GetAsync(url);
+
+            if (!response.IsSuccessStatusCode)
+            {
+                var errorContent = await response.Content.ReadAsStringAsync();
+                _logger.LogError("Failed to get task logs: {StatusCode} - {Content}",
+                    response.StatusCode, errorContent);
+
+                return StatusCode((int)response.StatusCode, new { Message = "Failed to get task logs" });
+            }
+
+            var jsonContent = await response.Content.ReadAsStringAsync();
+            
+            // Parse JSON and format as text
+            var textContent = FormatLogsAsText(jsonContent);
+
+            // Return as downloadable plain text file
+            var bytes = Encoding.UTF8.GetBytes(textContent);
+            return File(bytes, "text/plain", $"gl07-execution-{taskExecutionId}.log");
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to download task logs for {TaskExecutionId}", taskExecutionId);
+            return StatusCode(500, new { Message = "Failed to download task logs: " + ex.Message });
+        }
+    }
+
+    /// <summary>
+    /// Formats JSON log entries as plain text in the format: "HH:mm:ss.fff [LEVEL] message"
+    /// </summary>
+    private string FormatLogsAsText(string jsonContent)
+    {
+        var sb = new StringBuilder();
+        
+        try
+        {
+            using var doc = JsonDocument.Parse(jsonContent);
+            var root = doc.RootElement;
+
+            // Handle array of log entries
+            if (root.ValueKind == JsonValueKind.Array)
+            {
+                foreach (var entry in root.EnumerateArray())
+                {
+                    var line = FormatLogEntry(entry);
+                    if (!string.IsNullOrEmpty(line))
+                    {
+                        sb.AppendLine(line);
+                    }
+                }
+            }
+            // Handle object with logs property
+            else if (root.ValueKind == JsonValueKind.Object)
+            {
+                if (root.TryGetProperty("logs", out var logs) && logs.ValueKind == JsonValueKind.Array)
+                {
+                    foreach (var entry in logs.EnumerateArray())
+                    {
+                        var line = FormatLogEntry(entry);
+                        if (!string.IsNullOrEmpty(line))
+                        {
+                            sb.AppendLine(line);
+                        }
+                    }
+                }
+            }
+        }
+        catch (JsonException ex)
+        {
+            _logger.LogWarning(ex, "Failed to parse logs as JSON, returning raw content");
+            return jsonContent;
+        }
+
+        return sb.ToString();
+    }
+
+    /// <summary>
+    /// Formats a single log entry as text.
+    /// </summary>
+    private string FormatLogEntry(JsonElement entry)
+    {
+        try
+        {
+            // Try to extract timestamp
+            var timestamp = "";
+            if (entry.TryGetProperty("timestamp", out var ts))
+            {
+                if (DateTime.TryParse(ts.GetString(), out var dt))
+                {
+                    timestamp = dt.ToString("HH:mm:ss.fff");
+                }
+                else
+                {
+                    timestamp = ts.GetString() ?? "";
+                }
+            }
+            else if (entry.TryGetProperty("time", out var time))
+            {
+                if (DateTime.TryParse(time.GetString(), out var dt))
+                {
+                    timestamp = dt.ToString("HH:mm:ss.fff");
+                }
+                else
+                {
+                    timestamp = time.GetString() ?? "";
+                }
+            }
+
+            // Try to extract level
+            var level = "INFO";
+            if (entry.TryGetProperty("level", out var lvl))
+            {
+                level = lvl.GetString()?.ToUpperInvariant() ?? "INFO";
+            }
+            else if (entry.TryGetProperty("severity", out var sev))
+            {
+                level = sev.GetString()?.ToUpperInvariant() ?? "INFO";
+            }
+
+            // Try to extract message
+            var message = "";
+            if (entry.TryGetProperty("message", out var msg))
+            {
+                message = msg.GetString() ?? "";
+            }
+            else if (entry.TryGetProperty("msg", out var m))
+            {
+                message = m.GetString() ?? "";
+            }
+            else if (entry.TryGetProperty("body", out var body))
+            {
+                message = body.GetString() ?? "";
+            }
+
+            if (string.IsNullOrEmpty(message))
+            {
+                return "";
+            }
+
+            return $"{timestamp} [{level}] {message}";
+        }
+        catch
+        {
+            return "";
+        }
+    }
 }

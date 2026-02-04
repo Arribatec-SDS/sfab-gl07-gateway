@@ -1,6 +1,7 @@
 import { useAuth } from '@arribatec-sds/arribatec-nexus-react';
 import {
     CheckCircle as CheckCircleIcon,
+    Download as DownloadIcon,
     Error as ErrorIcon,
     ExpandLess as ExpandLessIcon,
     ExpandMore as ExpandMoreIcon,
@@ -27,6 +28,7 @@ import {
     TablePagination,
     TableRow,
     TextField,
+    Tooltip,
     Typography,
 } from '@mui/material';
 import React, { useCallback, useEffect, useState } from 'react';
@@ -43,6 +45,7 @@ interface ProcessingLog {
   errorMessage: string | null;
   processedAt: string;
   durationMs: number | null;
+  taskExecutionId: string | null;
 }
 
 type LogStatus = 'Success' | 'Failed' | 'Warning' | 'Processing' | '';
@@ -57,6 +60,7 @@ export default function ProcessingLogsPage() {
   const [rowsPerPage, setRowsPerPage] = useState(25);
   const [statusFilter, setStatusFilter] = useState<LogStatus>('');
   const [expandedRows, setExpandedRows] = useState<Set<number>>(new Set());
+  const [downloadingLogId, setDownloadingLogId] = useState<number | null>(null);
 
   const fetchLogs = useCallback(async () => {
     setLoading(true);
@@ -112,6 +116,42 @@ export default function ProcessingLogsPage() {
       }
       return newSet;
     });
+  };
+
+  const handleDownloadLog = async (log: ProcessingLog) => {
+    if (!log.taskExecutionId) return;
+    
+    setDownloadingLogId(log.id);
+    try {
+      const token = await getToken();
+      const apiClient = createApiClient();
+      apiClient.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+      
+      const response = await apiClient.get(`/worker/logs/${log.taskExecutionId}`, {
+        responseType: 'blob',
+      });
+      
+      // Create download link
+      const blob = new Blob([response.data], { type: 'text/plain' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      // Format: log_YYYY-MM-DD_HH-MM-SS.log
+      const processedDate = new Date(log.processedAt.endsWith('Z') ? log.processedAt : log.processedAt + 'Z');
+      const timestamp = processedDate.toISOString().slice(0, 19).replace('T', '_').replace(/:/g, '-');
+      link.download = `log_${timestamp}.log`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+      
+      setSuccess('Log file downloaded successfully');
+    } catch (err: unknown) {
+      const errorMessage = err instanceof Error ? err.message : 'Failed to download log file';
+      setError(errorMessage);
+    } finally {
+      setDownloadingLogId(null);
+    }
   };
 
   const getStatusIcon = (status: string): React.ReactElement | undefined => {
@@ -214,6 +254,7 @@ export default function ProcessingLogsPage() {
                   <TableCell>Status</TableCell>
                   <TableCell>Vouchers / Trans</TableCell>
                   <TableCell>Processed At</TableCell>
+                  <TableCell width={60} align="center">Log</TableCell>
                 </TableRow>
               </TableHead>
               <TableBody>
@@ -252,9 +293,34 @@ export default function ProcessingLogsPage() {
                           {formatDate(log.processedAt)}
                         </Typography>
                       </TableCell>
+                      <TableCell align="center">
+                        {log.taskExecutionId ? (
+                          <Tooltip title="Download execution log">
+                            <IconButton
+                              size="small"
+                              onClick={() => handleDownloadLog(log)}
+                              disabled={downloadingLogId === log.id}
+                            >
+                              {downloadingLogId === log.id ? (
+                                <CircularProgress size={18} />
+                              ) : (
+                                <DownloadIcon fontSize="small" />
+                              )}
+                            </IconButton>
+                          </Tooltip>
+                        ) : (
+                          <Tooltip title="No execution log available">
+                            <span>
+                              <IconButton size="small" disabled>
+                                <DownloadIcon fontSize="small" />
+                              </IconButton>
+                            </span>
+                          </Tooltip>
+                        )}
+                      </TableCell>
                     </TableRow>
                     <TableRow>
-                      <TableCell style={{ paddingBottom: 0, paddingTop: 0 }} colSpan={6}>
+                      <TableCell style={{ paddingBottom: 0, paddingTop: 0 }} colSpan={7}>
                         <Collapse in={expandedRows.has(log.id)} timeout="auto" unmountOnExit>
                           <Box sx={{ py: 2, px: 2, backgroundColor: 'grey.50' }}>
                             <Box sx={{ display: 'flex', gap: 4, flexWrap: 'wrap', mb: 2 }}>

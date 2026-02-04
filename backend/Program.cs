@@ -31,6 +31,7 @@ builder.Services.AddScoped<IProcessingLogRepository, ProcessingLogRepository>();
 builder.Services.AddScoped<IGl07ReportSetupRepository, Gl07ReportSetupRepository>();
 
 // Services
+builder.Services.AddScoped<IScopedDbConnectionProvider, ScopedDbConnectionProvider>();
 builder.Services.AddScoped<IAppSettingsService, AppSettingsService>();
 builder.Services.AddScoped<IXmlParserService, XmlParserService>();
 builder.Services.AddScoped<IDatabaseInitializer, DatabaseInitializer>();

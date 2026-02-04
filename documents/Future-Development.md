@@ -60,36 +60,44 @@ Add the ability to download task execution logs directly from the application in
 ### 2. Database Connection Caching
 
 **Priority:** Low  
-**Status:** Not Started  
-**Added:** 2026-02-03
+**Status:** ✅ Completed  
+**Added:** 2026-02-03  
+**Completed:** 2026-02-03
 
 **Description:**  
 Reduce redundant Master API calls by caching database connection strings within the worker execution scope.
 
-**Current Behavior:**
-- Every repository method calls `CreateProductConnectionAsync()`
-- Each call makes 2 Master API requests:
+**Previous Behavior:**
+- Every repository method called `CreateProductConnectionAsync()`
+- Each call made 2 Master API requests:
   1. `GET /api/nexus/product/{shortName}/connections`
   2. `GET /api/nexus/database-connections/{id}/secure`
-- Processing 1 file can result in 10+ database connection lookups
+- Processing 1 file resulted in 10+ database connection lookups
+
+**Solution Implemented:**
+Created `IScopedDbConnectionProvider` - a scoped service that caches the database connection for the lifetime of the DI scope (HTTP request or task execution).
+
+**Files Changed:**
+- `Services/ScopedDbConnectionProvider.cs` - New service with thread-safe lazy initialization
+- `Program.cs` - Registered `IScopedDbConnectionProvider` as scoped
+- `Repositories/AppSettingsRepository.cs` - Uses cached connection
+- `Repositories/SourceSystemRepository.cs` - Uses cached connection
+- `Repositories/ProcessingLogRepository.cs` - Uses cached connection
+- `Repositories/Gl07ReportSetupRepository.cs` - Uses cached connection
+- `Services/DatabaseInitializer.cs` - Uses cached connection
 
 **Impact:**
-- Adds ~50ms overhead per operation
-- Noisy logs during task execution
-- Unnecessary network traffic
-
-**Potential Solutions:**
-1. Cache connection string at worker level for duration of task execution
-2. Pass shared `IDbConnection` through method parameters
-3. Implement scoped connection service with lazy initialization
-
-**Note:** This is by design in the Nexus client library to ensure fresh credentials. Caching should respect token expiration.
+- Master API calls reduced from N per request/task to **1 per request/task**
+- Connection automatically disposed at end of scope via `IAsyncDisposable`
+- Thread-safe via `SemaphoreSlim` double-check pattern
 
 ---
 
 ## Completed Features
 
-_No items yet._
+### 1. Database Connection Caching (2026-02-03)
+
+Implemented `IScopedDbConnectionProvider` to cache database connections within request/task scope, reducing Master API traffic by ~90%.
 
 ---
 

@@ -14,7 +14,8 @@ public class ProcessingLog
     public string? ErrorMessage { get; set; }
     public DateTime ProcessedAt { get; set; }
     public int? DurationMs { get; set; }
-    
+    public Guid? TaskExecutionId { get; set; }
+
     // Navigation property
     public SourceSystem? SourceSystem { get; set; }
 }
@@ -34,6 +35,7 @@ public class ProcessingLogDto
     public string? ErrorMessage { get; set; }
     public DateTime ProcessedAt { get; set; }
     public int? DurationMs { get; set; }
+    public Guid? TaskExecutionId { get; set; }
 
     public static ProcessingLogDto FromEntity(ProcessingLog entity)
     {
@@ -48,7 +50,8 @@ public class ProcessingLogDto
             TransactionCount = entity.TransactionCount,
             ErrorMessage = entity.ErrorMessage,
             ProcessedAt = entity.ProcessedAt,
-            DurationMs = entity.DurationMs
+            DurationMs = entity.DurationMs,
+            TaskExecutionId = entity.TaskExecutionId
         };
     }
 }
