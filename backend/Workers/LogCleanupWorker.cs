@@ -54,7 +54,7 @@ public class LogCleanupWorker : ITaskHandler<LogCleanupParameters>
         try
         {
             // Get retention days from parameter or settings
-            var retentionDays = parameters.RetentionDays 
+            var retentionDays = parameters.RetentionDays
                 ?? await GetRetentionDaysFromSettingsAsync();
 
             // Enforce minimum retention

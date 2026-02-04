@@ -158,6 +158,24 @@ public class GL07ProcessingWorker : ITaskHandler<GL07ProcessingParameters>
         _logger.LogInformation("  Transformer: {Transformer}", sourceSystem.TransformerType);
         _logger.LogInformation("  Pattern: {Pattern}", sourceSystem.FilePattern);
 
+        // Log GL07 configuration
+        _logger.LogInformation("  ── GL07 Configuration ──");
+        if (sourceSystem.Gl07ReportSetup != null)
+        {
+            _logger.LogInformation("  Report Setup: {SetupCode} ({SetupName})",
+                sourceSystem.Gl07ReportSetup.SetupCode, sourceSystem.Gl07ReportSetup.SetupName);
+            _logger.LogInformation("  Report ID: {ReportId}", sourceSystem.Gl07ReportSetup.ReportId);
+            _logger.LogInformation("  Company: {CompanyId}, User: {UserId}",
+                sourceSystem.Gl07ReportSetup.CompanyId, sourceSystem.Gl07ReportSetup.UserId);
+        }
+        else
+        {
+            _logger.LogWarning("  Report Setup: NOT LOADED (ID: {SetupId})", sourceSystem.Gl07ReportSetupId);
+        }
+        _logger.LogInformation("  Interface: {Interface}", sourceSystem.Interface ?? "(from source file)");
+        _logger.LogInformation("  TransactionType: {TransType}", sourceSystem.TransactionType ?? "(from source file)");
+        _logger.LogInformation("  BatchId: {BatchId}", sourceSystem.BatchId ?? "(from source file)");
+
         var processed = 0;
         var success = 0;
         var errors = 0;

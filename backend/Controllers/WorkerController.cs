@@ -136,7 +136,7 @@ public class WorkerController : ControllerBase
             }
 
             var tasksJson = await searchResponse.Content.ReadAsStringAsync();
-            _logger.LogDebug("Tasks response: {Json}", tasksJson);
+            _logger.LogInformation("Tasks response for gl07-process: {Json}", tasksJson);
 
             using var tasksDoc = JsonDocument.Parse(tasksJson);
             var tasks = tasksDoc.RootElement;
@@ -148,10 +148,20 @@ public class WorkerController : ControllerBase
             {
                 foreach (var task in tasks.EnumerateArray())
                 {
-                    if (task.TryGetProperty("id", out var idProp))
+                    // Log each task for debugging
+                    _logger.LogDebug("Checking task: {Task}", task.GetRawText());
+                    
+                    // The task code is in applicationTask.apiRoute (e.g., "/api/tasks/gl07-process/execute")
+                    if (task.TryGetProperty("applicationTask", out var appTask) &&
+                        appTask.TryGetProperty("apiRoute", out var apiRouteProp))
                     {
-                        taskConfigId = idProp.GetString();
-                        break;
+                        var apiRoute = apiRouteProp.GetString();
+                        if (apiRoute?.Contains("gl07-process") == true && task.TryGetProperty("id", out var idProp))
+                        {
+                            taskConfigId = idProp.GetString();
+                            _logger.LogInformation("Found gl07-process task with ID: {TaskConfigId}, apiRoute: {ApiRoute}", taskConfigId, apiRoute);
+                            break;
+                        }
                     }
                 }
             }
@@ -416,7 +426,7 @@ public class WorkerController : ControllerBase
             }
 
             var jsonContent = await response.Content.ReadAsStringAsync();
-            
+
             // Parse JSON and format as text
             var textContent = FormatLogsAsText(jsonContent);
 
@@ -437,7 +447,7 @@ public class WorkerController : ControllerBase
     private string FormatLogsAsText(string jsonContent)
     {
         var sb = new StringBuilder();
-        
+
         try
         {
             using var doc = JsonDocument.Parse(jsonContent);

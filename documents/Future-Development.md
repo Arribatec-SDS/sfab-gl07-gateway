@@ -9,51 +9,42 @@ This document tracks planned features and improvements for the GL07 Gateway appl
 ### 1. Task Execution Log Download
 
 **Priority:** Medium  
-**Status:** Not Started  
-**Added:** 2026-02-03
+**Status:** ✅ Completed  
+**Added:** 2026-02-03  
+**Completed:** 2026-02-04
 
 **Description:**  
-Add the ability to download task execution logs directly from the application instead of requiring users to access Nexus Console.
+Add the ability to download task execution logs directly from the Processing Logs page.
 
-**Current State:**
-- Task execution logs are visible in Nexus Console under task executions
-- Logs include detailed information: file processing, Unit4 API calls, errors, timing
-- Logs are enriched with `task_execution_id`, `tenant_id`, `correlation_id` for traceability
+**Implementation:**
 
-**Implementation Plan:**
+1. **Backend** - Added endpoint in `WorkerController.cs`:
+   - `GET /api/worker/logs/{taskExecutionId}` - Downloads execution logs as plain text
+   - Calls Master API: `GET /api/task-executions/{id}/logs`
+   - Parses JSON response and formats as human-readable text with timestamps
 
-1. **Backend** - Add endpoint in `WorkerController.cs`:
-   ```csharp
-   [HttpGet("logs/{taskExecutionId}")]
-   [Authorize]
-   public async Task<IActionResult> DownloadTaskLogs(Guid taskExecutionId)
-   {
-       // Call Master API: GET /api/task-executions/{id}/logs
-       // Return as downloadable text file
-   }
-   ```
+2. **Model Changes** - `ProcessingLog.cs`:
+   - Added `TaskExecutionId` (Guid?) to link processing logs to Nexus task executions
+   - Updated DTO and repository queries
 
-2. **Frontend** - Add to `RunWorkerPage.tsx`:
-   - "Download Logs" button in the Status Panel
-   - Show button when execution is complete (success or failed)
-   - Trigger browser file download with filename: `gl07-execution-{taskExecutionId}.log`
+3. **Database** - `init-tables.sql`:
+   - Added `TaskExecutionId UNIQUEIDENTIFIER NULL` column with index
+   - Migration script for existing tables
 
-3. **Master API Verification:**
-   - Confirm endpoint exists: `GET /api/task-executions/{taskExecutionId}/logs`
-   - Alternative: Query Loki directly by `task_execution_id` label
+4. **Frontend** - `ProcessingLogsPage.tsx`:
+   - Download button (📥) next to each log entry with TaskExecutionId
+   - Downloads as `log_YYYY-MM-DD_HH-MM-SS.log`
+   - Tooltip shows "Download execution log"
 
-**UI Mockup:**
-```
-┌─────────────────────────────────────────────────────┐
-│ Status Panel                                        │
-├─────────────────────────────────────────────────────┤
-│ Task ID: f948a235-8c80-4189-bd17-0207febe5d02      │
-│ Status: ✓ Completed                                 │
-│ Duration: 2845ms                                    │
-│                                                     │
-│ [Download Logs]  [Run Again]                        │
-└─────────────────────────────────────────────────────┘
-```
+5. **Worker Enhancement** - `GL07ProcessingWorker.cs`:
+   - Sets `TaskExecutionId = _context.TaskExecutionId` on log entries
+   - Creates log entry even when no files to process
+   - Logs GL07 configuration details (Report Setup, Report ID, Company, etc.)
+
+6. **Log Cleanup** - New `LogCleanupWorker.cs`:
+   - Task handler with code `log-cleanup`
+   - Reads `LogRetention:Days` from settings (default 90, minimum 7)
+   - Deletes logs older than retention period
 
 ---
 
@@ -81,7 +72,7 @@ Created `IScopedDbConnectionProvider` - a scoped service that caches the databas
 - `Services/ScopedDbConnectionProvider.cs` - New service with thread-safe lazy initialization
 - `Program.cs` - Registered `IScopedDbConnectionProvider` as scoped
 - `Repositories/AppSettingsRepository.cs` - Uses cached connection
-- `Repositories/SourceSystemRepository.cs` - Uses cached connection
+cd- `Repositories/SourceSystemRepository.cs` - Uses cached connection
 - `Repositories/ProcessingLogRepository.cs` - Uses cached connection
 - `Repositories/Gl07ReportSetupRepository.cs` - Uses cached connection
 - `Services/DatabaseInitializer.cs` - Uses cached connection
@@ -95,7 +86,11 @@ Created `IScopedDbConnectionProvider` - a scoped service that caches the databas
 
 ## Completed Features
 
-### 1. Database Connection Caching (2026-02-03)
+### 1. Task Execution Log Download (2026-02-04)
+
+Implemented log download from Processing Logs page with TaskExecutionId linking, text-formatted logs, and LogCleanupWorker for retention management.
+
+### 2. Database Connection Caching (2026-02-03)
 
 Implemented `IScopedDbConnectionProvider` to cache database connections within request/task scope, reducing Master API traffic by ~90%.
 
