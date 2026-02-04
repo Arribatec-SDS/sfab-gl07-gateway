@@ -147,6 +147,13 @@ BEGIN
 END
 GO
 
+-- Add DefaultCurrency column if it doesn't exist (migration for currency fallback)
+IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('SourceSystems') AND name = 'DefaultCurrency')
+BEGIN
+    ALTER TABLE SourceSystems ADD DefaultCurrency NVARCHAR(3) NULL;
+END
+GO
+
 -- Drop old columns if they exist (migration from old schema)
 IF EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('SourceSystems') AND name = 'KeepOriginalBatchId')
 BEGIN

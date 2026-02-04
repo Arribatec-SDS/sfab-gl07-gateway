@@ -89,7 +89,7 @@ function HomePage() {
               <TransformIcon sx={{ color: '#003d4d', fontSize: 24 }} />
             </Box>
             <Typography variant="h6" component="div" fontWeight={600} sx={{ color: 'white' }}>
-              GL07 Gateway
+              Arribatec GL07 Gateway
             </Typography>
           </Box>
           <Box sx={{ flexGrow: 1 }} />
@@ -159,7 +159,7 @@ function HomePage() {
           <Grid container spacing={3} alignItems="center" sx={{ position: 'relative', zIndex: 1 }}>
             <Grid size={{ xs: 12, md: 8 }}>
               <Typography variant="h3" fontWeight={700} gutterBottom sx={{ color: '#ffffff' }}>
-                GL07 Transaction Gateway
+                Arribatec GL07 Gateway
               </Typography>
               <Typography variant="h6" sx={{ color: 'rgba(255,255,255,0.85)', mb: 3, fontWeight: 400 }}>
                 Automated transformation and posting of Agresso GL07 transactions to Unit4 ERP
@@ -301,7 +301,7 @@ function HomePage() {
         {/* Footer */}
         <Box sx={{ mt: 4, textAlign: 'center' }}>
           <Typography variant="body2" color="text.secondary">
-            Stena Fastigheter GL07 Gateway • Powered by Nexus Platform
+            Arribatec GL07 Gateway • Powered by Nexus Platform
           </Typography>
         </Box>
       </Container>

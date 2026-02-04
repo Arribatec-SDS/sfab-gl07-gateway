@@ -1,6 +1,7 @@
 import { useAuth } from '@arribatec-sds/arribatec-nexus-react';
 import {
     CheckCircle as CheckCircleIcon,
+    Delete as DeleteIcon,
     Download as DownloadIcon,
     Error as ErrorIcon,
     ExpandLess as ExpandLessIcon,
@@ -15,6 +16,11 @@ import {
     Chip,
     CircularProgress,
     Collapse,
+    Dialog,
+    DialogActions,
+    DialogContent,
+    DialogContentText,
+    DialogTitle,
     IconButton,
     MenuItem,
     Paper,
@@ -69,6 +75,8 @@ export default function ProcessingLogsPage() {
   const [statusFilter, setStatusFilter] = useState<LogStatus>('');
   const [expandedRows, setExpandedRows] = useState<Set<string>>(new Set());
   const [downloadingId, setDownloadingId] = useState<string | null>(null);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [deleteConfirm, setDeleteConfirm] = useState<ExecutionLog | null>(null);
 
   const fetchLogs = useCallback(async () => {
     setLoading(true);
@@ -159,6 +167,29 @@ export default function ProcessingLogsPage() {
       setError(errorMessage);
     } finally {
       setDownloadingId(null);
+    }
+  };
+
+  const handleDeleteExecution = async (execution: ExecutionLog) => {
+    if (!execution.taskExecutionId) return;
+    
+    setDeletingId(execution.taskExecutionId);
+    setDeleteConfirm(null);
+    
+    try {
+      const token = await getToken();
+      const apiClient = createApiClient();
+      apiClient.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+      
+      await apiClient.delete(`/processinglogs/execution/${execution.taskExecutionId}`);
+      
+      setSuccess('Execution logs deleted successfully');
+      fetchLogs(); // Refresh the list
+    } catch (err: unknown) {
+      const errorMessage = err instanceof Error ? err.message : 'Failed to delete execution logs';
+      setError(errorMessage);
+    } finally {
+      setDeletingId(null);
     }
   };
 
@@ -266,7 +297,7 @@ export default function ProcessingLogsPage() {
                   <TableCell align="center">Source Systems</TableCell>
                   <TableCell align="center">Vouchers / Trans</TableCell>
                   <TableCell align="center">Duration</TableCell>
-                  <TableCell width={60} align="center">Log</TableCell>
+                  <TableCell width={100} align="center">Actions</TableCell>
                 </TableRow>
               </TableHead>
               <TableBody>
@@ -314,29 +345,45 @@ export default function ProcessingLogsPage() {
                           </Typography>
                         </TableCell>
                         <TableCell align="center">
-                          {execution.taskExecutionId ? (
-                            <Tooltip title="Download execution log">
+                          <Box sx={{ display: 'flex', justifyContent: 'center', gap: 0.5 }}>
+                            {execution.taskExecutionId ? (
+                              <Tooltip title="Download execution log">
+                                <IconButton
+                                  size="small"
+                                  onClick={() => handleDownloadLog(execution)}
+                                  disabled={downloadingId === execution.taskExecutionId}
+                                >
+                                  {downloadingId === execution.taskExecutionId ? (
+                                    <CircularProgress size={18} />
+                                  ) : (
+                                    <DownloadIcon fontSize="small" />
+                                  )}
+                                </IconButton>
+                              </Tooltip>
+                            ) : (
+                              <Tooltip title="No execution log available">
+                                <span>
+                                  <IconButton size="small" disabled>
+                                    <DownloadIcon fontSize="small" />
+                                  </IconButton>
+                                </span>
+                              </Tooltip>
+                            )}
+                            <Tooltip title="Delete execution logs">
                               <IconButton
                                 size="small"
-                                onClick={() => handleDownloadLog(execution)}
-                                disabled={downloadingId === execution.taskExecutionId}
+                                onClick={() => setDeleteConfirm(execution)}
+                                disabled={deletingId === execution.taskExecutionId}
+                                color="error"
                               >
-                                {downloadingId === execution.taskExecutionId ? (
+                                {deletingId === execution.taskExecutionId ? (
                                   <CircularProgress size={18} />
                                 ) : (
-                                  <DownloadIcon fontSize="small" />
+                                  <DeleteIcon fontSize="small" />
                                 )}
                               </IconButton>
                             </Tooltip>
-                          ) : (
-                            <Tooltip title="No execution log available">
-                              <span>
-                                <IconButton size="small" disabled>
-                                  <DownloadIcon fontSize="small" />
-                                </IconButton>
-                              </span>
-                            </Tooltip>
-                          )}
+                          </Box>
                         </TableCell>
                       </TableRow>
                       <TableRow>
@@ -450,6 +497,32 @@ export default function ProcessingLogsPage() {
           {success}
         </Alert>
       </Snackbar>
+
+      {/* Delete Confirmation Dialog */}
+      <Dialog
+        open={!!deleteConfirm}
+        onClose={() => setDeleteConfirm(null)}
+      >
+        <DialogTitle>Delete Execution Logs?</DialogTitle>
+        <DialogContent>
+          <DialogContentText>
+            Are you sure you want to delete all logs for this execution? 
+            This will remove {deleteConfirm?.sourceSystemCount} source system log(s) 
+            from {deleteConfirm ? formatDate(deleteConfirm.processedAt) : ''}.
+            This action cannot be undone.
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setDeleteConfirm(null)}>Cancel</Button>
+          <Button 
+            onClick={() => deleteConfirm && handleDeleteExecution(deleteConfirm)} 
+            color="error"
+            variant="contained"
+          >
+            Delete
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Box>
   );
 }

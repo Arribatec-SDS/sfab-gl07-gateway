@@ -188,7 +188,7 @@ function LoginPage() {
           </Avatar>
           
           <Typography component="h1" variant="h4" gutterBottom>
-            Stena Fastigheter – GL07 Gateway
+            Arribatec GL07 Gateway
           </Typography>
           
           <Typography variant="h6" color="text.secondary" align="center" sx={{ mb: 3 }}>

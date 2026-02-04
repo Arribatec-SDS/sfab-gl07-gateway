@@ -114,7 +114,7 @@ public class ABWTransactionTransformer : ITransformationService
                         TransactionType = transactionType,
                         TransactionNumber = transactionNumber,
                         Invoice = MapApArToInvoice(transaction.ApArInfo),
-                        TransactionDetailInformation = MapTransactionToDetailInfo(transaction, sequenceNumber),
+                        TransactionDetailInformation = MapTransactionToDetailInfo(transaction, sequenceNumber, sourceSystem.DefaultCurrency),
                         AdditionalInformation = MapAdditionalInfo(transaction)
                     }
                 };
@@ -177,7 +177,7 @@ public class ABWTransactionTransformer : ITransformationService
         return DateTime.TryParse(dateStr, out var result) ? result : null;
     }
 
-    private TransactionDetailInformation MapTransactionToDetailInfo(Transaction transaction, int sequenceNumber)
+    private TransactionDetailInformation MapTransactionToDetailInfo(Transaction transaction, int sequenceNumber, string? defaultCurrency)
     {
         return new TransactionDetailInformation
         {
@@ -187,7 +187,7 @@ public class ABWTransactionTransformer : ITransformationService
             Status = transaction.Status,
             ValueDate = ParseDate(transaction.TransDate),
             AccountingInformation = MapGLAnalysisToAccountingInfo(transaction.GLAnalysis),
-            Amounts = MapAmounts(transaction.Amounts, transaction.GLAnalysis?.Currency),
+            Amounts = MapAmounts(transaction.Amounts, transaction.GLAnalysis?.Currency, defaultCurrency),
             TaxInformation = MapTaxInfo(transaction.GLAnalysis, transaction.TaxTransInfo),
             StatisticalInformation = MapStatisticalInfo(transaction.Amounts)
         };
@@ -210,16 +210,23 @@ public class ABWTransactionTransformer : ITransformationService
         };
     }
 
-    private Models.Unit4.Amounts? MapAmounts(Models.Xml.Amounts? amounts, string? currency)
+    private Models.Unit4.Amounts? MapAmounts(Models.Xml.Amounts? amounts, string? currency, string? defaultCurrency)
     {
         if (amounts == null) return null;
+
+        // Currency fallback chain: XML currency -> SourceSystem.DefaultCurrency -> "SEK"
+        var resolvedCurrency = !string.IsNullOrWhiteSpace(currency) 
+            ? currency 
+            : !string.IsNullOrWhiteSpace(defaultCurrency) 
+                ? defaultCurrency 
+                : "SEK";
 
         return new Models.Unit4.Amounts
         {
             DebitCreditFlag = amounts.DcFlag ?? 1, // Use XML value (1 = Debit, -1 = Credit), default to 1 (Debit) if missing
             Amount = amounts.Amount,
             CurrencyAmount = amounts.CurrAmount,
-            CurrencyCode = currency
+            CurrencyCode = resolvedCurrency
         };
     }
 

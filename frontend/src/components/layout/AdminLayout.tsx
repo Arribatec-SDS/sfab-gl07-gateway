@@ -87,7 +87,7 @@ export default function AdminLayout() {
     <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
       <Toolbar sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', px: 2 }}>
         <Typography variant="h6" noWrap component="div" sx={{ fontWeight: 600 }}>
-          GL07 Gateway
+          Arribatec GL07 Gateway
         </Typography>
         {isMobile && (
           <IconButton onClick={handleDrawerToggle}>

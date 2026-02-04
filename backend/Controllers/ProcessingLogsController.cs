@@ -119,4 +119,18 @@ public class ProcessingLogsController : ControllerBase
         
         return Ok(grouped);
     }
+
+    /// <summary>
+    /// Delete all processing logs for a task execution.
+    /// </summary>
+    [HttpDelete("execution/{taskExecutionId:guid}")]
+    public async Task<IActionResult> DeleteByExecution(Guid taskExecutionId)
+    {
+        _logger.LogInformation("Deleting processing logs for execution: {TaskExecutionId}", taskExecutionId);
+        
+        var deleted = await _repository.DeleteByTaskExecutionIdAsync(taskExecutionId);
+        _logger.LogInformation("Deleted {Count} processing logs for execution: {TaskExecutionId}", deleted, taskExecutionId);
+        
+        return Ok(new { deleted });
+    }
 }

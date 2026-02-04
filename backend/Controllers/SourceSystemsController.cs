@@ -194,11 +194,19 @@ public class SourceSystemsController : ControllerBase
             return NotFound($"Source system with ID {id} not found");
         }
 
-        await _repository.DeleteAsync(id);
-
-        _logger.LogInformation("Deleted source system: {SystemCode}", existing.SystemCode);
-
-        return NoContent();
+        try
+        {
+            await _repository.DeleteAsync(id);
+            _logger.LogInformation("Deleted source system: {SystemCode}", existing.SystemCode);
+            return NoContent();
+        }
+        catch (Microsoft.Data.SqlClient.SqlException ex) when (ex.Number == 547) // FK constraint violation
+        {
+            _logger.LogWarning("Cannot delete source system {Id} - has related processing logs", id);
+            return Conflict(new { 
+                message = $"Cannot delete source system '{existing.SystemCode}' because it has processing logs. Delete the logs first or disable the source system instead."
+            });
+        }
     }
 
     /// <summary>

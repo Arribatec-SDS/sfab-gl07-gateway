@@ -61,6 +61,7 @@ interface SourceSystem {
   interface: string | null;
   transactionType: string | null;
   batchId: string | null;
+  defaultCurrency: string | null;
 }
 
 interface SourceSystemRequest {
@@ -76,6 +77,7 @@ interface SourceSystemRequest {
   interface: string;
   transactionType: string;
   batchId: string;
+  defaultCurrency: string;
 }
 
 // Helper to join paths without double slashes
@@ -100,6 +102,7 @@ const emptySourceSystem: SourceSystemRequest = {
   interface: '',
   transactionType: '',
   batchId: '',
+  defaultCurrency: '',
 };
 
 export default function SourceSystemsPage() {
@@ -169,6 +172,7 @@ export default function SourceSystemsPage() {
         interface: system.interface || '',
         transactionType: system.transactionType || '',
         batchId: system.batchId || '',
+        defaultCurrency: system.defaultCurrency || '',
       });
     } else {
       setEditingSystem(null);
@@ -221,7 +225,14 @@ export default function SourceSystemsPage() {
       setSuccess('Source system deleted successfully');
       await fetchSourceSystems();
     } catch (err: unknown) {
-      const errorMessage = err instanceof Error ? err.message : 'Failed to delete source system';
+      // Extract error message from axios response or fallback to generic message
+      let errorMessage = 'Failed to delete source system';
+      if (err && typeof err === 'object' && 'response' in err) {
+        const axiosErr = err as { response?: { data?: { message?: string } } };
+        errorMessage = axiosErr.response?.data?.message || errorMessage;
+      } else if (err instanceof Error) {
+        errorMessage = err.message;
+      }
       setError(errorMessage);
     }
   };
@@ -245,6 +256,7 @@ export default function SourceSystemsPage() {
         interface: system.interface || '',
         transactionType: system.transactionType || '',
         batchId: system.batchId || '',
+        defaultCurrency: system.defaultCurrency || '',
       });
       
       setSuccess(`Source system ${system.isActive ? 'deactivated' : 'activated'} successfully`);
@@ -481,7 +493,7 @@ export default function SourceSystemsPage() {
                 <option value="ABWTransaction">ABW Transaction</option>
               </TextField>
             </Grid>
-            <Grid size={4}>
+            <Grid size={3}>
               <TextField
                 label="Interface"
                 fullWidth
@@ -491,7 +503,7 @@ export default function SourceSystemsPage() {
                 placeholder="e.g., GL07"
               />
             </Grid>
-            <Grid size={4}>
+            <Grid size={3}>
               <TextField
                 label="Trans. Type"
                 fullWidth
@@ -501,7 +513,7 @@ export default function SourceSystemsPage() {
                 placeholder="e.g., GL"
               />
             </Grid>
-            <Grid size={4}>
+            <Grid size={3}>
               <TextField
                 label="Batch ID Prefix"
                 fullWidth
@@ -509,10 +521,24 @@ export default function SourceSystemsPage() {
                 value={formData.batchId}
                 onChange={(e) => setFormData(prev => ({ ...prev, batchId: e.target.value.slice(0, 10) }))}
                 placeholder="e.g., SFAB"
-                helperText={`${formData.batchId.length}/10 chars. Timestamp appended at runtime.`}
+                helperText={`${formData.batchId.length}/10 chars`}
                 error={formData.batchId.length > 10}
                 slotProps={{
                   input: { inputProps: { maxLength: 10 } }
+                }}
+              />
+            </Grid>
+            <Grid size={3}>
+              <TextField
+                label="Default Currency"
+                fullWidth
+                size="small"
+                value={formData.defaultCurrency}
+                onChange={(e) => setFormData(prev => ({ ...prev, defaultCurrency: e.target.value.toUpperCase().slice(0, 3) }))}
+                placeholder="e.g., SEK"
+                helperText="Fallback: SEK"
+                slotProps={{
+                  input: { inputProps: { maxLength: 3 } }
                 }}
               />
             </Grid>

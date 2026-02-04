@@ -374,7 +374,7 @@ public class GL07ProcessingWorker : ITaskHandler<GL07ProcessingParameters>
             logEntry.ErrorMessage = ex.Message;
             logEntry.DurationMs = (int)stopwatch.ElapsedMilliseconds;
 
-            _logger.LogError(ex, "    ✗ Error processing file: {FileName}", fileName);
+            _logger.LogError(ex, "    ✗ Error processing file: {FileName} - {ErrorMessage}", fileName, ex.Message);
 
             // Move to error folder
             try

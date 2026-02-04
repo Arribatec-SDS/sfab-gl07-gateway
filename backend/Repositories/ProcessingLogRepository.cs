@@ -164,4 +164,22 @@ public class ProcessingLogRepository : IProcessingLogRepository
             WHERE ProcessedAt < @CutoffDate",
             new { CutoffDate = cutoffDate });
     }
+
+    public async Task DeleteAsync(int id)
+    {
+        var connection = await _connectionProvider.GetConnectionAsync();
+        await connection.ExecuteAsync(@"
+            DELETE FROM ProcessingLog 
+            WHERE Id = @Id",
+            new { Id = id });
+    }
+
+    public async Task<int> DeleteByTaskExecutionIdAsync(Guid taskExecutionId)
+    {
+        var connection = await _connectionProvider.GetConnectionAsync();
+        return await connection.ExecuteAsync(@"
+            DELETE FROM ProcessingLog 
+            WHERE TaskExecutionId = @TaskExecutionId",
+            new { TaskExecutionId = taskExecutionId });
+    }
 }

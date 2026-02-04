@@ -39,6 +39,13 @@ public class SourceSystem
     [MaxLength(10)]
     public string? BatchId { get; set; }
 
+    /// <summary>
+    /// Default currency code (3 chars, e.g., "SEK", "NOK", "EUR").
+    /// Used when source XML doesn't contain currency. Falls back to "SEK" if not set.
+    /// </summary>
+    [MaxLength(3)]
+    public string? DefaultCurrency { get; set; }
+
     public DateTime CreatedAt { get; set; }
     public DateTime UpdatedAt { get; set; }
 
@@ -69,6 +76,7 @@ public class SourceSystemDto
     public string? Interface { get; set; }
     public string? TransactionType { get; set; }
     public string? BatchId { get; set; }
+    public string? DefaultCurrency { get; set; }
 
     public static SourceSystemDto FromEntity(SourceSystem entity)
     {
@@ -95,7 +103,8 @@ public class SourceSystemDto
                 : null,
             Interface = entity.Interface,
             TransactionType = entity.TransactionType,
-            BatchId = entity.BatchId
+            BatchId = entity.BatchId,
+            DefaultCurrency = entity.DefaultCurrency
         };
     }
 
@@ -115,7 +124,8 @@ public class SourceSystemDto
             Gl07ReportSetupId = Gl07ReportSetupId,
             Interface = Interface,
             TransactionType = TransactionType,
-            BatchId = BatchId
+            BatchId = BatchId,
+            DefaultCurrency = DefaultCurrency
         };
     }
 }
@@ -154,6 +164,13 @@ public class CreateSourceSystemRequest
     /// </summary>
     [MaxLength(10)]
     public string? BatchId { get; set; }
+
+    /// <summary>
+    /// Default currency code (3 chars, e.g., "SEK", "NOK", "EUR").
+    /// Used when source XML doesn't contain currency. Falls back to "SEK" if not set.
+    /// </summary>
+    [MaxLength(3)]
+    public string? DefaultCurrency { get; set; }
 }
 
 /// <summary>
