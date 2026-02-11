@@ -15,7 +15,7 @@ public interface IFileSourceServiceFactory
 
 /// <summary>
 /// Implementation of the file source service factory.
-/// Creates LocalFileSourceService or AzureBlobFileSourceService based on the source system's Provider.
+/// Creates LocalFileSourceService, AzureBlobFileSourceService, or AzureFileShareFileSourceService based on the source system's Provider.
 /// </summary>
 public class FileSourceServiceFactory : IFileSourceServiceFactory
 {
@@ -38,9 +38,10 @@ public class FileSourceServiceFactory : IFileSourceServiceFactory
 
         return provider.ToUpperInvariant() switch
         {
+            "AZUREFILESHARE" => _serviceProvider.GetRequiredService<AzureFileShareFileSourceService>(),
             "AZUREBLOB" => _serviceProvider.GetRequiredService<AzureBlobFileSourceService>(),
             "LOCAL" => _serviceProvider.GetRequiredService<LocalFileSourceService>(),
-            _ => throw new InvalidOperationException($"Unknown file source provider: {provider}. Valid options are: Local, AzureBlob")
+            _ => throw new InvalidOperationException($"Unknown file source provider: {provider}. Valid options are: Local, AzureBlob, AzureFileShare")
         };
     }
 }

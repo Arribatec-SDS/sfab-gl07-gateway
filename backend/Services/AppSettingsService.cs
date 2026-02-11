@@ -76,7 +76,8 @@ public class AppSettingsService : IAppSettingsService
         var isSensitive = setting?.Sensitive ??
             paramName.Contains("Secret", StringComparison.OrdinalIgnoreCase) ||
             paramName.Contains("Password", StringComparison.OrdinalIgnoreCase) ||
-            paramName.Contains("ConnectionString", StringComparison.OrdinalIgnoreCase);
+            paramName.Contains("ConnectionString", StringComparison.OrdinalIgnoreCase) ||
+            paramName.Contains(":Token:", StringComparison.OrdinalIgnoreCase);
 
         // Encrypt if sensitive and has a value
         if (isSensitive && !string.IsNullOrEmpty(value))
@@ -109,6 +110,12 @@ public class AppSettingsService : IAppSettingsService
             await _repository.UpdateAsync(paramName, valueToStore);
             _logger.LogInformation("Updated setting: {ParamName}", paramName);
         }
+    }
+
+    public async Task DeleteAsync(string paramName)
+    {
+        await _repository.DeleteAsync(paramName);
+        _logger.LogInformation("Deleted setting: {ParamName}", paramName);
     }
 
     public async Task<T> GetSettingsGroupAsync<T>(string category) where T : new()

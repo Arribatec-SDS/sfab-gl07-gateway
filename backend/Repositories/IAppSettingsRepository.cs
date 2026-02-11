@@ -12,4 +12,5 @@ public interface IAppSettingsRepository
     Task<IEnumerable<AppSetting>> GetByCategoryAsync(string category);
     Task UpdateAsync(string paramName, string? paramValue);
     Task UpsertAsync(AppSetting setting);
+    Task DeleteAsync(string paramName);
 }

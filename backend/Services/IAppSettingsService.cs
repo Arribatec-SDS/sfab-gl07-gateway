@@ -11,22 +11,27 @@ public interface IAppSettingsService
     /// Get all settings, optionally masking sensitive values.
     /// </summary>
     Task<IEnumerable<AppSettingDto>> GetAllAsync(bool maskSensitive = true);
-    
+
     /// <summary>
     /// Get settings by category.
     /// </summary>
     Task<IEnumerable<AppSettingDto>> GetByCategoryAsync(string category, bool maskSensitive = true);
-    
+
     /// <summary>
     /// Get a single setting value, optionally decrypting if sensitive.
     /// </summary>
     Task<string?> GetValueAsync(string paramName, bool decrypt = true);
-    
+
     /// <summary>
     /// Set a setting value, automatically encrypting if marked as sensitive.
     /// </summary>
     Task SetValueAsync(string paramName, string? value);
-    
+
+    /// <summary>
+    /// Delete a setting by name.
+    /// </summary>
+    Task DeleteAsync(string paramName);
+
     /// <summary>
     /// Get a strongly-typed settings group by category.
     /// </summary>

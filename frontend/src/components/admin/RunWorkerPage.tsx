@@ -1,6 +1,7 @@
 import { useAuth } from '@arribatec-sds/arribatec-nexus-react';
 import {
     CheckCircle as CheckCircleIcon,
+    Download as DownloadIcon,
     Error as ErrorIcon,
     Folder as FolderIcon,
     PlayArrow as PlayArrowIcon,
@@ -183,6 +184,34 @@ export default function RunWorkerPage() {
       setSuccess('Cancellation requested');
     } catch (err: unknown) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to cancel worker';
+      setError(errorMessage);
+    }
+  };
+
+  const handleDownloadLog = async () => {
+    if (!taskStatus?.taskExecutionId) return;
+
+    try {
+      const token = await getToken();
+      const apiClient = createApiClient();
+      apiClient.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+
+      const response = await apiClient.get(`/worker/logs/${taskStatus.taskExecutionId}`, {
+        responseType: 'blob',
+      });
+
+      // Create download link
+      const blob = new Blob([response.data], { type: 'text/plain' });
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `gl07-execution-${taskStatus.taskExecutionId}.log`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+    } catch (err: unknown) {
+      const errorMessage = err instanceof Error ? err.message : 'Failed to download log';
       setError(errorMessage);
     }
   };
@@ -402,8 +431,20 @@ export default function RunWorkerPage() {
 
               {dryRun && (
                 <Alert severity="info" sx={{ mb: 2 }}>
-                  <strong>Dry Run Mode:</strong> Files will be validated but NOT posted to Unit4.
+                  <strong>Dry Run Mode:</strong> Files will be validated but NOT posted to Unit4. Files will remain in the inbox folder.
                 </Alert>
+              )}
+
+              {taskStatus.taskExecutionId && ['Completed', 'Failed'].includes(taskStatus.status) && (
+                <Button
+                  variant="outlined"
+                  startIcon={<DownloadIcon />}
+                  onClick={handleDownloadLog}
+                  sx={{ mb: 2 }}
+                  fullWidth
+                >
+                  Download Execution Log
+                </Button>
               )}
 
               {taskStatus.status === 'Completed' && (

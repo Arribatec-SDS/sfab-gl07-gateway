@@ -11,8 +11,15 @@ public class SourceSystem
     public int Id { get; set; }
     public string SystemCode { get; set; } = string.Empty;
     public string SystemName { get; set; } = string.Empty;
-    public string Provider { get; set; } = "Local"; // Local or AzureBlob
+    public string Provider { get; set; } = "Local"; // Local, AzureBlob, or AzureFileShare
     public string FolderPath { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Name of the Azure File Share connection in AppSettings (e.g., "pigello-prod" references
+    /// "AzureFileShare:pigello-prod:Url" and "AzureFileShare:pigello-prod:Token").
+    /// </summary>
+    public string? AzureFileShareConnectionName { get; set; }
+
     public string TransformerType { get; set; } = "ABWTransaction";
     public string FilePattern { get; set; } = "*.xml";
     public bool IsActive { get; set; } = true;
@@ -63,8 +70,9 @@ public class SourceSystemDto
     public int Id { get; set; }
     public string SystemCode { get; set; } = string.Empty;
     public string SystemName { get; set; } = string.Empty;
-    public string Provider { get; set; } = "Local"; // Local or AzureBlob
+    public string Provider { get; set; } = "Local"; // Local, AzureBlob, or AzureFileShare
     public string FolderPath { get; set; } = string.Empty;
+    public string? AzureFileShareConnectionName { get; set; }
     public string TransformerType { get; set; } = "ABWTransaction";
     public string FilePattern { get; set; } = "*.xml";
     public bool IsActive { get; set; } = true;
@@ -87,6 +95,7 @@ public class SourceSystemDto
             SystemName = entity.SystemName,
             Provider = entity.Provider,
             FolderPath = entity.FolderPath,
+            AzureFileShareConnectionName = entity.AzureFileShareConnectionName,
             TransformerType = entity.TransformerType,
             FilePattern = entity.FilePattern,
             IsActive = entity.IsActive,
@@ -117,6 +126,7 @@ public class SourceSystemDto
             SystemName = SystemName,
             Provider = Provider,
             FolderPath = FolderPath,
+            AzureFileShareConnectionName = AzureFileShareConnectionName,
             TransformerType = TransformerType,
             FilePattern = FilePattern,
             IsActive = IsActive,
@@ -137,8 +147,15 @@ public class CreateSourceSystemRequest
 {
     public string SystemCode { get; set; } = string.Empty;
     public string SystemName { get; set; } = string.Empty;
-    public string Provider { get; set; } = "Local"; // Local or AzureBlob
+    public string Provider { get; set; } = "Local"; // Local, AzureBlob, or AzureFileShare
     public string FolderPath { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Name of the Azure File Share connection in AppSettings (e.g., "pigello-prod" references
+    /// "AzureFileShare:pigello-prod:Url" and "AzureFileShare:pigello-prod:Token").
+    /// </summary>
+    public string? AzureFileShareConnectionName { get; set; }
+
     public string TransformerType { get; set; } = "ABWTransaction";
     public string FilePattern { get; set; } = "*.xml";
     public bool IsActive { get; set; } = true;

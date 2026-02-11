@@ -76,4 +76,12 @@ public class AppSettingsRepository : IAppSettingsRepository
                 setting);
         }
     }
+
+    public async Task DeleteAsync(string paramName)
+    {
+        var connection = await _connectionProvider.GetConnectionAsync();
+        await connection.ExecuteAsync(
+            "DELETE FROM AppSettings WHERE ParamName = @ParamName",
+            new { ParamName = paramName });
+    }
 }

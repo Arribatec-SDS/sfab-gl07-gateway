@@ -103,4 +103,24 @@ public class SettingsController : ControllerBase
             return Ok(new { success = false, message = ex.Message });
         }
     }
+
+    /// <summary>
+    /// Delete a setting.
+    /// </summary>
+    [HttpDelete("{name}")]
+    public async Task<IActionResult> Delete(string name)
+    {
+        _logger.LogInformation("Deleting setting: {Name}", name);
+
+        try
+        {
+            await _settingsService.DeleteAsync(name);
+            return NoContent();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to delete setting: {Name}", name);
+            return BadRequest($"Failed to delete setting: {ex.Message}");
+        }
+    }
 }

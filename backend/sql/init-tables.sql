@@ -154,6 +154,33 @@ BEGIN
 END
 GO
 
+-- Add AzureFileShareConnectionName column (references connection in AppSettings: AzureFileShare:{name}:Url and AzureFileShare:{name}:Token)
+IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('SourceSystems') AND name = 'AzureFileShareConnectionName')
+BEGIN
+    ALTER TABLE SourceSystems ADD AzureFileShareConnectionName NVARCHAR(100) NULL;
+END
+GO
+
+-- Drop old AzureFileShareUrl and AzureFileShareTokenName columns (migration from old schema)
+IF EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('SourceSystems') AND name = 'AzureFileShareUrl')
+BEGIN
+    ALTER TABLE SourceSystems DROP COLUMN AzureFileShareUrl;
+END
+GO
+
+IF EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('SourceSystems') AND name = 'AzureFileShareTokenName')
+BEGIN
+    ALTER TABLE SourceSystems DROP COLUMN AzureFileShareTokenName;
+END
+GO
+
+-- Drop old AzureSasUrl column if it exists (migration from old schema)
+IF EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('SourceSystems') AND name = 'AzureSasUrl')
+BEGIN
+    ALTER TABLE SourceSystems DROP COLUMN AzureSasUrl;
+END
+GO
+
 -- Drop old columns if they exist (migration from old schema)
 IF EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('SourceSystems') AND name = 'KeepOriginalBatchId')
 BEGIN

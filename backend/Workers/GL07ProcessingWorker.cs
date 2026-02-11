@@ -297,8 +297,13 @@ public class GL07ProcessingWorker : ITaskHandler<GL07ProcessingParameters>
             _logger.LogInformation("    Processing file: {FileName}", fileName);
 
             // Download file content
+            var downloadStopwatch = Stopwatch.StartNew();
             var content = await fileSourceService.DownloadAsStringAsync(sourceSystem, fileName);
-            _logger.LogDebug("    Downloaded {Length} bytes", content.Length);
+            downloadStopwatch.Stop();
+
+            var fileSizeFormatted = FormatFileSize(content.Length);
+            _logger.LogInformation("    Downloaded {Size} from {Provider} in {Duration}ms",
+                fileSizeFormatted, sourceSystem.Provider, downloadStopwatch.ElapsedMilliseconds);
 
             // Transform to Unit4 format (passing SourceSystem for configuration)
             // Returns an array - one item per XML Transaction element
@@ -321,9 +326,9 @@ public class GL07ProcessingWorker : ITaskHandler<GL07ProcessingParameters>
 
             if (dryRun)
             {
-                _logger.LogInformation("    [DRY RUN] Would post {Count} rows to Unit4 API", transactionCount);
+                _logger.LogInformation("    [DRY RUN] Would post {Count} rows to Unit4 API (file will remain in inbox)", transactionCount);
                 logEntry.Status = "Success";
-                logEntry.ErrorMessage = "Dry run - not posted";
+                logEntry.ErrorMessage = "Dry run - not posted, file preserved in inbox";
             }
             else
             {
@@ -344,22 +349,29 @@ public class GL07ProcessingWorker : ITaskHandler<GL07ProcessingParameters>
                 }
             }
 
-            // Move file based on result
-            if (logEntry.Status == "Success")
+            // Move file based on result (skip during dry run to preserve files in inbox)
+            if (!dryRun)
             {
-                await fileSourceService.MoveToProcessedAsync(sourceSystem, fileName);
-                _logger.LogDebug("    Moved to archive folder");
+                if (logEntry.Status == "Success")
+                {
+                    await fileSourceService.MoveToProcessedAsync(sourceSystem, fileName);
+                    _logger.LogDebug("    Moved to archive folder");
 
-                // Save the transformed JSON alongside the XML (array format)
-                var jsonOptions = new JsonSerializerOptions { WriteIndented = true };
-                var jsonContent = JsonSerializer.Serialize(requests, jsonOptions);
-                await fileSourceService.SaveJsonToArchiveAsync(sourceSystem, fileName, jsonContent);
-                _logger.LogDebug("    Saved JSON to archive folder");
+                    // Save the transformed JSON alongside the XML (array format)
+                    var jsonOptions = new JsonSerializerOptions { WriteIndented = true };
+                    var jsonContent = JsonSerializer.Serialize(requests, jsonOptions);
+                    await fileSourceService.SaveJsonToArchiveAsync(sourceSystem, fileName, jsonContent);
+                    _logger.LogDebug("    Saved JSON to archive folder");
+                }
+                else
+                {
+                    await fileSourceService.MoveToErrorAsync(sourceSystem, fileName);
+                    _logger.LogDebug("    Moved to error folder");
+                }
             }
             else
             {
-                await fileSourceService.MoveToErrorAsync(sourceSystem, fileName);
-                _logger.LogDebug("    Moved to error folder");
+                _logger.LogInformation("    [DRY RUN] File preserved in inbox - not moved");
             }
 
             stopwatch.Stop();
@@ -376,17 +388,39 @@ public class GL07ProcessingWorker : ITaskHandler<GL07ProcessingParameters>
 
             _logger.LogError(ex, "    ✗ Error processing file: {FileName} - {ErrorMessage}", fileName, ex.Message);
 
-            // Move to error folder
-            try
+            // Move to error folder (skip during dry run)
+            if (!dryRun)
             {
-                await fileSourceService.MoveToErrorAsync(sourceSystem, fileName);
+                try
+                {
+                    await fileSourceService.MoveToErrorAsync(sourceSystem, fileName);
+                }
+                catch (Exception moveEx)
+                {
+                    _logger.LogError(moveEx, "    Failed to move file to error folder");
+                }
             }
-            catch (Exception moveEx)
+            else
             {
-                _logger.LogError(moveEx, "    Failed to move file to error folder");
+                _logger.LogInformation("    [DRY RUN] File preserved in inbox despite error");
             }
 
             return (false, logEntry, ex);
         }
+    }
+
+    private static string FormatFileSize(long bytes)
+    {
+        string[] suffixes = { "B", "KB", "MB", "GB" };
+        var order = 0;
+        double size = bytes;
+
+        while (size >= 1024 && order < suffixes.Length - 1)
+        {
+            order++;
+            size /= 1024;
+        }
+
+        return $"{size:0.##} {suffixes[order]}";
     }
 }

@@ -19,11 +19,15 @@ import {
     DialogActions,
     DialogContent,
     DialogTitle,
+    FormControl,
     FormControlLabel,
     Grid,
     IconButton,
     InputAdornment,
+    InputLabel,
+    MenuItem,
     Paper,
+    Select,
     Snackbar,
     Switch,
     Table,
@@ -53,6 +57,7 @@ interface SourceSystem {
   description: string | null;
   provider: string;
   folderPath: string;
+  azureFileShareConnectionName: string | null;
   filePattern: string;
   transformerType: string;
   isActive: boolean;
@@ -70,6 +75,7 @@ interface SourceSystemRequest {
   description: string;
   provider: string;
   folderPath: string;
+  azureFileShareConnectionName: string;
   filePattern: string;
   transformerType: string;
   isActive: boolean;
@@ -95,6 +101,7 @@ const emptySourceSystem: SourceSystemRequest = {
   description: '',
   provider: 'Local',
   folderPath: '',
+  azureFileShareConnectionName: '',
   filePattern: '*.xml',
   transformerType: 'ABWTransaction',
   isActive: true,
@@ -117,6 +124,7 @@ export default function SourceSystemsPage() {
   const [formData, setFormData] = useState<SourceSystemRequest>(emptySourceSystem);
   const [localBasePath, setLocalBasePath] = useState<string>('');
   const [azureContainerName, setAzureContainerName] = useState<string>('');
+  const [azureFileShareConnectionNames, setAzureFileShareConnectionNames] = useState<string[]>([]);
   const [saving, setSaving] = useState(false);
 
   const fetchSourceSystems = useCallback(async () => {
@@ -138,12 +146,18 @@ export default function SourceSystemsPage() {
       setSourceSystems(systemsResponse.data);
       setGl07ReportSetups(setupsResponse.data);
       
-      // Extract base paths from settings
+      // Extract base paths and connection names from settings
       const settings = settingsResponse.data;
       const localPath = settings.find(s => s.paramName === 'FileSource:LocalBasePath')?.paramValue || '';
       const containerName = settings.find(s => s.paramName === 'AzureStorage:ContainerName')?.paramValue || '';
       setLocalBasePath(localPath);
       setAzureContainerName(containerName);
+      
+      // Extract Azure File Share connection names (settings like "AzureFileShare:{name}:Url")
+      const connectionNames = settings
+        .filter(s => s.paramName.match(/^AzureFileShare:[^:]+:Url$/))
+        .map(s => s.paramName.replace(/^AzureFileShare:/, '').replace(/:Url$/, ''));
+      setAzureFileShareConnectionNames(connectionNames);
     } catch (err: unknown) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to load source systems';
       setError(errorMessage);
@@ -165,6 +179,7 @@ export default function SourceSystemsPage() {
         description: system.description || '',
         provider: system.provider || 'Local',
         folderPath: system.folderPath,
+        azureFileShareConnectionName: system.azureFileShareConnectionName || '',
         filePattern: system.filePattern,
         transformerType: system.transformerType,
         isActive: system.isActive,
@@ -249,6 +264,7 @@ export default function SourceSystemsPage() {
         description: system.description || '',
         provider: system.provider,
         folderPath: system.folderPath,
+        azureFileShareConnectionName: system.azureFileShareConnectionName || '',
         filePattern: system.filePattern,
         transformerType: system.transformerType,
         isActive: !system.isActive,
@@ -561,7 +577,8 @@ export default function SourceSystemsPage() {
                 slotProps={{ select: { native: true } }}
               >
                 <option value="Local">Local Filesystem</option>
-                <option value="AzureBlob">Azure Blob Storage</option>
+                {/* AzureBlob hidden - use AzureFileShare instead */}
+                <option value="AzureFileShare">Azure File Share</option>
               </TextField>
             </Grid>
             <Grid size={6}>
@@ -575,18 +592,44 @@ export default function SourceSystemsPage() {
                 placeholder="*.xml"
               />
             </Grid>
+            {formData.provider === 'AzureFileShare' && (
+              <>
+                <Grid size={12}>
+                  <FormControl fullWidth size="small" required error={formData.provider === 'AzureFileShare' && !formData.azureFileShareConnectionName}>
+                    <InputLabel>Azure File Share Connection</InputLabel>
+                    <Select
+                      value={formData.azureFileShareConnectionName}
+                      onChange={(e) => setFormData(prev => ({ ...prev, azureFileShareConnectionName: e.target.value }))}
+                      label="Azure File Share Connection"
+                    >
+                      {azureFileShareConnectionNames.map(connName => (
+                        <MenuItem key={connName} value={connName}>
+                          {connName}
+                        </MenuItem>
+                      ))}
+                    </Select>
+                  </FormControl>
+                  {azureFileShareConnectionNames.length === 0 && (
+                    <Typography variant="caption" color="warning.main" sx={{ mt: 0.5, display: 'block' }}>
+                      No connections configured. Go to Settings &gt; Azure File Share to add a connection.
+                    </Typography>
+                  )}
+                </Grid>
+              </>
+            )}
             <Grid size={12}>
               <TextField
                 label="Folder Path"
                 fullWidth
-                required
+                required={formData.provider !== 'AzureFileShare'}
                 size="small"
                 value={formData.folderPath}
                 onChange={(e) => setFormData(prev => ({ ...prev, folderPath: e.target.value }))}
-                placeholder={formData.provider === 'AzureBlob' ? 'erp/inbox' : 'erp'}
+                placeholder={formData.provider === 'AzureFileShare' ? 'GL07' : (formData.provider === 'AzureBlob' ? 'erp/inbox' : 'erp')}
+                helperText={formData.provider === 'AzureFileShare' ? 'Root folder in share (e.g., GL07). Subfolders: inbox, archive, error' : undefined}
                 slotProps={{
                   input: {
-                    endAdornment: (
+                    endAdornment: formData.provider !== 'AzureFileShare' ? (
                       <InputAdornment position="end">
                         <Tooltip 
                           title={
@@ -617,7 +660,7 @@ export default function SourceSystemsPage() {
                           <InfoIcon fontSize="small" color="action" sx={{ cursor: 'pointer' }} />
                         </Tooltip>
                       </InputAdornment>
-                    ),
+                    ) : undefined,
                   },
                 }}
               />
@@ -643,7 +686,8 @@ export default function SourceSystemsPage() {
             disabled={
               !formData.systemCode || 
               !formData.systemName || 
-              !formData.folderPath || 
+              (formData.provider !== 'AzureFileShare' && !formData.folderPath) ||
+              (formData.provider === 'AzureFileShare' && !formData.azureFileShareConnectionName) ||
               formData.gl07ReportSetupId === 0 ||
               saving
             }

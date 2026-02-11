@@ -103,6 +103,7 @@ public class SourceSystemsController : ControllerBase
             SystemName = request.SystemName,
             Provider = request.Provider,
             FolderPath = request.FolderPath,
+            AzureFileShareConnectionName = request.AzureFileShareConnectionName,
             TransformerType = request.TransformerType,
             FilePattern = request.FilePattern,
             IsActive = request.IsActive,
@@ -110,7 +111,8 @@ public class SourceSystemsController : ControllerBase
             Gl07ReportSetupId = request.Gl07ReportSetupId,
             Interface = request.Interface,
             TransactionType = request.TransactionType,
-            BatchId = request.BatchId
+            BatchId = request.BatchId,
+            DefaultCurrency = request.DefaultCurrency
         };
 
         var id = await _repository.CreateAsync(sourceSystem);
@@ -164,6 +166,7 @@ public class SourceSystemsController : ControllerBase
         existing.SystemName = request.SystemName;
         existing.Provider = request.Provider;
         existing.FolderPath = request.FolderPath;
+        existing.AzureFileShareConnectionName = request.AzureFileShareConnectionName;
         existing.TransformerType = request.TransformerType;
         existing.FilePattern = request.FilePattern;
         existing.IsActive = request.IsActive;
@@ -172,6 +175,7 @@ public class SourceSystemsController : ControllerBase
         existing.Interface = request.Interface;
         existing.TransactionType = request.TransactionType;
         existing.BatchId = request.BatchId;
+        existing.DefaultCurrency = request.DefaultCurrency;
 
         await _repository.UpdateAsync(existing);
 
@@ -203,7 +207,8 @@ public class SourceSystemsController : ControllerBase
         catch (Microsoft.Data.SqlClient.SqlException ex) when (ex.Number == 547) // FK constraint violation
         {
             _logger.LogWarning("Cannot delete source system {Id} - has related processing logs", id);
-            return Conflict(new { 
+            return Conflict(new
+            {
                 message = $"Cannot delete source system '{existing.SystemCode}' because it has processing logs. Delete the logs first or disable the source system instead."
             });
         }

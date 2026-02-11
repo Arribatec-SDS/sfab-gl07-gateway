@@ -42,10 +42,11 @@ builder.Services.AddScoped<ITransformationService, ABWTransactionTransformer>();
 // builder.Services.AddScoped<ITransformationService, CustomCsvTransformer>();
 builder.Services.AddScoped<ITransformationServiceFactory, TransformationServiceFactory>();
 
-// File source services - register both providers and factory
-// Each SourceSystem specifies its own provider (Local or AzureBlob)
+// File source services - register all providers and factory
+// Each SourceSystem specifies its own provider (Local, AzureBlob, or AzureFileShare)
 builder.Services.AddScoped<LocalFileSourceService>();
 builder.Services.AddScoped<AzureBlobFileSourceService>();
+builder.Services.AddScoped<AzureFileShareFileSourceService>();
 builder.Services.AddScoped<IFileSourceServiceFactory, FileSourceServiceFactory>();
 
 // HTTP Client for Unit4 API

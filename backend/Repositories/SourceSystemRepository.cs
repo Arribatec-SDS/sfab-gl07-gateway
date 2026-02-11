@@ -15,7 +15,7 @@ public class SourceSystemRepository : ISourceSystemRepository
     private const string SelectColumns = @"
         s.Id, s.SystemCode, s.SystemName, s.Provider, s.FolderPath, s.TransformerType, s.FilePattern, 
         s.IsActive, s.Description, s.Gl07ReportSetupId, s.Interface, s.TransactionType, 
-        s.BatchId, s.CreatedAt, s.UpdatedAt";
+        s.BatchId, s.DefaultCurrency, s.AzureFileShareConnectionName, s.CreatedAt, s.UpdatedAt";
 
     public SourceSystemRepository(
         IScopedDbConnectionProvider connectionProvider,
@@ -106,11 +106,11 @@ public class SourceSystemRepository : ISourceSystemRepository
         return await connection.QuerySingleAsync<int>(@"
             INSERT INTO SourceSystems (SystemCode, SystemName, Provider, FolderPath, TransformerType, FilePattern, 
                                        IsActive, Description, Gl07ReportSetupId, Interface, TransactionType, 
-                                       BatchId, CreatedAt, UpdatedAt)
+                                       BatchId, DefaultCurrency, AzureFileShareConnectionName, CreatedAt, UpdatedAt)
             OUTPUT INSERTED.Id
             VALUES (@SystemCode, @SystemName, @Provider, @FolderPath, @TransformerType, @FilePattern, 
                     @IsActive, @Description, @Gl07ReportSetupId, @Interface, @TransactionType,
-                    @BatchId, GETUTCDATE(), GETUTCDATE())",
+                    @BatchId, @DefaultCurrency, @AzureFileShareConnectionName, GETUTCDATE(), GETUTCDATE())",
             sourceSystem);
     }
 
@@ -131,6 +131,8 @@ public class SourceSystemRepository : ISourceSystemRepository
                 Interface = @Interface,
                 TransactionType = @TransactionType,
                 BatchId = @BatchId,
+                DefaultCurrency = @DefaultCurrency,
+                AzureFileShareConnectionName = @AzureFileShareConnectionName,
                 UpdatedAt = GETUTCDATE() 
             WHERE Id = @Id",
             sourceSystem);
