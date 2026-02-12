@@ -1,6 +1,6 @@
 using System.Text.Json.Serialization;
 
-namespace SfabGl07Gateway.Api.Models.Unit4;
+namespace A1arErpSfabGl07Gateway.Api.Models.Unit4;
 
 /// <summary>
 /// Response from Unit4 API for transaction batch posting.

@@ -1,7 +1,7 @@
 using System.Data;
 using Arribatec.Nexus.Client.Services;
 
-namespace SfabGl07Gateway.Api.Services;
+namespace A1arErpSfabGl07Gateway.Api.Services;
 
 /// <summary>
 /// Provides a scoped database connection that is cached for the lifetime of the request/task scope.

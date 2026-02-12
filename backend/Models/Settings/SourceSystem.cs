@@ -1,6 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 
-namespace SfabGl07Gateway.Api.Models.Settings;
+namespace A1arErpSfabGl07Gateway.Api.Models.Settings;
 
 /// <summary>
 /// Represents a source system that provides files for processing.

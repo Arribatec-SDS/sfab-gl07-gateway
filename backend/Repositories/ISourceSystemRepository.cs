@@ -1,6 +1,6 @@
-using SfabGl07Gateway.Api.Models.Settings;
+using A1arErpSfabGl07Gateway.Api.Models.Settings;
 
-namespace SfabGl07Gateway.Api.Repositories;
+namespace A1arErpSfabGl07Gateway.Api.Repositories;
 
 /// <summary>
 /// Repository interface for SourceSystem operations.

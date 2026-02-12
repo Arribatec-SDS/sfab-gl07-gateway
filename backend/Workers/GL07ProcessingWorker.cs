@@ -1,11 +1,11 @@
 using System.Diagnostics;
 using System.Text.Json;
 using Arribatec.Nexus.Client.TaskExecution;
-using SfabGl07Gateway.Api.Models.Settings;
-using SfabGl07Gateway.Api.Repositories;
-using SfabGl07Gateway.Api.Services;
+using A1arErpSfabGl07Gateway.Api.Models.Settings;
+using A1arErpSfabGl07Gateway.Api.Repositories;
+using A1arErpSfabGl07Gateway.Api.Services;
 
-namespace SfabGl07Gateway.Api.Workers;
+namespace A1arErpSfabGl07Gateway.Api.Workers;
 
 /// <summary>
 /// Parameters for the GL07 processing task.
@@ -17,6 +17,12 @@ public record GL07ProcessingParameters
     /// If null, all active source systems are processed.
     /// </summary>
     public string? SourceSystemCode { get; init; }
+
+    /// <summary>
+    /// Optional: Process only a specific file by name.
+    /// If null, all files in the inbox are processed.
+    /// </summary>
+    public string? Filename { get; init; }
 
     /// <summary>
     /// If true, only validates files without posting to Unit4.
@@ -67,6 +73,7 @@ public class GL07ProcessingWorker : ITaskHandler<GL07ProcessingParameters>
         _logger.LogInformation("║  Task ID: {TaskId}", _context.TaskExecutionId);
         _logger.LogInformation("║  Dry Run: {DryRun}", parameters.DryRun);
         _logger.LogInformation("║  Source Filter: {Filter}", parameters.SourceSystemCode ?? "All active systems");
+        _logger.LogInformation("║  Filename Filter: {Filename}", parameters.Filename ?? "All files");
         _logger.LogInformation("╚════════════════════════════════════════════════════════════════╝");
 
         var overallStopwatch = Stopwatch.StartNew();
@@ -92,7 +99,7 @@ public class GL07ProcessingWorker : ITaskHandler<GL07ProcessingParameters>
                 cancellationToken.ThrowIfCancellationRequested();
 
                 var (processed, success, errors) = await ProcessSourceSystemAsync(
-                    sourceSystem, parameters.DryRun, cancellationToken);
+                    sourceSystem, parameters.DryRun, parameters.Filename, cancellationToken);
 
                 totalFilesProcessed += processed;
                 totalFilesSuccess += success;
@@ -148,6 +155,7 @@ public class GL07ProcessingWorker : ITaskHandler<GL07ProcessingParameters>
     private async Task<(int processed, int success, int errors)> ProcessSourceSystemAsync(
         SourceSystem sourceSystem,
         bool dryRun,
+        string? filenameFilter,
         CancellationToken cancellationToken)
     {
         _logger.LogInformation("────────────────────────────────────────────────────────────────");
@@ -191,6 +199,19 @@ public class GL07ProcessingWorker : ITaskHandler<GL07ProcessingParameters>
 
             // List files in inbox
             var files = (await fileSourceService.ListFilesAsync(sourceSystem)).ToList();
+
+            // Filter to specific file if filename parameter is provided
+            if (!string.IsNullOrEmpty(filenameFilter))
+            {
+                files = files.Where(f => f.Equals(filenameFilter, StringComparison.OrdinalIgnoreCase)).ToList();
+                
+                if (!files.Any())
+                {
+                    _logger.LogWarning("  Specified file not found in inbox: {Filename}", filenameFilter);
+                    return (0, 0, 0);
+                }
+                _logger.LogInformation("  Filtered to specific file: {Filename}", filenameFilter);
+            }
 
             if (!files.Any())
             {

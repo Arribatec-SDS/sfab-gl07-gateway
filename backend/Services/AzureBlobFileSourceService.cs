@@ -1,8 +1,8 @@
 using Azure.Storage.Blobs;
 using Azure.Storage.Blobs.Models;
-using SfabGl07Gateway.Api.Models.Settings;
+using A1arErpSfabGl07Gateway.Api.Models.Settings;
 
-namespace SfabGl07Gateway.Api.Services;
+namespace A1arErpSfabGl07Gateway.Api.Services;
 
 /// <summary>
 /// Azure Blob Storage implementation of IFileSourceService for production use.

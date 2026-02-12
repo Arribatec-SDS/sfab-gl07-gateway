@@ -1,17 +1,17 @@
 using Arribatec.Nexus.Client.Extensions;
 using Arribatec.Nexus.Client.TaskExecution;
-using SfabGl07Gateway.Api.Middleware;
-using SfabGl07Gateway.Api.Repositories;
-using SfabGl07Gateway.Api.Services;
-using SfabGl07Gateway.Api.Services.Transformers;
+using A1arErpSfabGl07Gateway.Api.Middleware;
+using A1arErpSfabGl07Gateway.Api.Repositories;
+using A1arErpSfabGl07Gateway.Api.Services;
+using A1arErpSfabGl07Gateway.Api.Services.Transformers;
 
 var builder = WebApplication.CreateBuilder(args);
 
 
 // Add COMPLETE Nexus architecture in ONE call
 builder.AddArribatecNexus(
-    applicationName: "SfabGl07GatewayApp",
-    productShortName: "sfab-gl07-gateway",
+    applicationName: "A1arErpSfabGl07GatewayApp",
+    productShortName: "a1ar-erp-sfab-gl07-gateway",
     options =>
     {
         options.Loki = new LokiOptions

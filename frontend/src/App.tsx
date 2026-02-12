@@ -41,7 +41,7 @@ const authConfig = createMultiTenantKeycloakConfig({
   useDynamicConfig: true,
   enableUserValidation: true,
   enableLogging: true,
-  backendApiUrl: '/sfab-gl07-gateway/api',
+  backendApiUrl: '/a1ar-erp-sfab-gl07-gateway/api',
   keycloak: {
     url: '',
     realm: '',
@@ -130,7 +130,7 @@ function App() {
       <ThemeProvider theme={arribatecTheme}>
         <CssBaseline />
         <AuthProvider config={authConfig}>
-          <Router basename="/sfab-gl07-gateway">
+          <Router basename="/a1ar-erp-sfab-gl07-gateway">
             <Routes>
               <Route path="/login" element={<LoginPage />} />
               

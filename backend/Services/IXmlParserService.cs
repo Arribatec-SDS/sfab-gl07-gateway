@@ -1,6 +1,6 @@
-using SfabGl07Gateway.Api.Models.Xml;
+using A1arErpSfabGl07Gateway.Api.Models.Xml;
 
-namespace SfabGl07Gateway.Api.Services;
+namespace A1arErpSfabGl07Gateway.Api.Services;
 
 /// <summary>
 /// Service interface for parsing ABWTransaction XML documents.

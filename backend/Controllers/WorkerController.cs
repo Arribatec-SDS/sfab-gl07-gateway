@@ -3,7 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using System.Text;
 using System.Text.Json;
 
-namespace SfabGl07Gateway.Api.Controllers;
+namespace A1arErpSfabGl07Gateway.Api.Controllers;
 
 /// <summary>
 /// Controller for manually triggering and monitoring the GL07 worker via Nexus Task Scheduler.
@@ -43,6 +43,12 @@ public class WorkerController : ControllerBase
         /// If null, all active source systems are processed.
         /// </summary>
         public string? SourceSystemCode { get; init; }
+
+        /// <summary>
+        /// Optional: Process only a specific file by name.
+        /// If null, all files in the inbox are processed.
+        /// </summary>
+        public string? Filename { get; init; }
 
         /// <summary>
         /// If true, only validates files without posting to Unit4.
@@ -91,8 +97,9 @@ public class WorkerController : ControllerBase
         try
         {
             _logger.LogInformation(
-                "Manual worker run requested. SourceSystemCode={SourceSystemCode}, DryRun={DryRun}",
+                "Manual worker run requested. SourceSystemCode={SourceSystemCode}, Filename={Filename}, DryRun={DryRun}",
                 request.SourceSystemCode ?? "ALL",
+                request.Filename ?? "ALL",
                 request.DryRun);
 
             var masterApiUrl = GetMasterApiUrl();
@@ -192,6 +199,7 @@ public class WorkerController : ControllerBase
             var parametersObject = new
             {
                 SourceSystemCode = request.SourceSystemCode,
+                Filename = request.Filename,
                 DryRun = request.DryRun
             };
 

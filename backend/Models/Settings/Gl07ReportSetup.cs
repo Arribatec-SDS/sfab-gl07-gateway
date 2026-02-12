@@ -1,6 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 
-namespace SfabGl07Gateway.Api.Models.Settings;
+namespace A1arErpSfabGl07Gateway.Api.Models.Settings;
 
 /// <summary>
 /// Represents a GL07 report setup configuration for Unit4 API posting.

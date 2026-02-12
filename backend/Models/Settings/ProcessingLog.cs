@@ -1,4 +1,4 @@
-namespace SfabGl07Gateway.Api.Models.Settings;
+namespace A1arErpSfabGl07Gateway.Api.Models.Settings;
 
 /// <summary>
 /// Represents a log entry for file processing.

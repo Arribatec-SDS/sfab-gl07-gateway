@@ -44,20 +44,20 @@ export default defineConfig({
   // Base path for the app - this value is exposed as import.meta.env.BASE_URL
   // and used by src/utils/api.ts to dynamically build API paths.
   // When deploying a new app, change this to match your app name (e.g., '/myapp/')
-  base: '/sfab-gl07-gateway/',
+  base: '/a1ar-erp-sfab-gl07-gateway/',
   server: {
     port: 7358,
     host: true,  // Listen on all network interfaces but only show relevant URLs
     strictPort: true,  // Fail if port is already in use
     https: httpsConfig,
     cors: true,
-    open: 'https://sfab.localtest.me:7358/sfab-gl07-gateway/',
+    open: 'https://sfab.localtest.me:7358/a1ar-erp-sfab-gl07-gateway/',
     proxy: {
-      '/sfab-gl07-gateway/api': {
+      '/a1ar-erp-sfab-gl07-gateway/api': {
         target: 'http://localhost:7458',
         changeOrigin: true,
         secure: false,
-        rewrite: (path) => path.replace(/^\/sfab-gl07-gateway\/api/, '/api'),
+        rewrite: (path) => path.replace(/^\/a1ar-erp-sfab-gl07-gateway\/api/, '/api'),
         configure: (proxy) => {
           proxy.on('error', (err) => {
             console.log('API Proxy error:', err);
@@ -69,7 +69,7 @@ export default defineConfig({
               const [, forwardPort] = originalHost.split(':');
               proxyReq.setHeader('X-Forwarded-Proto', 'https');
               proxyReq.setHeader('X-Forwarded-Port', forwardPort ?? '7300');
-              proxyReq.setHeader('X-Forwarded-Prefix', '/sfab-gl07-gateway');
+              proxyReq.setHeader('X-Forwarded-Prefix', '/a1ar-erp-sfab-gl07-gateway');
               proxyReq.setHeader('Host', originalHost);
             }
             const remoteAddress = req.socket.remoteAddress;

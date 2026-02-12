@@ -1,10 +1,10 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using SfabGl07Gateway.Api.Models.Settings;
-using SfabGl07Gateway.Api.Repositories;
-using SfabGl07Gateway.Api.Services;
+using A1arErpSfabGl07Gateway.Api.Models.Settings;
+using A1arErpSfabGl07Gateway.Api.Repositories;
+using A1arErpSfabGl07Gateway.Api.Services;
 
-namespace SfabGl07Gateway.Api.Controllers;
+namespace A1arErpSfabGl07Gateway.Api.Controllers;
 
 /// <summary>
 /// API controller for managing source systems.

@@ -1,8 +1,8 @@
 using Arribatec.Nexus.Client.TaskExecution;
-using SfabGl07Gateway.Api.Repositories;
-using SfabGl07Gateway.Api.Services;
+using A1arErpSfabGl07Gateway.Api.Repositories;
+using A1arErpSfabGl07Gateway.Api.Services;
 
-namespace SfabGl07Gateway.Api.Workers;
+namespace A1arErpSfabGl07Gateway.Api.Workers;
 
 /// <summary>
 /// Parameters for the log cleanup task.

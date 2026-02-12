@@ -1,6 +1,6 @@
-using SfabGl07Gateway.Api.Models.Unit4;
+using A1arErpSfabGl07Gateway.Api.Models.Unit4;
 
-namespace SfabGl07Gateway.Api.Services;
+namespace A1arErpSfabGl07Gateway.Api.Services;
 
 /// <summary>
 /// Service interface for communicating with Unit4 REST API.

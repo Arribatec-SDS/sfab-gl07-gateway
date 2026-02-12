@@ -1,7 +1,7 @@
 using Arribatec.Nexus.Client.Models;
 using Arribatec.Nexus.Client.TaskExecution;
 
-namespace SfabGl07Gateway.Api.Services;
+namespace A1arErpSfabGl07Gateway.Api.Services;
 
 /// <summary>
 /// Simple in-process task context for development/testing.

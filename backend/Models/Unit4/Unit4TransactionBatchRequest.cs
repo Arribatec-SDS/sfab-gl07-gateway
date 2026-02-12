@@ -1,6 +1,6 @@
 using System.Text.Json.Serialization;
 
-namespace SfabGl07Gateway.Api.Models.Unit4;
+namespace A1arErpSfabGl07Gateway.Api.Models.Unit4;
 
 /// <summary>
 /// Root request object for posting financial transactions to Unit4 API.

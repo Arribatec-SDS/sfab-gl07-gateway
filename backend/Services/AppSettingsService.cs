@@ -1,9 +1,9 @@
 using System.Reflection;
 using Microsoft.AspNetCore.DataProtection;
-using SfabGl07Gateway.Api.Models.Settings;
-using SfabGl07Gateway.Api.Repositories;
+using A1arErpSfabGl07Gateway.Api.Models.Settings;
+using A1arErpSfabGl07Gateway.Api.Repositories;
 
-namespace SfabGl07Gateway.Api.Services;
+namespace A1arErpSfabGl07Gateway.Api.Services;
 
 /// <summary>
 /// Service implementation for managing application settings with Data Protection API encryption.

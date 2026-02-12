@@ -1,6 +1,6 @@
 using System.Xml.Serialization;
 
-namespace SfabGl07Gateway.Api.Models.Xml;
+namespace A1arErpSfabGl07Gateway.Api.Models.Xml;
 
 // Namespace constants for Agresso XML
 public static class AgressoNamespaces

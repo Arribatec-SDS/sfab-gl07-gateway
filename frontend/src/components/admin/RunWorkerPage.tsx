@@ -31,6 +31,7 @@ import {
     Select,
     Snackbar,
     Switch,
+    TextField,
     Typography,
 } from '@mui/material';
 import { useCallback, useEffect, useState } from 'react';
@@ -66,6 +67,7 @@ export default function RunWorkerPage() {
   const { getToken } = useAuth();
   const [sourceSystems, setSourceSystems] = useState<SourceSystem[]>([]);
   const [selectedSystem, setSelectedSystem] = useState<string>('');
+  const [filename, setFilename] = useState<string>('');
   const [dryRun, setDryRun] = useState(false);
   const [loading, setLoading] = useState(true);
   const [running, setRunning] = useState(false);
@@ -145,6 +147,7 @@ export default function RunWorkerPage() {
 
       const params = {
         sourceSystemCode: selectedSystem || null,
+        filename: filename || null,
         dryRun: dryRun,
       };
 
@@ -299,6 +302,16 @@ export default function RunWorkerPage() {
                 ))}
               </Select>
             </FormControl>
+
+            <TextField
+              fullWidth
+              label="Filename (Optional)"
+              value={filename}
+              onChange={(e) => setFilename(e.target.value)}
+              disabled={running}
+              placeholder="e.g., transaction-001.xml"
+              helperText="Leave empty to process all files in the inbox"
+            />
 
             <FormControlLabel
               control={

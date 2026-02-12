@@ -1,6 +1,6 @@
-using SfabGl07Gateway.Api.Models.Settings;
+using A1arErpSfabGl07Gateway.Api.Models.Settings;
 
-namespace SfabGl07Gateway.Api.Services;
+namespace A1arErpSfabGl07Gateway.Api.Services;
 
 /// <summary>
 /// Service interface for managing application settings with encryption support.

@@ -7,7 +7,7 @@ This is a complete Stena Fastigheter – GL07 Gateway demonstrating the Nexus Pl
 ```
 ┌─────────────────────────────────────────────────────────────┐
 │                      Traefik (HTTPS)                        │
-│              https://*.localtest.me/sfab-gl07-gateway                  │
+│              https://*.localtest.me/a1ar-erp-sfab-gl07-gateway                  │
 └─────────────────────────────────────────────────────────────┘
                           │
                           ├──► nginx (port 80)
@@ -16,7 +16,7 @@ This is a complete Stena Fastigheter – GL07 Gateway demonstrating the Nexus Pl
                           │     └──> Master API (/api/master/)
                           │
 ┌─────────────────────────────────────────────────────────────┐
-│  Sample Container (sfab-gl07-gateway-app)                              │
+│  Sample Container (a1ar-erp-sfab-gl07-gateway-app)                              │
 │  ┌────────────────────┐  ┌─────────────────────────────┐   │
 │  │   React Frontend   │  │   .NET 8 Backend API        │   │
 │  │   (Static Files)   │  │   (Port 5000)               │   │
@@ -38,7 +38,7 @@ This is a complete Stena Fastigheter – GL07 Gateway demonstrating the Nexus Pl
 ## Project Structure
 
 ```
-sfab-gl07-gateway/
+a1ar-erp-sfab-gl07-gateway/
 ├── frontend/                    # React frontend
 │   ├── src/
 │   │   ├── App.tsx             # Auth provider setup
@@ -55,8 +55,8 @@ sfab-gl07-gateway/
 │   └── index.html              # HTML template
 ├── backend/                     # .NET 8 API
 │   ├── Program.cs              # API configuration
-│   ├── SfabGl07GatewayController.cs     # Sample endpoints
-│   ├── SfabGl07Gateway.Api.csproj       # Project file
+│   ├── A1arErpSfabGl07GatewayController.cs     # Sample endpoints
+│   ├── A1arErpSfabGl07Gateway.Api.csproj       # Project file
 │   ├── appsettings.json        # Configuration
 │   └── nuget.config            # NuGet sources
 ├── Dockerfile                   # Multi-stage build
@@ -72,7 +72,7 @@ The sample demonstrates how to build API paths dynamically based on the applicat
 
 ### The Problem
 
-When an app runs at `https://demo.localtest.me/sfab-gl07-gateway`, API calls need to go to `https://demo.localtest.me/sfab-gl07-gateway/api/*`. Hardcoding `/sfab-gl07-gateway/api/` makes the code less portable.
+When an app runs at `https://demo.localtest.me/a1ar-erp-sfab-gl07-gateway`, API calls need to go to `https://demo.localtest.me/a1ar-erp-sfab-gl07-gateway/api/*`. Hardcoding `/a1ar-erp-sfab-gl07-gateway/api/` makes the code less portable.
 
 ### The Solution
 
@@ -84,21 +84,21 @@ import { buildApiPath, getApiBasePath, createApiClient } from '@/utils/api';
 
 // Option 1: Build individual API paths
 const userEndpoint = buildApiPath('/user');
-// Returns: "/sfab-gl07-gateway/api/user" (base path from vite.config.ts)
+// Returns: "/a1ar-erp-sfab-gl07-gateway/api/user" (base path from vite.config.ts)
 
 const response = await axios.get(userEndpoint);
 
 // Option 2: Use pre-configured axios instance (recommended)
 const apiClient = createApiClient();
-// apiClient has baseURL set to "/sfab-gl07-gateway/api"
+// apiClient has baseURL set to "/a1ar-erp-sfab-gl07-gateway/api"
 
 // Add auth token
 const token = await getToken();
 apiClient.defaults.headers.common['Authorization'] = `Bearer ${token}`;
 
 // Make calls - base path is automatic
-await apiClient.get('/user');          // -> /sfab-gl07-gateway/api/user
-await apiClient.post('/items', data);  // -> /sfab-gl07-gateway/api/items
+await apiClient.get('/user');          // -> /a1ar-erp-sfab-gl07-gateway/api/user
+await apiClient.post('/items', data);  // -> /a1ar-erp-sfab-gl07-gateway/api/items
 ```
 
 ### How It Works
@@ -106,7 +106,7 @@ await apiClient.post('/items', data);  // -> /sfab-gl07-gateway/api/items
 1. **Vite Configuration** (`vite.config.ts`):
    ```typescript
    export default defineConfig({
-     base: '/sfab-gl07-gateway/',  // This sets the base path
+     base: '/a1ar-erp-sfab-gl07-gateway/',  // This sets the base path
      // ...
    });
    ```
@@ -116,17 +116,17 @@ await apiClient.post('/items', data);  // -> /sfab-gl07-gateway/api/items
    - Available at runtime without hardcoding
 
 3. **API Utility**:
-   - `getBasePath()` - Gets the base path (e.g., "/sfab-gl07-gateway")
-   - `buildApiPath(endpoint)` - Builds full path (e.g., "/sfab-gl07-gateway/api/user")
-   - `getApiBasePath()` - Gets API base (e.g., "/sfab-gl07-gateway/api")
+   - `getBasePath()` - Gets the base path (e.g., "/a1ar-erp-sfab-gl07-gateway")
+   - `buildApiPath(endpoint)` - Builds full path (e.g., "/a1ar-erp-sfab-gl07-gateway/api/user")
+   - `getApiBasePath()` - Gets API base (e.g., "/a1ar-erp-sfab-gl07-gateway/api")
    - `createApiClient()` - Returns configured axios instance
 
 4. **Proxy Configuration** (`vite.config.ts`):
    ```typescript
    proxy: {
-     '/sfab-gl07-gateway/api': {
+     '/a1ar-erp-sfab-gl07-gateway/api': {
        target: 'http://localhost:7458',
-       rewrite: (path) => path.replace(/^\/sfab-gl07-gateway\/api/, '/api'),
+       rewrite: (path) => path.replace(/^\/a1ar-erp-sfab-gl07-gateway\/api/, '/api'),
      }
    }
    ```
@@ -229,12 +229,12 @@ docker-compose build
 docker-compose up -d
 
 # Check logs
-docker logs sfab-gl07-gateway-app -f
+docker logs a1ar-erp-sfab-gl07-gateway-app -f
 ```
 
 Access the app:
-- Via Traefik: `https://demo.localtest.me/sfab-gl07-gateway/` or `https://admin.localtest.me/sfab-gl07-gateway/`
-- Direct: `http://localhost:8280/sfab-gl07-gateway/`
+- Via Traefik: `https://demo.localtest.me/a1ar-erp-sfab-gl07-gateway/` or `https://admin.localtest.me/a1ar-erp-sfab-gl07-gateway/`
+- Direct: `http://localhost:8280/a1ar-erp-sfab-gl07-gateway/`
 
 ### Option 2: Local Development
 
@@ -265,7 +265,7 @@ dotnet restore
 ### Frontend
 
 - **Vite Config** (`vite.config.ts`):
-  - Base path: `/sfab-gl07-gateway/`
+  - Base path: `/a1ar-erp-sfab-gl07-gateway/`
   - React plugin with deduplication
   - Dev server on port 5173
 
@@ -277,12 +277,12 @@ dotnet restore
 ### Backend
 
 - **ASP.NET Core** (`Program.cs`):
-  - Path base: `/sfab-gl07-gateway` (from environment)
+  - Path base: `/a1ar-erp-sfab-gl07-gateway` (from environment)
   - CORS enabled for local development
   - Master API client configured
 
 - **API Endpoints**:
-  - `GET /api/sfab-gl07-gateway/user` - Current user info
+  - `GET /api/a1ar-erp-sfab-gl07-gateway/user` - Current user info
   - `GET /health` - Health check
 
 ### Docker
@@ -302,7 +302,7 @@ dotnet restore
 ### Traefik Integration
 
 The service is configured with:
-- StripPrefix middleware to remove `/sfab-gl07-gateway` before forwarding
+- StripPrefix middleware to remove `/a1ar-erp-sfab-gl07-gateway` before forwarding
 - TLS enabled
 - Load balancer on port 80
 - Health check at `/health`
@@ -313,8 +313,8 @@ The service is configured with:
 
 1. **Access via Traefik**:
    ```
-   https://demo.localtest.me/sfab-gl07-gateway/
-   https://admin.localtest.me/sfab-gl07-gateway/
+   https://demo.localtest.me/a1ar-erp-sfab-gl07-gateway/
+   https://admin.localtest.me/a1ar-erp-sfab-gl07-gateway/
    ```
 
 2. **Login Flow**:
@@ -325,7 +325,7 @@ The service is configured with:
 3. **Test API**:
    ```bash
    # Get current user (requires auth)
-   curl -H "Authorization: Bearer $TOKEN" http://localhost:8280/api/sfab-gl07-gateway/user
+   curl -H "Authorization: Bearer $TOKEN" http://localhost:8280/api/a1ar-erp-sfab-gl07-gateway/user
    ```
 
 4. **Check Health**:
@@ -337,11 +337,11 @@ The service is configured with:
 
 ```bash
 # Container logs
-docker logs sfab-gl07-gateway-app -f
+docker logs a1ar-erp-sfab-gl07-gateway-app -f
 
 # Specific component
-docker exec sfab-gl07-gateway-app cat /var/log/nginx/access.log
-docker exec sfab-gl07-gateway-app cat /var/log/nginx/error.log
+docker exec a1ar-erp-sfab-gl07-gateway-app cat /var/log/nginx/access.log
+docker exec a1ar-erp-sfab-gl07-gateway-app cat /var/log/nginx/error.log
 ```
 
 ## Development Workflow
@@ -369,17 +369,17 @@ docker exec sfab-gl07-gateway-app cat /var/log/nginx/error.log
 
 ### 404 Not Found
 
-- **Symptom**: Page not found at `/sfab-gl07-gateway/`
+- **Symptom**: Page not found at `/a1ar-erp-sfab-gl07-gateway/`
 - **Check**:
   ```bash
   # Verify container is running
-  docker ps | grep sfab-gl07-gateway-app
+  docker ps | grep a1ar-erp-sfab-gl07-gateway-app
   
   # Check Traefik routing
   docker logs traefik-shared | grep sample
   
   # Check nginx logs
-  docker exec sfab-gl07-gateway-app cat /var/log/nginx/error.log
+  docker exec a1ar-erp-sfab-gl07-gateway-app cat /var/log/nginx/error.log
   ```
 
 ### Login Redirect Issues
@@ -398,7 +398,7 @@ docker exec sfab-gl07-gateway-app cat /var/log/nginx/error.log
 - **Solutions**:
   1. Check token in browser DevTools (Application → Storage)
   2. Verify Master API is running: `docker ps | grep common-services`
-  3. Check backend logs: `docker logs sfab-gl07-gateway-app | grep -i error`
+  3. Check backend logs: `docker logs a1ar-erp-sfab-gl07-gateway-app | grep -i error`
   4. Verify CORS headers in nginx.conf
 
 ### Docker Build Fails
@@ -416,13 +416,13 @@ docker exec sfab-gl07-gateway-app cat /var/log/nginx/error.log
 - **Check**:
   ```bash
   # Manual health check
-  docker exec sfab-gl07-gateway-app curl -f http://localhost/health
+  docker exec a1ar-erp-sfab-gl07-gateway-app curl -f http://localhost/health
   
   # Check if nginx is running
-  docker exec sfab-gl07-gateway-app ps aux | grep nginx
+  docker exec a1ar-erp-sfab-gl07-gateway-app ps aux | grep nginx
   
   # Check if .NET app is running
-  docker exec sfab-gl07-gateway-app ps aux | grep dotnet
+  docker exec a1ar-erp-sfab-gl07-gateway-app ps aux | grep dotnet
   ```
 
 ## Next Steps

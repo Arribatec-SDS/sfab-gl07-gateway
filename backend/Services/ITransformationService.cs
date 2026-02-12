@@ -1,7 +1,7 @@
-using SfabGl07Gateway.Api.Models.Settings;
-using SfabGl07Gateway.Api.Models.Unit4;
+using A1arErpSfabGl07Gateway.Api.Models.Settings;
+using A1arErpSfabGl07Gateway.Api.Models.Unit4;
 
-namespace SfabGl07Gateway.Api.Services;
+namespace A1arErpSfabGl07Gateway.Api.Services;
 
 /// <summary>
 /// Base interface for file content transformers.

@@ -41,7 +41,7 @@ COPY frontend/dist ./wwwroot
 COPY nginx.conf /etc/nginx/nginx.conf
 
 # Create startup script
-RUN printf '#!/bin/bash\nnginx &\nexec dotnet SfabGl07Gateway.Api.dll\n' > /app/start.sh && chmod +x /app/start.sh
+RUN printf '#!/bin/bash\nnginx &\nexec dotnet A1arErpSfabGl07Gateway.Api.dll\n' > /app/start.sh && chmod +x /app/start.sh
 
 EXPOSE 80 5000
 

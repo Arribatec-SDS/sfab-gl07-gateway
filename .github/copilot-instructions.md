@@ -88,13 +88,13 @@ For app-specific rules, conventions, and notes, use:
 
 ### Path-Based Routing
 
-- App is accessed via `/sfab-gl07-gateway` path (configurable base path)
+- App is accessed via `/a1ar-erp-sfab-gl07-gateway` path (configurable base path)
 - Traefik routes based on path prefix
-- Frontend uses `base: '/sfab-gl07-gateway/'` in Vite config
-- Backend uses `app.UsePathBase("/sfab-gl07-gateway")` in Program.cs
+- Frontend uses `base: '/a1ar-erp-sfab-gl07-gateway/'` in Vite config
+- Backend uses `app.UsePathBase("/a1ar-erp-sfab-gl07-gateway")` in Program.cs
 - **API calls**: Frontend MUST call APIs at `https://<realm>.<domain>/<basepath>/api`
-  - Example: If app loads from `https://admin.localtest.me/sfab-gl07-gateway/`, call APIs at `https://admin.localtest.me/sfab-gl07-gateway/api`
-  - Use relative URLs (`/sfab-gl07-gateway/api/...`) to automatically match the frontend's origin
+  - Example: If app loads from `https://admin.localtest.me/a1ar-erp-sfab-gl07-gateway/`, call APIs at `https://admin.localtest.me/a1ar-erp-sfab-gl07-gateway/api`
+  - Use relative URLs (`/a1ar-erp-sfab-gl07-gateway/api/...`) to automatically match the frontend's origin
   - In development: Vite dev server proxies these calls to backend
   - In production: nginx routes these calls to backend container
 
@@ -138,7 +138,7 @@ The backend uses **dynamic JWT validation** that fetches tenant-specific Keycloa
 ## Project Structure
 
 ```
-sfab-gl07-gateway/
+a1ar-erp-sfab-gl07-gateway/
 ├── frontend/              # React application
 │   ├── src/
 │   │   ├── App.tsx       # Auth provider & routing
@@ -211,7 +211,7 @@ cd frontend && npm run build
 1. **Always use the auth hook**: `const { user, isAuthenticated, token } = useAuth()`
 2. **API calls - Use Dynamic Path Construction**:
    - **RECOMMENDED**: Use `buildApiPath()` or `createApiClient()` from `@/utils/api.ts` to dynamically construct API paths
-   - Automatically adapts to any base path (no hardcoding `/sfab-gl07-gateway/api/...`)
+   - Automatically adapts to any base path (no hardcoding `/a1ar-erp-sfab-gl07-gateway/api/...`)
    - Works in development (Vite proxy) and production (nginx routing)
    - **ALWAYS include Bearer token**: Every API call MUST include `Authorization: Bearer ${token}` header
 
@@ -225,8 +225,8 @@ cd frontend && npm run build
    apiClient.defaults.headers.common["Authorization"] = `Bearer ${token}`;
 
    // All calls automatically use correct base path
-   await apiClient.get("/user"); // -> /sfab-gl07-gateway/api/user
-   await apiClient.post("/items", data); // -> /sfab-gl07-gateway/api/items
+   await apiClient.get("/user"); // -> /a1ar-erp-sfab-gl07-gateway/api/user
+   await apiClient.post("/items", data); // -> /a1ar-erp-sfab-gl07-gateway/api/items
 
    // GOOD: Build individual paths
    import { buildApiPath } from "@/utils/api";
@@ -235,7 +235,7 @@ cd frontend && npm run build
    });
 
    // ACCEPTABLE: Legacy pattern (works but less portable)
-   await axios.get("/sfab-gl07-gateway/api/user", {
+   await axios.get("/a1ar-erp-sfab-gl07-gateway/api/user", {
      headers: { Authorization: `Bearer ${token}` },
    });
 
@@ -243,10 +243,10 @@ cd frontend && npm run build
    await axios.get("http://localhost:7458/api/user"); // ❌ BAD
 
    // WRONG: Never call APIs without authentication
-   await axios.get("/sfab-gl07-gateway/api/user"); // ❌ Missing Bearer token!
+   await axios.get("/a1ar-erp-sfab-gl07-gateway/api/user"); // ❌ Missing Bearer token!
    ```
 
-3. **Routing**: All routes must be under base path (`/sfab-gl07-gateway/`)
+3. **Routing**: All routes must be under base path (`/a1ar-erp-sfab-gl07-gateway/`)
 4. **Protected routes**: Wrap with auth check or use route guards
 5. **TypeScript**: Maintain type safety, define interfaces for API responses
 6. **UI Components**: Use Material-UI (MUI) v7.3.4 for all UI components - it's our preferred component library
@@ -666,11 +666,11 @@ import { useAuth } from "@arribatec-sds/keycloak-auth-react";
 const { token } = useAuth();
 
 // BEST: Use pre-configured axios instance
-const apiClient = createApiClient(); // baseURL is automatically set to /sfab-gl07-gateway/api
+const apiClient = createApiClient(); // baseURL is automatically set to /a1ar-erp-sfab-gl07-gateway/api
 apiClient.defaults.headers.common["Authorization"] = `Bearer ${token}`;
 
 // All calls work regardless of base path
-const response = await apiClient.get("/myendpoint"); // -> /sfab-gl07-gateway/api/myendpoint
+const response = await apiClient.get("/myendpoint"); // -> /a1ar-erp-sfab-gl07-gateway/api/myendpoint
 const data = await apiClient.post("/items", { name: "New Item" });
 
 // GOOD: Build individual paths dynamically
@@ -678,10 +678,10 @@ import axios from "axios";
 const response = await axios.get(buildApiPath("/myendpoint"), {
   headers: { Authorization: `Bearer ${token}` },
 });
-// buildApiPath('/myendpoint') automatically returns '/sfab-gl07-gateway/api/myendpoint'
+// buildApiPath('/myendpoint') automatically returns '/a1ar-erp-sfab-gl07-gateway/api/myendpoint'
 
 // ACCEPTABLE: Legacy hardcoded pattern (works but less portable)
-const response = await axios.get("/sfab-gl07-gateway/api/myendpoint", {
+const response = await axios.get("/a1ar-erp-sfab-gl07-gateway/api/myendpoint", {
   headers: { Authorization: `Bearer ${token}` },
 });
 
@@ -689,7 +689,7 @@ const response = await axios.get("/sfab-gl07-gateway/api/myendpoint", {
 // const response = await axios.get('http://localhost:7458/api/myendpoint', ...)  // ❌
 
 // WRONG: Never call APIs without authentication
-// const response = await axios.get('/sfab-gl07-gateway/api/myendpoint'); // Missing Authorization header!
+// const response = await axios.get('/a1ar-erp-sfab-gl07-gateway/api/myendpoint'); // Missing Authorization header!
 ```
 
 #### Protected Route
@@ -834,14 +834,14 @@ function DashboardPage() {
 
 ### Development
 
-- Frontend dev server: `https://admin.localtest.me:7358/sfab-gl07-gateway/`
+- Frontend dev server: `https://admin.localtest.me:7358/a1ar-erp-sfab-gl07-gateway/`
 - Backend API: `http://localhost:7458/api/`
 - Swagger: `http://localhost:7458/swagger`
 
 ### Production (Docker via Traefik)
 
-- Admin realm: `https://admin.localtest.me/sfab-gl07-gateway/`
-- Demo realm: `https://demo.localtest.me/sfab-gl07-gateway/`
+- Admin realm: `https://admin.localtest.me/a1ar-erp-sfab-gl07-gateway/`
+- Demo realm: `https://demo.localtest.me/a1ar-erp-sfab-gl07-gateway/`
 - API: Routes through frontend proxy
 
 ## API Path Utilities
@@ -853,19 +853,19 @@ The app uses **dynamic API path construction** to avoid hardcoded base paths, ma
 ```typescript
 /**
  * Get the base path of the application from Vite config.
- * Example: '/sfab-gl07-gateway' (derived from vite.config.ts base: '/sfab-gl07-gateway/')
+ * Example: '/a1ar-erp-sfab-gl07-gateway' (derived from vite.config.ts base: '/a1ar-erp-sfab-gl07-gateway/')
  */
 getBasePath(): string
 
 /**
  * Build a complete API path from a relative endpoint.
- * Example: buildApiPath('/user') -> '/sfab-gl07-gateway/api/user'
+ * Example: buildApiPath('/user') -> '/a1ar-erp-sfab-gl07-gateway/api/user'
  */
 buildApiPath(endpoint: string): string
 
 /**
  * Get the base URL for API calls.
- * Example: '/sfab-gl07-gateway/api'
+ * Example: '/a1ar-erp-sfab-gl07-gateway/api'
  */
 getApiBasePath(): string
 
@@ -892,9 +892,9 @@ function MyComponent() {
     apiClient.defaults.headers.common["Authorization"] = `Bearer ${token}`;
 
     // All calls automatically use correct base path
-    const users = await apiClient.get("/user"); // -> /sfab-gl07-gateway/api/user
-    const items = await apiClient.get("/items"); // -> /sfab-gl07-gateway/api/items
-    const item = await apiClient.post("/items", data); // -> /sfab-gl07-gateway/api/items
+    const users = await apiClient.get("/user"); // -> /a1ar-erp-sfab-gl07-gateway/api/user
+    const items = await apiClient.get("/items"); // -> /a1ar-erp-sfab-gl07-gateway/api/items
+    const item = await apiClient.post("/items", data); // -> /a1ar-erp-sfab-gl07-gateway/api/items
   };
 }
 ```
@@ -913,7 +913,7 @@ function MyComponent() {
     const response = await axios.get(buildApiPath("/user"), {
       headers: { Authorization: `Bearer ${token}` },
     });
-    // buildApiPath('/user') -> '/sfab-gl07-gateway/api/user'
+    // buildApiPath('/user') -> '/a1ar-erp-sfab-gl07-gateway/api/user'
   };
 }
 ```
@@ -924,7 +924,7 @@ function MyComponent() {
 
    ```typescript
    export default defineConfig({
-     base: "/sfab-gl07-gateway/", // Exposed as import.meta.env.BASE_URL
+     base: "/a1ar-erp-sfab-gl07-gateway/", // Exposed as import.meta.env.BASE_URL
    });
    ```
 
@@ -1039,7 +1039,7 @@ public async Task<IActionResult> GetItems()
 2. Add route in `App.tsx`
 3. Use auth hook for protected pages
 4. Make API calls using `buildApiPath()` or `createApiClient()` from `@/utils/api` (recommended)
-   - Alternatively, use relative URLs like `/sfab-gl07-gateway/api/...` (legacy pattern)
+   - Alternatively, use relative URLs like `/a1ar-erp-sfab-gl07-gateway/api/...` (legacy pattern)
    - Always include Bearer token in Authorization header
 
 Example:
@@ -1442,7 +1442,7 @@ dotnet test  # Run tests (if any)
 ```bash
 docker-compose build
 docker-compose up -d
-docker logs sfab-gl07-gateway-app -f  # View logs
+docker logs a1ar-erp-sfab-gl07-gateway-app -f  # View logs
 ```
 
 ## Troubleshooting
@@ -1456,7 +1456,7 @@ docker logs sfab-gl07-gateway-app -f  # View logs
 
 ### 404 Not Found
 
-- Verify base path is correct (`/sfab-gl07-gateway`)
+- Verify base path is correct (`/a1ar-erp-sfab-gl07-gateway`)
 - Check Traefik routing rules
 - Ensure nginx.conf has correct proxy settings
 
@@ -1492,8 +1492,8 @@ dotnet build       # Compile the project
 # Docker
 docker-compose up -d              # Start in background
 docker-compose down              # Stop and remove
-docker-compose logs -f sfab-gl07-gateway-app # Follow logs
-docker exec -it sfab-gl07-gateway-app bash  # Shell into container
+docker-compose logs -f a1ar-erp-sfab-gl07-gateway-app # Follow logs
+docker exec -it a1ar-erp-sfab-gl07-gateway-app bash  # Shell into container
 ```
 
 ## Nexus Developer Kit

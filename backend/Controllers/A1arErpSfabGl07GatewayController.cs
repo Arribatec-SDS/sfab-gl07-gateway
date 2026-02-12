@@ -3,17 +3,17 @@ using Arribatec.Nexus.Client.Services;
 using Microsoft.AspNetCore.Authorization;
 using System.Security.Claims;
 
-namespace SfabGl07Gateway.Api.Controllers;
+namespace A1arErpSfabGl07Gateway.Api.Controllers;
 
 [ApiController]
 [Route("api")]
-public class SfabGl07GatewayController : ControllerBase
+public class A1arErpSfabGl07GatewayController : ControllerBase
 {
-    private readonly ILogger<SfabGl07GatewayController> _logger;
+    private readonly ILogger<A1arErpSfabGl07GatewayController> _logger;
     private readonly IContextProvider _contextProvider;
 
-    public SfabGl07GatewayController(
-        ILogger<SfabGl07GatewayController> logger,
+    public A1arErpSfabGl07GatewayController(
+        ILogger<A1arErpSfabGl07GatewayController> logger,
         IContextProvider contextProvider)
     {
         _logger = logger;

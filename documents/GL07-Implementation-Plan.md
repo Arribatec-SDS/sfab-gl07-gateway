@@ -671,7 +671,7 @@ builder.Services.AddHttpClient<IUnit4ApiClient, Unit4ApiClient>();
 ```
 backend/
 ├── Controllers/
-│   ├── SfabGl07GatewayController.cs (existing)
+│   ├── A1arErpSfabGl07GatewayController.cs (existing)
 │   ├── SettingsController.cs
 │   └── SourceSystemsController.cs      # NEW: CRUD for source systems
 ├── Models/
@@ -723,7 +723,7 @@ backend/
 │   ├── IUnit4ApiClient.cs
 │   └── Unit4ApiClient.cs
 ├── Workers/
-│   ├── SfabGl07GatewayWorker.cs (existing)
+│   ├── A1arErpSfabGl07GatewayWorker.cs (existing)
 │   └── GL07ProcessingWorker.cs
 ├── sql/
 │   └── init-tables.sql
@@ -985,7 +985,7 @@ Install these VS Code extensions for the best development experience:
 - Source maps are enabled by default (`sourcemap: true` in vite.config.ts)
 - Use browser DevTools (F12) alongside VS Code debugging
 - React DevTools extension helps inspect component state
-- Network tab shows API calls to `/sfab-gl07-gateway/api/*`
+- Network tab shows API calls to `/a1ar-erp-sfab-gl07-gateway/api/*`
 
 **Common Issues:**
 

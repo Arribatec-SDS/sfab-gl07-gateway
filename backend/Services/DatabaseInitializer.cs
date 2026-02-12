@@ -1,6 +1,6 @@
 using Dapper;
 
-namespace SfabGl07Gateway.Api.Services;
+namespace A1arErpSfabGl07Gateway.Api.Services;
 
 /// <summary>
 /// Initializes the database schema on first startup.

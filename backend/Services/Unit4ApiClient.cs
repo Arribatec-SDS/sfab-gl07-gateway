@@ -1,9 +1,9 @@
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using System.Text.Json;
-using SfabGl07Gateway.Api.Models.Unit4;
+using A1arErpSfabGl07Gateway.Api.Models.Unit4;
 
-namespace SfabGl07Gateway.Api.Services;
+namespace A1arErpSfabGl07Gateway.Api.Services;
 
 /// <summary>
 /// HTTP client implementation for Unit4 REST API with OAuth2 authentication.
