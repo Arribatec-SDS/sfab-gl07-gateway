@@ -186,6 +186,11 @@ public class Unit4Settings
     /// API endpoint path for financial transaction batches (default: /v1/financial-transaction-batch)
     /// </summary>
     public string BatchEndpoint { get; set; } = "/v1/financial-transaction-batch";
+
+    /// <summary>
+    /// API endpoint path for ordering GL07 report jobs (default: /v1/report-jobs/order)
+    /// </summary>
+    public string ReportJobsEndpoint { get; set; } = "/v1/report-jobs/order";
 }
 
 /// <summary>

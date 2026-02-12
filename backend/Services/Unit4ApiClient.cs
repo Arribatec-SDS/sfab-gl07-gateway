@@ -111,6 +111,146 @@ public class Unit4ApiClient : IUnit4ApiClient
         }
     }
 
+    public async Task<Unit4ReportJobResponse> OrderReportJobAsync(Unit4ReportJobRequest request)
+    {
+        var token = await GetAccessTokenAsync();
+        var settings = await _settingsService.GetSettingsGroupAsync<Unit4Settings>("Unit4");
+
+        _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+
+        // Use ReportJobsEndpoint if configured, otherwise fall back to default endpoint
+        var reportJobsEndpoint = !string.IsNullOrWhiteSpace(settings.ReportJobsEndpoint)
+            ? settings.ReportJobsEndpoint
+            : "/v1/report-jobs/order";
+
+        var url = $"{settings.BaseUrl?.TrimEnd('/')}{reportJobsEndpoint}";
+        if (!string.IsNullOrEmpty(settings.TenantId))
+        {
+            url += $"?tenant={settings.TenantId}";
+        }
+
+        _logger.LogInformation("Ordering report job in Unit4: {Url} (ReportId: {ReportId}, BatchId: {BatchId})",
+            url, request.ReportId, request.Parameters?.FirstOrDefault(p => p.Id == "batch_id")?.Value);
+
+        var response = await _httpClient.PostAsJsonAsync(url, request);
+        var responseContent = await response.Content.ReadAsStringAsync();
+
+        if (!response.IsSuccessStatusCode)
+        {
+            // Try to extract clean error message from JSON response
+            var errorMessage = ExtractErrorMessage(responseContent) ?? responseContent;
+
+            _logger.LogError("Unit4 Report Jobs API error: {StatusCode} - {ErrorMessage}",
+                response.StatusCode, errorMessage);
+
+            return new Unit4ReportJobResponse
+            {
+                Status = "Error",
+                Message = $"HTTP {(int)response.StatusCode}: {errorMessage}"
+            };
+        }
+
+        // Handle empty successful responses
+        if (string.IsNullOrWhiteSpace(responseContent))
+        {
+            _logger.LogInformation("Unit4 Report Jobs API returned success with empty body: {StatusCode}", response.StatusCode);
+            var emptyResult = new Unit4ReportJobResponse
+            {
+                Status = "Success",
+                Message = $"HTTP {(int)response.StatusCode}: Report job ordered"
+            };
+            ExtractLocationHeader(response, emptyResult);
+            return emptyResult;
+        }
+
+        try
+        {
+            var result = JsonSerializer.Deserialize<Unit4ReportJobResponse>(responseContent,
+                new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+
+            if (result != null)
+            {
+                ExtractLocationHeader(response, result);
+                result.Status ??= "Success";
+            }
+
+            _logger.LogInformation("Unit4 Report Jobs API response: {Status}, TaskId: {TaskId}, OrderNumber: {OrderNumber}, Location: {Location}",
+                result?.Status ?? "Unknown", result?.TaskId, result?.OrderNumber, result?.Location);
+
+            return result ?? new Unit4ReportJobResponse { Status = "Success", Message = "Report job ordered" };
+        }
+        catch (JsonException ex)
+        {
+            _logger.LogWarning("Could not parse Unit4 Report Jobs response as JSON: {Error}. StatusCode: {StatusCode}, Content: {Content}",
+                ex.Message, response.StatusCode, responseContent);
+
+            var errorResult = new Unit4ReportJobResponse
+            {
+                Status = "Success",
+                Message = $"HTTP {(int)response.StatusCode}: Report job ordered (response not JSON)"
+            };
+            ExtractLocationHeader(response, errorResult);
+            return errorResult;
+        }
+    }
+
+    /// <summary>
+    /// Extract Location header from response and parse TaskId/OrderNumber.
+    /// Location format: /v1/report-jobs/order/{taskId} where taskId ends with order number (e.g., 300029f1-9227-4106-GL07-71)
+    /// </summary>
+    private void ExtractLocationHeader(HttpResponseMessage response, Unit4ReportJobResponse result)
+    {
+        if (response.Headers.Location != null)
+        {
+            result.Location = response.Headers.Location.ToString();
+        }
+        else if (response.Headers.TryGetValues("Location", out var locationValues))
+        {
+            result.Location = locationValues.FirstOrDefault();
+        }
+
+        if (!string.IsNullOrEmpty(result.Location))
+        {
+            // Extract TaskId from Location (last segment of path)
+            var lastSlashIndex = result.Location.LastIndexOf('/');
+            if (lastSlashIndex >= 0 && lastSlashIndex < result.Location.Length - 1)
+            {
+                result.TaskId = result.Location.Substring(lastSlashIndex + 1);
+
+                // Extract OrderNumber (last segment after last hyphen in TaskId)
+                var lastHyphenIndex = result.TaskId.LastIndexOf('-');
+                if (lastHyphenIndex >= 0 && lastHyphenIndex < result.TaskId.Length - 1)
+                {
+                    result.OrderNumber = result.TaskId.Substring(lastHyphenIndex + 1);
+                }
+            }
+        }
+    }
+
+    /// <summary>
+    /// Extract clean error message from Unit4 API error response JSON.
+    /// </summary>
+    private string? ExtractErrorMessage(string? responseContent)
+    {
+        if (string.IsNullOrWhiteSpace(responseContent))
+            return null;
+
+        try
+        {
+            using var doc = JsonDocument.Parse(responseContent);
+            if (doc.RootElement.TryGetProperty("message", out var messageElement))
+            {
+                return messageElement.GetString();
+            }
+        }
+        catch (JsonException)
+        {
+            // Not valid JSON, return null to use raw content
+        }
+
+        return null;
+    }
+
     public async Task<bool> TestConnectionAsync()
     {
         try

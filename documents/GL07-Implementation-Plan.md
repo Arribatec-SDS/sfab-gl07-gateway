@@ -616,8 +616,11 @@ public class GL07ProcessingWorker : ITaskHandler<GL07ProcessingParameters>
    c. For each file:
       i.   Download file content
       ii.  Transform via selected transformer
-      iii. POST to Unit4 via IUnit4ApiClient
-      iv.  Log result to ProcessingLog (with SourceSystemId)
+      iii. POST to Unit4 via IUnit4ApiClient.PostTransactionBatchAsync()
+      iv.  If successful, order GL07 report via IUnit4ApiClient.OrderReportJobAsync()
+           - Uses batch_id from processed file
+           - Uses GL07 report setup configuration from source system
+      v.   Log result to ProcessingLog (with SourceSystemId)
       v.   On success: Move to {system.FolderPath}/done/YYYY-MM-DD_filename.xml
       vi.  On failure: Move to {system.FolderPath}/error/YYYY-MM-DD_filename.xml, STOP this system
    d. Continue to next source system (isolation between systems)
@@ -1015,6 +1018,7 @@ Backend debug environment (configured in launch.json):
 ## References
 
 - **Unit4 API:** https://no01-npe.erpx-api.unit4cloud.com/swagger/
-- **Endpoint:** `POST /v1/financial-transaction-batch`
+- **Batch Endpoint:** `POST /v1/financial-transaction-batch`
+- **Report Jobs Endpoint:** `POST /v1/report-jobs/order` (called after successful batch post with `batch_id` parameter)
 - **XSD Schema:** ABWTransaction.xsd, ABWSchemaLib.xsd
 - **XML Namespace:** `http://services.agresso.com/schema/ABWTransaction/2011/11/14`

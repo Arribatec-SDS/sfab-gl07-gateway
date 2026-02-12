@@ -17,6 +17,10 @@ public class SourceSystemRepository : ISourceSystemRepository
         s.IsActive, s.Description, s.Gl07ReportSetupId, s.Interface, s.TransactionType, 
         s.BatchId, s.DefaultCurrency, s.AzureFileShareConnectionName, s.CreatedAt, s.UpdatedAt";
 
+    private const string Gl07SetupColumns = @"
+        g.Id, g.SetupCode, g.SetupName, g.Description, g.ReportId, g.ReportName, g.Variant,
+        g.UserId, g.CompanyId, g.Priority, g.EmailConfirmation, g.Status, g.OutputType, g.IsActive";
+
     public SourceSystemRepository(
         IScopedDbConnectionProvider connectionProvider,
         ILogger<SourceSystemRepository> logger)
@@ -30,7 +34,7 @@ public class SourceSystemRepository : ISourceSystemRepository
         var connection = await _connectionProvider.GetConnectionAsync();
         return await connection.QueryAsync<SourceSystem, Gl07ReportSetup, SourceSystem>($@"
             SELECT {SelectColumns},
-                   g.Id, g.SetupCode, g.SetupName
+                   {Gl07SetupColumns}
             FROM SourceSystems s
             LEFT JOIN Gl07ReportSetups g ON s.Gl07ReportSetupId = g.Id
             ORDER BY s.SystemName",
@@ -47,7 +51,7 @@ public class SourceSystemRepository : ISourceSystemRepository
         var connection = await _connectionProvider.GetConnectionAsync();
         return await connection.QueryAsync<SourceSystem, Gl07ReportSetup, SourceSystem>($@"
             SELECT {SelectColumns},
-                   g.Id, g.SetupCode, g.SetupName
+                   {Gl07SetupColumns}
             FROM SourceSystems s
             LEFT JOIN Gl07ReportSetups g ON s.Gl07ReportSetupId = g.Id
             WHERE s.IsActive = 1 
@@ -65,7 +69,7 @@ public class SourceSystemRepository : ISourceSystemRepository
         var connection = await _connectionProvider.GetConnectionAsync();
         var results = await connection.QueryAsync<SourceSystem, Gl07ReportSetup, SourceSystem>($@"
             SELECT {SelectColumns},
-                   g.Id, g.SetupCode, g.SetupName
+                   {Gl07SetupColumns}
             FROM SourceSystems s
             LEFT JOIN Gl07ReportSetups g ON s.Gl07ReportSetupId = g.Id
             WHERE s.Id = @Id",
@@ -85,7 +89,7 @@ public class SourceSystemRepository : ISourceSystemRepository
         var connection = await _connectionProvider.GetConnectionAsync();
         var results = await connection.QueryAsync<SourceSystem, Gl07ReportSetup, SourceSystem>($@"
             SELECT {SelectColumns},
-                   g.Id, g.SetupCode, g.SetupName
+                   {Gl07SetupColumns}
             FROM SourceSystems s
             LEFT JOIN Gl07ReportSetups g ON s.Gl07ReportSetupId = g.Id
             WHERE s.SystemCode = @SystemCode",

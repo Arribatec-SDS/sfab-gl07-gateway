@@ -200,29 +200,42 @@ export default function Gl07ReportSetupsPage() {
     }
   }, [getToken]);
 
-  const handleOpenDialog = (setup?: Gl07ReportSetup) => {
+  const handleOpenDialog = async (setup?: Gl07ReportSetup) => {
     setSetupCodeError(null);
 
     if (setup) {
-      setEditingSetup(setup);
-      setFormData({
-        setupCode: setup.setupCode,
-        reportId: setup.reportId || defaultReportId,
-        reportName: setup.reportName || defaultReportName,
-        variant: setup.variant,
-        userId: setup.userId || '',
-        companyId: setup.companyId || '',
-        priority: 0,
-        emailConfirmation: setup.emailConfirmation ?? false,
-        status: 'N',
-        outputType: 0,
-        description: setup.description || '',
-        isActive: setup.isActive,
-        parameters: setup.parameters?.map(p => ({
-          parameterId: p.parameterId,
-          parameterValue: p.parameterValue,
-        })) || [],
-      });
+      // Fetch full setup with parameters from API
+      try {
+        const token = await getToken();
+        const apiClient = createApiClient();
+        apiClient.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+
+        const response = await apiClient.get<Gl07ReportSetup>(`/gl07reportsetups/${setup.id}`);
+        const fullSetup = response.data;
+
+        setEditingSetup(fullSetup);
+        setFormData({
+          setupCode: fullSetup.setupCode,
+          reportId: fullSetup.reportId || defaultReportId,
+          reportName: fullSetup.reportName || defaultReportName,
+          variant: fullSetup.variant,
+          userId: fullSetup.userId || '',
+          companyId: fullSetup.companyId || '',
+          priority: 0,
+          emailConfirmation: fullSetup.emailConfirmation ?? false,
+          status: 'N',
+          outputType: 0,
+          description: fullSetup.description || '',
+          isActive: fullSetup.isActive,
+          parameters: fullSetup.parameters?.map(p => ({
+            parameterId: p.parameterId,
+            parameterValue: p.parameterValue,
+          })) || [],
+        });
+      } catch (err) {
+        setError('Failed to load setup details');
+        return;
+      }
     } else {
       setEditingSetup(null);
       setFormData({

@@ -2,6 +2,7 @@ using System.Diagnostics;
 using System.Text.Json;
 using Arribatec.Nexus.Client.TaskExecution;
 using A1arErpSfabGl07Gateway.Api.Models.Settings;
+using A1arErpSfabGl07Gateway.Api.Models.Unit4;
 using A1arErpSfabGl07Gateway.Api.Repositories;
 using A1arErpSfabGl07Gateway.Api.Services;
 
@@ -42,6 +43,7 @@ public class GL07ProcessingWorker : ITaskHandler<GL07ProcessingParameters>
     private readonly ILogger<GL07ProcessingWorker> _logger;
     private readonly ITaskContext _context;
     private readonly ISourceSystemRepository _sourceSystemRepository;
+    private readonly IGl07ReportSetupRepository _reportSetupRepository;
     private readonly IProcessingLogRepository _processingLogRepository;
     private readonly IFileSourceServiceFactory _fileSourceFactory;
     private readonly ITransformationServiceFactory _transformerFactory;
@@ -51,6 +53,7 @@ public class GL07ProcessingWorker : ITaskHandler<GL07ProcessingParameters>
         ILogger<GL07ProcessingWorker> logger,
         ITaskContext context,
         ISourceSystemRepository sourceSystemRepository,
+        IGl07ReportSetupRepository reportSetupRepository,
         IProcessingLogRepository processingLogRepository,
         IFileSourceServiceFactory fileSourceFactory,
         ITransformationServiceFactory transformerFactory,
@@ -59,6 +62,7 @@ public class GL07ProcessingWorker : ITaskHandler<GL07ProcessingParameters>
         _logger = logger;
         _context = context;
         _sourceSystemRepository = sourceSystemRepository;
+        _reportSetupRepository = reportSetupRepository;
         _processingLogRepository = processingLogRepository;
         _fileSourceFactory = fileSourceFactory;
         _transformerFactory = transformerFactory;
@@ -360,6 +364,24 @@ public class GL07ProcessingWorker : ITaskHandler<GL07ProcessingParameters>
                 {
                     logEntry.Status = "Success";
                     _logger.LogInformation("    ✓ Posted {Count} rows to Unit4 successfully", transactionCount);
+
+                    // Order GL07 report job after successful batch post
+                    if (sourceSystem.Gl07ReportSetupId > 0)
+                    {
+                        var batchId = requests.FirstOrDefault()?.BatchInformation?.BatchId;
+                        if (!string.IsNullOrEmpty(batchId))
+                        {
+                            await OrderReportJobAsync(sourceSystem.Gl07ReportSetupId, batchId);
+                        }
+                        else
+                        {
+                            _logger.LogWarning("    Skipping report job - no batch_id found in processed file");
+                        }
+                    }
+                    else
+                    {
+                        _logger.LogWarning("    Skipping report job - no GL07 report setup configured");
+                    }
                 }
                 else
                 {
@@ -443,5 +465,69 @@ public class GL07ProcessingWorker : ITaskHandler<GL07ProcessingParameters>
         }
 
         return $"{size:0.##} {suffixes[order]}";
+    }
+
+    private async Task OrderReportJobAsync(int setupId, string batchId)
+    {
+        // Fetch the full setup with parameters
+        var setup = await _reportSetupRepository.GetByIdWithParametersAsync(setupId);
+        if (setup == null)
+        {
+            _logger.LogWarning("    Cannot order report job - GL07 report setup ID {SetupId} not found", setupId);
+            return;
+        }
+
+        _logger.LogInformation("    Ordering GL07 report job: ReportId={ReportId}, BatchId={BatchId}, Parameters={ParameterCount}",
+            setup.ReportId, batchId, setup.Parameters?.Count ?? 0);
+
+        // Build parameters list - include batch_id plus any configured parameters
+        var parameters = new List<ReportJobParameter>
+        {
+            new ReportJobParameter { Id = "batch_id", Value = batchId }
+        };
+
+        // Add configured parameters from setup
+        if (setup.Parameters != null)
+        {
+            foreach (var param in setup.Parameters)
+            {
+                parameters.Add(new ReportJobParameter
+                {
+                    Id = param.ParameterId,
+                    Value = param.ParameterValue ?? string.Empty
+                });
+            }
+        }
+
+        var request = new Unit4ReportJobRequest
+        {
+            ReportId = setup.ReportId,
+            ReportName = setup.ReportName,
+            Variant = setup.Variant,
+            UserId = setup.UserId,
+            CompanyId = setup.CompanyId,
+            Parameters = parameters,
+            GeneralParameters = new ReportJobGeneralParameters
+            {
+                Priority = setup.Priority,
+                EmailConfirmation = setup.EmailConfirmation,
+                Status = setup.Status,
+                OutputType = setup.OutputType,
+                Start = DateTime.UtcNow.Date // Today at 00:00:00.000
+            }
+        };
+
+        var response = await _unit4Client.OrderReportJobAsync(request);
+
+        if (response.Status == "Success" || response.Status == "Accepted")
+        {
+            _logger.LogInformation("    ✓ GL07 report job ordered successfully (TaskId: {TaskId}, OrderNumber: {OrderNumber}, Location: {Location})",
+                response.TaskId, response.OrderNumber, response.Location);
+        }
+        else
+        {
+            _logger.LogWarning("    ⚠ GL07 report job order returned: {Status} - {Message}",
+                response.Status, response.Message);
+        }
     }
 }

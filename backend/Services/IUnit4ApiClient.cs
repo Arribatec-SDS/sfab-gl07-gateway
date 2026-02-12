@@ -14,6 +14,12 @@ public interface IUnit4ApiClient
     Task<Unit4TransactionBatchResponse> PostTransactionBatchAsync(List<Unit4TransactionBatchRequest> requests);
 
     /// <summary>
+    /// Order a report job in Unit4.
+    /// Called after successful batch submission to trigger GL07 report generation.
+    /// </summary>
+    Task<Unit4ReportJobResponse> OrderReportJobAsync(Unit4ReportJobRequest request);
+
+    /// <summary>
     /// Test connection to Unit4 API by validating OAuth token.
     /// </summary>
     Task<bool> TestConnectionAsync();
