@@ -157,7 +157,7 @@ public class WorkerController : ControllerBase
                 {
                     // Log each task for debugging
                     _logger.LogDebug("Checking task: {Task}", task.GetRawText());
-                    
+
                     // The task code is in applicationTask.apiRoute (e.g., "/api/tasks/gl07-process/execute")
                     if (task.TryGetProperty("applicationTask", out var appTask) &&
                         appTask.TryGetProperty("apiRoute", out var apiRouteProp))

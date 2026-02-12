@@ -204,7 +204,7 @@ public class GL07ProcessingWorker : ITaskHandler<GL07ProcessingParameters>
             if (!string.IsNullOrEmpty(filenameFilter))
             {
                 files = files.Where(f => f.Equals(filenameFilter, StringComparison.OrdinalIgnoreCase)).ToList();
-                
+
                 if (!files.Any())
                 {
                     _logger.LogWarning("  Specified file not found in inbox: {Filename}", filenameFilter);
